@@ -1,0 +1,50 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Function to process the file and print out its content
+void process_file(FILE *file) {
+    char *buffer = NULL;
+    size_t buffer_length = 0;
+    char *current_position = NULL;
+    size_t read_index = 0;
+    size_t string_length = 0;
+
+    // Read the entire file into buffer using getdelim()
+    if (getdelim(&buffer, &buffer_length, EOF, file) != -1) {
+        current_position = buffer;
+
+        // Iterate over each string in the buffer
+        while (read_index < buffer_length) {
+            string_length = strlen(current_position);
+
+            // Print each character in the current string
+            for (size_t char_index = 0; char_index < string_length; ++char_index) {
+                putchar(*(current_position + char_index));
+            }
+
+            // Move to the next string position in the buffer
+            read_index += string_length + 1;
+            current_position += string_length + 1;
+        }
+    }
+
+    free(buffer);
+}
+
+int main(void) {
+    FILE *file_pointer = fopen("data.src", "r");
+
+    if (file_pointer == NULL) {
+        fprintf(stderr, "Couldn't open data file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    process_file(file_pointer);
+
+    fclose(file_pointer);
+    return EXIT_SUCCESS;
+}
+```

@@ -1,0 +1,113 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <unistd.h>
+
+#define MAX_SIZE 9999
+#define ASCII_START 33
+#define ASCII_END 127
+
+// Constants for the main loop
+int W = 33331;
+int X = 33333331;
+int N = 40;
+int M;
+int S;
+int T;
+
+// Arrays to hold character data
+char A[MAX_SIZE][MAX_SIZE] = {0};
+char B[MAX_SIZE][MAX_SIZE];
+
+// Function to fill the array A with space characters where needed
+void fill_space(int c) {
+    int i = M * N;
+    for (; i--; ) {
+        A[i % N][i / N] = (!c ? 32 : A[i % N][i / N]);
+    }
+}
+
+// Function Q performs transformations on array A based on input t and d
+void perform_transformation(int t, int d) {
+    for (int i, j, k = ~d / 2 * 3 + 3, l; j = k != 2, k - (3 + 5 * d) / 2; k += d) {
+        long long m = M * N, n = j ? M : N, u = (2 * k - k / 2 * 3 - k / 3 * 5) * d;
+        long long x, y, w, s;
+        for (i = m; i--; ) {
+            B[i % N][i / N] = A[i % N][i / N];
+        }
+        for (i = n; i--; ) {
+            s = S + k;
+            for (w = 0, l = 6; l -= 2; ) {
+                s = (s + T) * W % X;
+                x = l * i + s % W * n * t / W / 5 + n * (n + s % W) - n * t / 10;
+                w += x % n * (n - x % n) * (x / n % 2 * 2 - 1) * (3 + k % 3 + k / 2);
+            }
+            w = (w + n * n / (w > 0 ? 2 : -2)) / n / n;
+            for (l = j ? N : M; l--; x = j * i + u * l + m * 4, y = !j * i + d * j * l + m * 4) {
+                A[y % N][x % M] = B[(y + d * j * w) % N][(x + u * w) % M];
+            }
+        }
+    }
+}
+
+int main(int argc, char **argv) {
+    int x = 0, y = 0, n[256] = {0}, a, b, c;
+    
+    // Parse command line argument for N
+    if (--argc && sscanf(*++argv, "%ld", &N)) {
+        --argc;
+        argv++;
+    }
+    
+    // Calculate T from first command line argument string
+    if (argc) {
+        char *s = *argv++;
+        while (*s) {
+            T = (T * W + *s++) % X;
+        }
+    }
+    
+    // Read characters from input and count occurrences
+    while ((c = getchar()) >= 0) {
+        n[c]++;
+        c == 10 ? (y++, x = 0) : (A[y][x++] = c);
+    }
+    
+    M = 2 * N;
+    fill_space(0);
+    
+    // Calculate S based on character counts
+    for (int i = ASCII_START; i < ASCII_END; i++) {
+        S = (3331 * S + n[i]) % W;
+    }
+    
+    // Main transformation loop
+    for (int i = c = 0; i < 128; i++) {
+        x = -(6 >> i / 32) % 2 * 2 + 1;
+        perform_transformation((96 + i * x + ~-x / 2) % 32, x);
+        for (int j = a = 0; i % 64 == 31 && j < N * M; b = A[j / M][j % M] & 95, c += x * (a | !b && (j % M)), a = b, j++);
+    }
+    
+    // Animation loop
+    for (x = 0; x <= 32; x++) {
+        int j = MAX_SIZE;
+        while (j--) {
+            char *s = A[j];
+            while (*s) s++;
+            while (*--s == 32) *s = 0;
+        }
+        for (j = x / 32, a = ~-MAX_SIZE; ~j; j--) {
+            for (; a && !*A[a];) a--;
+            fprintf(stderr, x ? "%s" : "%s\033[2J", "\033[H");
+            for (int i = 0; j ? i <= a : i < y || i < N; i++) {
+                !j ? !fprintf(stderr, "%s\033[K\n", A[i]) : puts(A[i]);
+            }
+        }
+        fill_space(0);
+        if (x - 32) {
+            c < 0 ? perform_transformation(31 - x, -1) : perform_transformation(x, 1);
+        }
+        usleep(W << 1);
+    }
+}
+```

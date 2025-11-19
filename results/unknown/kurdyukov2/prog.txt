@@ -1,0 +1,229 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "jpeglib.h"
+
+#ifdef _WIN32
+#include <fcntl.h>
+#define main X(); void run_program(); int main() { \
+    int i; \
+    for (i = 0; i < 2; i++) _setmode(i, _O_BINARY); \
+    run_program(); \
+} \
+void run_program
+#endif
+
+// JPEG function shortcuts
+#define JPEG_FUNCTION(x) jpeg_##x
+
+// Loop shortcut
+#define LOOP(variable, count) for(variable = 0; variable < count; variable++)
+
+// Declare JPEG compression and decompression functions
+#define COMPRESS_AND_DECOMPRESS(x) \
+    JPEG_FUNCTION(x##_compress(&compress_struct)) \
+    JPEG_FUNCTION(x##_decompress(&decompress_struct))
+
+// Forward declarations for helper functions
+void process_block(int component, int* quant_table, int quant_table_size, float quant_scale, int* coefficients, int* temp_buffer);
+void transform_coefficients(int* buffer, int stride, float quant_scale, float* transform_matrix);
+void handle_quantization(int* coefficients, int* temp_buffer, int* quant_table, int quant_table_size, float quant_scale);
+
+int main() {
+    // JPEG structures
+    struct jpeg_compress_struct compress_struct;
+    struct jpeg_error_mgr error_mgr;
+    struct jpeg_decompress_struct decompress_struct;
+    JQUANT_TBL *quantization_table;
+
+    // JPEG variables
+    void *virtual_arrays, **output_arrays;
+    int i, j, component_index, quant_table_index;
+    int width, height, width_in_blocks, height_in_blocks, stride, quant_table_size;
+    float quant_scale, total_error, total_energy;
+    
+    // Allocate buffers
+    JSAMPLE *image_buffer, *processed_buffer;
+    int coefficients[64], temp_buffer[64];
+    float transform_matrix[64][64];
+
+    // Initialize JPEG error handling
+    compress_struct.err = decompress_struct.err = jpeg_std_error(&error_mgr);
+    
+    // Initialize JPEG compression and decompression
+    COMPRESS_AND_DECOMPRESS(create);
+    JPEG_FUNCTION(stdio_dest(&compress_struct, stdout));
+    JPEG_FUNCTION(stdio_src(&decompress_struct, stdin));
+    JPEG_FUNCTION(read_header(&decompress_struct, TRUE));
+    
+    // Read coefficients
+    output_arrays = virtual_arrays = JPEG_FUNCTION(read_coefficients(&decompress_struct));
+    
+    // Precompute and normalize transform matrix
+    LOOP(i, 64) {
+        LOOP(quant_table_index, 64) {
+            coefficients[quant_table_index] = (quant_table_index - i) ? 0 : quant_scale;
+        }
+        transform_coefficients(coefficients, 8, quant_scale, (float *)transform_matrix[i]);
+    }
+    
+    // Process each component
+    LOOP(component_index, decompress_struct.num_components) {
+        if ((quantization_table = decompress_struct.comp_info[component_index].quant_table)) {
+            width = decompress_struct.comp_info[component_index].width_in_blocks * 8;
+            height = decompress_struct.comp_info[component_index].height_in_blocks * 8;
+            stride = width * 8 + 2;
+            quant_table_size = 64;
+            
+            // Allocate and process image buffer
+            if ((image_buffer = malloc((height + 2) * stride * sizeof(*image_buffer)))) {
+                // Process the image in 3 passes
+                LOOP(quant_table_index, 3) {
+                    for (int y = 0; y < height / 8; y++) {
+                        JBLOCK *barray = *(*decompress_struct.mem->access_virt_barray)(&decompress_struct, output_arrays[component_index], y, 1, TRUE);
+                        LOOP(i, 64) {
+                            if (!quant_table_index) coefficients[i] *= quantization_table->quantval[i];
+                        }
+                        process_block(component_index, quantization_table->quantval, quant_table_size, quant_scale, coefficients, temp_buffer);
+                    }
+                }
+
+                // Post-process image buffer
+                LOOP(i, stride) {
+                    image_buffer[i] = image_buffer[stride];
+                    image_buffer[height * stride + stride] = image_buffer[height * stride];
+                }
+                image_buffer++;
+                LOOP(y, height) {
+                    image_buffer[0] = image_buffer[1];
+                    image_buffer[width + 1] = image_buffer[width];
+                    image_buffer += stride;
+                }
+                image_buffer -= stride * y + stride;
+            }
+            free(image_buffer);
+        }
+    }
+    
+    // Clean up quantization tables
+    LOOP(quant_table_index, NUM_QUANT_TBLS) {
+        if ((quantization_table = decompress_struct.quant_tbl_ptrs[quant_table_index])) {
+            LOOP(i, 64) {
+                quantization_table->quantval[i] = 1;
+            }
+        }
+    }
+
+    // Write coefficients and finish processing
+    JPEG_FUNCTION(copy_critical_parameters(&decompress_struct, &compress_struct));
+    JPEG_FUNCTION(write_coefficients(&compress_struct, output_arrays));
+    COMPRESS_AND_DECOMPRESS(finish);
+    COMPRESS_AND_DECOMPRESS(destroy);
+
+    return 0;
+}
+
+void process_block(int component, int* quant_table, int quant_table_size, float quant_scale, int* coefficients, int* temp_buffer) {
+    int i, j, k, stride, quant_table_value;
+    float total_error, total_energy, q, p, t, u, l, a, b, r, g, x, y, z;
+    float *transform_matrix;
+
+    // Process each block
+    for (y = 0; y < height / 8; y++) {
+        JBLOCK *block = *(*decompress_struct.mem->access_virt_barray)(&decompress_struct, output_arrays[component], y, 1, TRUE);
+        LOOP(x, width / 8) {
+            JCOEF *coefficients = block[x];
+            UINT16 *quant_vals = quantization_table->quantval;
+            stride = (y * stride + x) * 8 + stride + 1;
+
+            // Initialize calculation variables
+            total_error = total_energy = 0;
+            LOOP(i, 64) {
+                if (!quant_table_index) coefficients[i] *= quant_vals[i];
+            }
+            
+            // Transform coefficients
+            transform_coefficients(coefficients, 8, quant_scale, transform_matrix);
+            
+            // Handle quantization adjustments
+            handle_quantization(coefficients, temp_buffer, quant_vals, quant_table_size, quant_scale);
+        }
+    }
+}
+
+void transform_coefficients(int* buffer, int stride, float quant_scale, float* transform_matrix) {
+    int i, j, d, e, h, p, q, t, u, v;
+    float f, total_error, total_energy, a, b, r, g, x, y, z;
+
+    // Transform coefficients using the provided transform matrix
+    LOOP(i, 8) {
+        d = t * buffer[2 * stride];
+        d += a * buffer[6 * stride];
+        d *= 4433;
+        h = g * buffer[0 * stride] << 13;
+        e = h += p * buffer[4 * stride] << 13;
+        u = g -= p;
+        u += a = d - a * 15137;
+        g -= a;
+        e += d += t * 6270;
+        h -= d;
+        p = a * buffer[7 * stride];
+        t = b * buffer[5 * stride];
+        p += v * buffer[3 * stride];
+        t += d * buffer[1 * stride];
+        q = (a + d) * 7373;
+        f = (p + t) * 9633;
+        p = p * 16069 - f;
+        f -= t * 3196;
+        t = (b + v) * 20995;
+        a = q + p - a * 2446;
+        p += t - v * 25172;
+        t -= f + b * 16819;
+        q -= f + d * 12299;
+
+        // Adjust buffer with transformed coefficients
+        buffer[i * stride + 0] = (f - e);
+        buffer[i * stride + 7] = (e + f);
+        buffer[i * stride + 1] = (u - p);
+        buffer[i * stride + 6] = (u + p);
+        buffer[i * stride + 2] = (g - t);
+        buffer[i * stride + 5] = (g + t);
+        buffer[i * stride + 3] = (h - a);
+        buffer[i * stride + 4] = (h + a);
+    }
+}
+
+void handle_quantization(int* coefficients, int* temp_buffer, int* quant_table, int quant_table_size, float quant_scale) {
+    int f, k, i, q, p, t, u, l, a, b, r, g, x, y, z;
+    float total_error, total_energy;
+
+    // Adjust coefficients based on quantization table and scale
+    for (f = k = 71; (i = k < 8 ? k * 8 - 8 : k % 8 - 7 ? k - 7 : k / 8 + 55);) {
+        r = quant_table[i];
+        if (f) {
+            u = (b = coefficients[i]) * quant_scale;
+        } else {
+            if (f && k - i - 7) transform_coefficients(temp_buffer, 8, quant_scale, transform_matrix);
+            u = l = 0;
+            if (i & 7) {
+                transform_coefficients(temp_buffer, 8, quant_scale, transform_matrix);
+            }
+            if (i > 8) {
+                transform_coefficients(temp_buffer, 8, quant_scale, transform_matrix);
+            }
+
+            u /= l;
+            u += b = coefficients[i];
+        }
+        z = u + (u > 0) - 0.5f;
+        g = (b + (b < 0 ? -r : r) / 2) / r * r;
+        a = ((g < 1) - r) / 2 + g;
+        r -= g ? 1 - a : r + a;
+        f |= b ^= coefficients[k = i] = a = z > r ? r : z < a ? a : z;
+        total_error += a * g;
+        total_energy += g * g;
+    }
+}
+```

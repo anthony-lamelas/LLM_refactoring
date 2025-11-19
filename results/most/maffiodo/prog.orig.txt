@@ -1,0 +1,525 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Structure definition
+typedef struct node *node_ptr;
+struct node {
+    union {
+        char *str_val;
+        double num_val;
+    };
+    char *name;
+    char type, flag, extra_flag;
+    node_ptr next, prev, branch, sub_branch, (*func)();
+    int int_val;
+};
+
+// Global variables and function prototypes
+node_ptr head, tail;
+int current_index, (*strlen_func)() = strlen, (*strcmp_func)() = strcmp;
+char *buffer, *current_ptr, current_char, processing_flag = 0, temp_str[99], *(*strdup_func)() = strdup;
+node_ptr create_node(int mode);
+node_ptr find_node(node_ptr start);
+node_ptr create_sub_node(node_ptr *start);
+void skip_whitespace();
+void skip_line();
+int find_char(char *chars);
+int is_logical_end();
+int match_string(char *str);
+int match_keyword(char *keyword);
+void parse_block();
+double convert_to_double(node_ptr node);
+node_ptr duplicate_node(node_ptr node);
+node_ptr process_expression(int precedence);
+int is_alphanumeric();
+void parse_identifier();
+node_ptr parse_expression(int precedence);
+void free_nodes(node_ptr node, node_ptr limit, int free_limit);
+void reset_nodes(node_ptr limit);
+node_ptr process_block(int depth);
+node_ptr print_node(node_ptr node);
+void main_loop();
+node_ptr execute_function(node_ptr node);
+
+// Function to create a new node with a specific mode
+node_ptr create_node(int mode) {
+    node_ptr new_node = calloc(1, sizeof(struct node));
+    new_node->prev = tail;
+    new_node->type = mode;
+    return tail = new_node;
+}
+
+// Function to find a node starting from a given node
+node_ptr find_node(node_ptr start) {
+    while (start) {
+        if (!strcmp_func(temp_str, start->name)) {
+            return start;
+        }
+        start = start->prev;
+    }
+    return NULL;
+}
+
+// Function to create a sub-node
+node_ptr create_sub_node(node_ptr *start) {
+    node_ptr new_node = create_node(4);
+    new_node->name = strdup_func(temp_str);
+    new_node->prev = *start;
+    new_node->next = create_node(0);
+    return *start = new_node;
+}
+
+// Function to skip whitespace and comments
+void skip_whitespace() {
+    int is_comment;
+    while ((is_comment = *current_ptr == '/' && current_ptr[1] == '/') || isspace(*current_ptr)) {
+        if (is_comment) {
+            while (*current_ptr && *current_ptr != '\n') {
+                current_ptr++;
+            }
+        } else {
+            current_ptr++;
+        }
+    }
+}
+
+// Function to skip a line
+void skip_line() {
+    skip_whitespace();
+    if (*current_ptr) {
+        current_ptr++;
+    }
+}
+
+// Function to find a character in a string
+int find_char(char *chars) {
+    char *pos = strchr(chars, *current_ptr);
+    return pos ? pos - chars : -1;
+}
+
+// Function to check if the current character is a logical end
+int is_logical_end() {
+    return find_char(";)]") != -1;
+}
+
+// Function to match a string with the current buffer
+int match_string(char *str) {
+    int len = strlen_func(str);
+    if (!strncmp(str, current_ptr, len) && !isalnum(current_ptr[len])) {
+        current_ptr += len;
+        return 1;
+    }
+    return 0;
+}
+
+// Function to parse a block of code
+void parse_block() {
+    int depth = 1;
+    while (*current_ptr && depth) {
+        current_char = *++current_ptr;
+        depth += current_char == '{' ? 1 : current_char == '}' ? -1 : 0;
+    }
+}
+
+// Function to convert a node to a double
+double convert_to_double(node_ptr node) {
+    char *end_ptr;
+    return node->type & 1 ? node->num_val : node->type & 2 ? strtod(node->str_val, &end_ptr) : 0;
+}
+
+// Function to duplicate a node
+node_ptr duplicate_node(node_ptr node) {
+    node_ptr new_node = create_node(2);
+    char *str = "[object]";
+    char mode = node->type;
+    if (mode & 1) {
+        sprintf(temp_str, "%g", node->num_val);
+        str = temp_str;
+    }
+    if (mode & 2) {
+        str = node->str_val;
+    }
+    new_node->str_val = strdup_func(str);
+    return new_node;
+}
+
+// Function to process an expression with a given precedence
+node_ptr process_expression(int precedence) {
+    int initial_index = 0, secondary_index, op_index, precedence_value, result;
+    double left_value, right_value;
+    char *identifier, op_char;
+    node_ptr left_node, right_node, current_node = create_node(0), temp_node;
+    skip_whitespace();
+    if (is_logical_end()) {
+        return current_node;
+    }
+    initial_index = find_char("-+!~");
+    if (initial_index > -1) {
+        current_ptr++;
+    }
+    current_char = *current_ptr;
+    if (current_char == '(') {
+        current_ptr++;
+        current_node = parse_expression(0);
+        skip_line();
+    } else if (current_char == '[' || current_char == '{') {
+        current_node->type = 4;
+        current_ptr++;
+        skip_line();
+    } else if (current_char == '"' || current_char == '\'') {
+        identifier = temp_str;
+        current_ptr++;
+        current_node->type = 2;
+        while (*current_ptr != current_char) {
+            char ch = *current_ptr++;
+            if (ch == '\\') {
+                ch = *current_ptr++;
+                ch = ch == 'n' ? '\n' : ch == 'x' ? strtol(current_ptr, &current_ptr, 16) : ch;
+            }
+            *identifier++ = ch;
+        }
+        *identifier = 0;
+        current_ptr++;
+        current_node->str_val = strdup_func(temp_str);
+    } else if (isdigit(*current_ptr)) {
+        current_node->type = 1;
+        current_node->num_val = strtod(current_ptr, &current_ptr);
+    } else if (is_alphanumeric()) {
+        int is_function = 0;
+        temp_str[0] = '\0';
+        parse_identifier();
+        if (match_keyword("function")) {
+            skip_line();
+            skip_line();
+            skip_line();
+            identifier = current_ptr - 1;
+            current_node = create_node(2);
+            parse_block();
+            current_node->str_val = strndup(identifier, current_ptr - identifier);
+        } else {
+            if (match_keyword("var")) {
+                current_ptr++;
+                is_function = 1;
+                goto parse_identifier_block;
+            }
+            temp_node = find_node(head);
+            if (is_function || !temp_node) {
+                temp_node = create_sub_node(&head);
+            }
+            current_node = temp_node->next;
+            current_node->branch = temp_node;
+        }
+    }
+    if (initial_index > -1) {
+        left_value = convert_to_double(current_node);
+        temp_node = left_value;
+        if (secondary_index == 0) {
+            initial_index == 43 ? left_value = -left_value : initial_index == 33 ? left_value = !temp_node : left_value = ~temp_node;
+        }
+        current_node = create_node(1);
+        current_node->num_val = left_value;
+    }
+    while (*current_ptr) {
+        skip_whitespace();
+        if (is_logical_end()) break;
+        op_index = find_char(",=!&|><-+*/%[(.");
+        if (op_index > -1) {
+            op_char = *current_ptr;
+            if (op_index < precedence) {
+                break;
+            }
+            int op_flag = 0, op_flag2 = 0, op_precedence = 0;
+            current_ptr++;
+            if (*current_ptr == '=') {
+                op_flag = 2;
+                current_ptr++;
+            } else if (*current_ptr == op_char) {
+                op_precedence = 1;
+                current_ptr++;
+            }
+            right_node = NULL;
+            temp_node = create_node(1);
+            left_value = convert_to_double(current_node);
+            double *result_ptr = &temp_node->num_val;
+            char current_mode = current_node->type;
+            temp_node = current_node;
+            if (op_index < 13) {
+                right_node = parse_expression(op_index == 12 ? 0 : op_index);
+                right_value = convert_to_double(right_node);
+                precedence_value = right_value;
+            }
+            if (secondary_index == 0) {
+                if (op_flag) {
+                    if (current_mode == right_node->type) {
+                        if (current_mode & 4) precedence_value = current_node != right_node;
+                        else if (current_mode & 1) goto op_mismatch;
+                        else goto op_string_compare;
+                    } else if ((current_mode | right_node->type) == 2) {
+                    op_string_compare:
+                        precedence_value = strcmp_func(duplicate_node(current_node)->str_val, duplicate_node(right_node)->str_val);
+                    } else {
+                    op_mismatch:
+                        precedence_value = left_value - right_value;
+                    }
+                    op_index = op_flag2;
+                    if (secondary_index == 0) {
+                        if (precedence_value == 0) current_node = right_node;
+                        else if (precedence_value >= 0) current_node = right_node;
+                        else if (precedence_value <= 0) current_node = right_node;
+                        else if (precedence_value > 0) current_node = right_node;
+                        else if (precedence_value < 0) current_node = right_node;
+                        else if (precedence_value != 0) current_node = right_node;
+                    }
+                    *result_ptr = precedence_value;
+                    op_flag = 0;
+                } else {
+                    op_flag = 1;
+                    if (right_node->type & 4) {
+                        temp_node = right_node;
+                    } else {
+                        temp_node = create_node(right_node->type);
+                        temp_node->func = right_node->func;
+                        if (right_node->type & 2) temp_node->str_val = strdup_func(right_node->str_val);
+                        else temp_node->num_val = right_node->num_val;
+                    }
+                }
+                if (secondary_index == 0) {
+                    *result_ptr = op_precedence ? left_value && precedence_value : left_value & precedence_value;
+                } else {
+                    op_flag2 = 5;
+                    goto op_loop;
+                }
+            op_loop:
+                if (*result_ptr == precedence_value ? left_value || precedence_value : left_value | precedence_value) {
+                    if (op_precedence) {
+                        *result_ptr = left_value >> precedence_value;
+                    } else {
+                        op_flag2 = 3 - op_flag;
+                        goto op_loop;
+                    }
+                } else {
+                    if (op_precedence) {
+                        *result_ptr = left_value << precedence_value;
+                    } else {
+                        op_flag2 = 4 - op_flag;
+                        goto op_loop;
+                    }
+                }
+                if (*result_ptr == left_value - right_value) {
+                    if ((current_mode | right_node->type) & 2) {
+                        node_ptr left_dup = duplicate_node(current_node);
+                        right_node = duplicate_node(right_node);
+                        identifier = malloc(strlen_func(left_dup->str_val) + strlen_func(right_node->str_val) + 1);
+                        sprintf(identifier, "%s%s", left_dup->str_val, right_node->str_val);
+                        temp_node->type = 2;
+                        temp_node->str_val = identifier;
+                    } else {
+                        *result_ptr = left_value + right_value;
+                    }
+                }
+                if (*result_ptr == left_value * right_value) {
+                    *result_ptr = left_value / right_value;
+                }
+                if (*result_ptr == temp_node->num_val % precedence_value) {
+                    skip_line();
+                    if (current_mode & 2) {
+                        sprintf(temp_str, "%c", precedence_value < strlen_func(current_node->str_val) ? current_node->str_val[precedence_value] : 0);
+                        temp_node->type = 2;
+                        temp_node->str_val = strdup_func(temp_str);
+                    } else {
+                        sprintf(temp_str, "%s", duplicate_node(right_node)->str_val);
+                        goto op_end;
+                    }
+                }
+                op_end:
+                sprintf(temp_str, "arguments");
+                node_ptr buffer_node = head, user_node = create_sub_node(&head)->next;
+                op_index = 0;
+                while (*current_ptr) {
+                    skip_whitespace();
+                    right_node = parse_expression(1);
+                    if (!processing_flag) {
+                        sprintf(temp_str, "%d", op_index++);
+                        create_sub_node(&user_node->prev)->next = right_node;
+                        user_node->int_val++;
+                    }
+                    if (*current_ptr == ')') break;
+                    current_ptr++;
+                }
+                current_ptr++;
+                op_index = processing_flag;
+                if (current_node->func) {
+                    if (!processing_flag) temp_node = current_node->func(user_node->prev);
+                } else {
+                    identifier = current_ptr;
+                    current_ptr = current_node->str_val;
+                    temp_node = execute_function(0);
+                    current_ptr = identifier;
+                }
+                if (!op_index) processing_flag = op_index & ~1;
+                tail = buffer_node;
+                op_index = 0;
+                parse_identifier();
+                if (match_keyword("length")) {
+                    *result_ptr = current_node->type & 2 ? strlen_func(current_node->str_val) : current_node->int_val;
+                } else {
+                    op_end_loop:
+                    right_node = find_node(current_node->prev);
+                    if (!right_node) {
+                        right_node = create_sub_node(&current_node->prev);
+                        current_node->int_val++;
+                    }
+                    temp_node = right_node->next;
+                    if (!temp_node->branch) temp_node->branch = right_node;
+                }
+                if (op_flag) {
+                    if (!processing_flag) {
+                        temp_node->branch = current_node->next = temp_node;
+                    } else continue;
+                }
+                current_node = temp_node;
+            } else {
+                current_ptr++;
+            }
+        } else break;
+    }
+    return current_node;
+}
+
+// Function to check if the current character is alphanumeric
+int is_alphanumeric() {
+    return *current_ptr == '_' || isalnum(*current_ptr);
+}
+
+// Function to parse an identifier
+void parse_identifier() {
+    char *d = temp_str;
+    while (is_alphanumeric()) {
+        *d++ = *current_ptr++;
+    }
+    *d = 0;
+}
+
+// Function to parse an expression with a given precedence
+node_ptr parse_expression(int precedence) {
+    return process_expression(precedence);
+}
+
+// Function to free nodes within a specified range
+void free_nodes(node_ptr node, node_ptr limit, int free_limit) {
+    if (node && node != limit) {
+        node_ptr temp = node->prev;
+        node_ptr next_node = node->next;
+        if (temp) {
+            if (temp->prev != node) free_nodes(temp, 0, 0);
+            free_nodes(temp->sub_branch, 0, 1);
+        }
+        free_nodes(node->prev, 0, 1);
+        if (free_limit) free_nodes(node, limit, 1);
+    }
+}
+
+// Function to reset nodes
+void reset_nodes(node_ptr limit) {
+    current_index = 1;
+    free_nodes(tail, limit, 1);
+    current_index = 0;
+    free_nodes(head, 0, 1);
+    node_ptr *prev_limit = &tail;
+    node_ptr current_node = tail;
+    while (current_node) {
+        node_ptr *prev_branch = &current_node->prev;
+        if (current_node->flag && !current_node->extra_flag) {
+            *prev_limit = *prev_branch;
+            if (current_node->type & 2) free(current_node->str_val);
+            if (current_node->name) free(current_node->name);
+            free(current_node);
+        } else {
+            current_node->flag = 0;
+            prev_limit = prev_branch;
+        }
+        current_node = *prev_branch;
+    }
+}
+
+// Function to process a block of code with a given depth
+node_ptr process_block(int depth) {
+    node_ptr current_node = create_node(0), temp_node, branch_node = head, sub_node = tail;
+    while (*current_ptr) {
+        skip_whitespace();
+        if (*current_ptr == '{') {
+            current_ptr++;
+            if (!processing_flag) current_node = process_block(1);
+            else parse_block();
+        } else {
+            int has_branch = 0, temp_flag;
+            if (*current_ptr == '}') {
+                current_ptr++;
+                break;
+            } else if (*current_ptr) {
+                current_ptr++;
+                char *backup_ptr;
+                int was_processing;
+                backup_ptr = current_ptr;
+                was_processing = processing_flag;
+                skip_line();
+                temp_node = parse_expression(0);
+                skip_line();
+                if (!(int)temp_node->num_val) processing_flag = 4;
+                temp_flag = processing_flag;
+                branch_node = process_block(0);
+                if (*current_ptr == ';') current_ptr++;
+                if (!temp_flag) {
+                    current_node = branch_node;
+                }
+                skip_whitespace();
+                if (has_branch) {
+                    if (!processing_flag && !temp_flag) {
+                        current_node = branch_node;
+                        current_ptr = backup_ptr;
+                        goto process_else;
+                    } else {
+                    }
+                process_else:
+                    processing_flag = !temp_flag && !has_branch ? 4 : processing_flag;
+                    temp_flag = processing_flag;
+                    branch_node = process_block(0);
+                    if (!temp_flag) {
+                        current_node = branch_node;
+                    }
+                }
+                processing_flag = has_branch ? has_branch & ~2 : has_branch | (processing_flag & 3);
+            process_loop:
+                op_index = 1;
+                goto process_loop;
+            process_return:
+                branch_node = parse_expression(0);
+                if (!processing_flag) {
+                    current_node = branch_node;
+                    processing_flag |= 1;
+                }
+            process_break:
+                if (!processing_flag) processing_flag |= 2;
+            process_continue:
+                if (*current_ptr) {
+                    branch_node = parse_expression(0);
+                    if (!processing_flag) current_node = branch_node;
+                    skip_line();
+                }
+                if (!depth) break;
+            }
+        }
+        current_index = 1;
+        current_index = 0;
+        head = branch_node;
+        return current_node;
+    }
+    return NULL;
+}
+
+// Function to print a node
+node_ptr

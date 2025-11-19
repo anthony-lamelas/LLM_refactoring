@@ -1,0 +1,219 @@
+```c
+#include <stdio.h>
+
+#define MAX_ELEMENTS 1000
+
+typedef long int long_int;
+
+typedef struct {
+    int is_operator;
+    long_int value;
+} element;
+
+element stack[MAX_ELEMENTS];
+
+long_int calculate_hash(char *str);
+void process_input(char **input);
+element create_element(long_int value, int is_operator);
+void evaluate_expression(void);
+
+// Main function to process input and evaluate expression
+int main(int argc, char **argv) {
+    // Process each input string
+    if (argc > 1) {
+        process_input(argv + 1);
+    }
+    evaluate_expression();
+    printf("%ld\n", stack[0].value);
+    return 0;
+}
+
+// Calculate a hash based on the input string
+long_int calculate_hash(char *str) {
+    long_int hash = 1;
+    long_int length = 0;
+    while (*str) {
+        hash >>= 1;
+        hash ^= *str++;
+        length++;
+    }
+    return (hash & 15) | ((length ^ *str) << 4 & 240);
+}
+
+// Create an element with a specified value and operator flag
+element create_element(long_int value, int is_operator) {
+    element el;
+    el.is_operator = is_operator;
+    el.value = value;
+    return el;
+}
+
+// Process input strings and evaluate based on hash values
+void process_input(char **input) {
+    long_int m = 0, n = 0, o = 1;
+    int index = 0, stack_index = MAX_ELEMENTS;
+    
+    while (*input) {
+        char *current = *input++;
+        long_int hash = calculate_hash(current);
+        
+        switch (hash) {
+            case 16:
+                stack[index++] = create_element(m, 1);
+                m = n = 0;
+                o = 1;
+                break;
+            case 90:
+                n += MAX_ELEMENTS * MAX_ELEMENTS * MAX_ELEMENTS;
+                break;
+            case 106:
+                n += 7;
+                break;
+            case 52:
+                n += 40;
+                break;
+            case 223:
+                n += 18;
+                break;
+            case 31:
+                n += 15;
+                break;
+            case 165:
+                n += 9;
+                break;
+            case 121:
+                n += 2;
+                break;
+            case 40:
+                n += 5;
+                break;
+            case 113:
+                n += 10;
+                break;
+            case 56:
+                n += 11;
+                break;
+            case 111:
+                n += 19;
+                break;
+            case 45:
+                n += 12;
+                break;
+            case 238:
+                n += 14;
+                break;
+            case 0:
+                n += 6;
+                break;
+            case 47:
+                n += 4;
+                break;
+            case 206:
+                n += 13;
+                break;
+            case 49:
+                n += 50;
+                break;
+            case 55:
+                stack[index++] = create_element(m, 1);
+                m = n = 0;
+                o = 1;
+                break;
+            case 130:
+                n += 90;
+                break;
+            case 175:
+                n += 17;
+                break;
+            case 2:
+                n += 8;
+                break;
+            case 17:
+                n += 3;
+                break;
+            case 103:
+                n += 60;
+                break;
+            case 202:
+                n += MAX_ELEMENTS * MAX_ELEMENTS * MAX_ELEMENTS * MAX_ELEMENTS;
+                break;
+            case 192:
+                n += MAX_ELEMENTS;
+                break;
+            case 65:
+                n += 70;
+                break;
+            case 137:
+                stack[index++] = create_element(m, 1);
+                m = n = 0;
+                o = 1;
+                break;
+            case 110:
+                o = -1;
+                break;
+            case 39:
+                n += 30;
+                break;
+            case 201:
+                n += 1;
+                break;
+            case 242:
+                n *= 99;
+                break;
+            case 78:
+                n += 16;
+                break;
+            case 170:
+                n += MAX_ELEMENTS * MAX_ELEMENTS;
+                break;
+            case 76:
+                stack[index++] = create_element(m, 1);
+                m = n = 0;
+                o = 1;
+                break;
+            case 232:
+                stack[index++] = create_element(m, 1);
+                m = n = 0;
+                o = 1;
+                break;
+            case 48:
+                n += 80;
+                break;
+            case 32:
+                n += 20;
+                break;
+            default:
+                break;
+        }
+    }
+    stack[index++] = create_element(m, 1);
+}
+
+// Evaluate the expression stored in the stack
+void evaluate_expression(void) {
+    int i = 0, j = 0;
+    long_int n, o, m;
+
+    while (i < MAX_ELEMENTS) {
+        if (stack[i].is_operator) {
+            stack[j++] = stack[i++];
+        } else {
+            n = stack[i++].value;
+            o = stack[i++].value;
+            m = stack[i++].value;
+
+            if (m == 1) {
+                stack[j++] = create_element(n + o, 1);
+            } else if (m == 2) {
+                stack[j++] = create_element(o - n, 1);
+            } else if (m == 5) {
+                stack[j++] = create_element(n * o, 1);
+            } else if (m == 6) {
+                stack[j++] = create_element(o / n, 1);
+            } else {
+                stack[j++] = create_element(o % n, 1);
+            }
+        }
+    }
+}
+```

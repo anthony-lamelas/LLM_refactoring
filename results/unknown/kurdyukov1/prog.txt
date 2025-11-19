@@ -1,0 +1,43 @@
+```c
+// Refactored code with clear comments
+#include <time.h>
+#include <stdio.h>
+
+// Define constants for the calculation
+#define TIME_OFFSET 592531
+#define TIME_FACTOR 2551443
+#define WIDTH 44
+
+// Declare global variables
+int time_factor, width, x, y, z;
+
+// Function to perform the main calculations and display output
+void render_pattern() {
+    // Check if time_factor is not initialized
+    if (!time_factor) {
+        // Initialize variables on the first run
+        time_factor = TIME_FACTOR;
+        x = -WIDTH;
+        y = 2 - WIDTH;
+        z = ((time(0) - TIME_OFFSET) % time_factor << 9) / time_factor;
+    } else {
+        // Determine character to display
+        putchar(
+            ++x >= time_factor ? x = -WIDTH, y += 4, '\n' :
+            x < 0 ? x = x * x + y * y < WIDTH * WIDTH ? time_factor = 1 - x, -1 : x + 1, ' ' :
+            "#."[(x < time_factor * (~z & 255) >> 8) ^ z >> 8]
+        );
+        
+        // Recursively call the main function if the condition is met
+        if (y <= WIDTH) {
+            render_pattern();
+        }
+    }
+}
+
+// Entry point of the program
+int main() {
+    render_pattern();
+    return 0;
+}
+```

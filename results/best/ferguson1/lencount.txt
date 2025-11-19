@@ -1,0 +1,120 @@
+```c
+// Refactored code with clear comments
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <errno.h>
+
+#define BLOCKSIZE 1024 // Defining a constant for the block size
+
+static int test_mode = 0;
+
+// Function prototypes
+FILE *open_file(const char *filename);
+void process_strings(FILE *file, char **longest_string, size_t *longest_length, size_t *total_strings);
+void handle_long_string(size_t string_number, const char *string, int *exit_code);
+void print_longest_string(size_t total_strings, size_t longest_length, const char *longest_string);
+void handle_test_mode_failure(int exit_code, const char *program_name, const char *filename);
+
+int main(int argc, char **argv) {
+    const char *filename = "data.src";
+    FILE *file = NULL;
+    char *longest_string = NULL;
+    size_t longest_length = 0, total_strings = 0;
+    int exit_code = 0;
+    int option;
+
+    // Parse command-line options
+    while ((option = getopt(argc, argv, "i:t")) != -1) {
+        switch (option) {
+            case 'i':
+                filename = optarg;
+                break;
+            case 't':
+                test_mode = 1;
+                break;
+            case ':':
+            case '?':
+                exit(1);
+        }
+    }
+
+    // Open the file for reading
+    file = open_file(filename);
+
+    // Process strings from the file
+    process_strings(file, &longest_string, &longest_length, &total_strings);
+
+    // Print the longest string found
+    if (longest_string) {
+        print_longest_string(total_strings, longest_length, longest_string);
+        free(longest_string);
+    } else {
+        fprintf(stderr, "Error: no string found!\n");
+        exit(666);
+    }
+
+    // Handle test mode failure
+    if (test_mode && exit_code != 0) {
+        handle_test_mode_failure(exit_code, argv[0], filename);
+    }
+
+    return 0;
+}
+
+// Open a file and handle errors
+FILE *open_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Couldn't open data file %s: %s\n", filename, strerror(errno));
+        exit(1);
+    }
+    return file;
+}
+
+// Process strings from the file to find the longest one
+void process_strings(FILE *file, char **longest_string, size_t *longest_length, size_t *total_strings) {
+    char *buffer = NULL;
+    size_t buffer_length = 0;
+    int exit_code = 0;
+
+    while (getdelim(&buffer, &buffer_length, '\0', file) != -1) {
+        ++(*total_strings);
+        handle_long_string(*total_strings, buffer, &exit_code);
+
+        // Check if the current string is the longest
+        if (strlen(buffer) > *longest_length) {
+            *longest_length = strlen(buffer);
+            free(*longest_string);
+            *longest_string = strdup(buffer);
+        }
+    }
+    free(buffer);
+}
+
+// Handle cases where a string exceeds the block size
+void handle_long_string(size_t string_number, const char *string, int *exit_code) {
+    if (strlen(string) >= BLOCKSIZE) {
+        if (test_mode) {
+            *exit_code = 666;
+        } else {
+            printf("WARNING: string %zu is >= BLOCKSIZE length: %zu >= %d\n", string_number, strlen(string), BLOCKSIZE);
+        }
+    }
+}
+
+// Print the longest string found
+void print_longest_string(size_t total_strings, size_t longest_length, const char *longest_string) {
+    if (!test_mode) {
+        printf("Out of a total of %zu strings, the longest string is %zu characters long:\n%s\n\n", total_strings, longest_length, longest_string);
+    }
+}
+
+// Handle test mode failure
+void handle_test_mode_failure(int exit_code, const char *program_name, const char *filename) {
+    fprintf(stderr, "Failed test mode: run '%s -i %s' (without -t) to see problematic strings!\n", program_name, filename);
+    exit(exit_code);
+}
+```

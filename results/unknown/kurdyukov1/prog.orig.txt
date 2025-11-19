@@ -1,0 +1,41 @@
+```c
+// Refactored code with clear comments
+#include <time.h>
+#include <stdio.h>
+
+int main() {
+    static int is_initialized = 0;
+    static int cycle_length = 2551443;
+    static int offset = 44;
+    static int x = -44;
+    static int y = 2 - 44;
+    static int z;
+
+    // Initialization of z variable on the first call
+    if (!is_initialized) {
+        z = (((time(NULL) - 592531) % cycle_length) << 9) / cycle_length;
+        is_initialized = 1;
+    }
+
+    // Update x and check conditions
+    if (++x >= cycle_length) {
+        x = -offset;
+        y += 4;
+        putchar(10); // Print newline
+    } else {
+        if (x < 0) {
+            x = x * x + y * y < offset * offset ? cycle_length - 1 - x : x + 1;
+        }
+        // Determine character based on condition
+        int char_index = (x < cycle_length * (~z & 255) >> 8) ^ (z >> 8);
+        putchar("#." [char_index]); // Print '#' or '.'
+    }
+
+    // Continue main loop unless y exceeds offset
+    if (y <= offset) {
+        main();
+    }
+
+    return 0;
+}
+```

@@ -1,0 +1,138 @@
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Define a structure to hold dictionary entries
+struct DictionaryEntry {
+    char *source;
+    char *translation;
+    char *extra;
+    struct DictionaryEntry *next;
+};
+
+// Global variables
+struct DictionaryEntry *dictionary = NULL;
+char *bioh[26][2] = {
+    {"A", "WOL-LA-CHEE"},
+    {"B", "SHUSH"},
+    {"C", "BA-GOSHI"},
+    {"D", "CHINDI"},
+    {"E", "AH-JAH"},
+    {"F", "CHUO"},
+    {"G", "JEHA"},
+    {"H", "TSE-GAH"},
+    {"I", "YEH-HES"},
+    {"J", "AH-YA-TSINNE"},
+    {"K", "BA-AH-NE-DI-TININ"},
+    {"L", "NASH-DOIE-TSO"},
+    {"M", "BE-TAS-TNI"},
+    {"N", "TSAH"},
+    {"O", "A-KHA"},
+    {"P", "CLA-GI-AIH"},
+    {"Q", "CA-YEILTH"},
+    {"R", "DAH-NES-TSA"},
+    {"S", "KLESH"},
+    {"T", "D-AH"},
+    {"U", "NO-DA-IH"},
+    {"V", "A-KEH-DI-GLINI"},
+    {"W", "GLOE-IH"},
+    {"X", "AL-NA-AS-DZOH"},
+    {"Y", "TSAH-AS-ZIH"},
+    {"Z", "BESH-DO-TLIZ"},
+    {NULL, NULL}
+};
+
+// Helper function to reverse the alphabetic string
+char *reverse_alphabet(char *s) {
+    for (int i = 0; s[i]; ++i) {
+        s[i] = isupper(s[i]) ? ('Z' - (s[i] - 'A')) : s[i];
+    }
+    return s;
+}
+
+// Function to load the dictionary from a file
+void load_dictionary(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file != NULL) {
+        char *line = NULL;
+        size_t len = 0;
+        struct DictionaryEntry *entry;
+
+        while (getline(&line, &len, file) > 0) {
+            char *source = strtok(line, "\t");
+            char *translation = strtok(NULL, "\t");
+            char *extra = strtok(NULL, "\t");
+
+            if (source && translation) {
+                entry = calloc(1, sizeof(*entry));
+                entry->source = strdup(reverse_alphabet(source));
+                entry->translation = strdup(reverse_alphabet(translation));
+                entry->extra = extra ? strdup(reverse_alphabet(extra)) : "";
+                entry->next = dictionary;
+                dictionary = entry;
+            }
+        }
+
+        free(line);
+        fclose(file);
+    } else {
+        puts("couldn't open dict");
+    }
+}
+
+// Function to process a string and print its encoded form
+void encode_and_print(char *input) {
+    struct DictionaryEntry *entry = dictionary;
+
+    if (*input == '+') {
+        FILE *file = stdin;
+        if (file && (input = NULL) == NULL) {
+            size_t size = 0;
+            if (getdelim(&input, &size, EOF, file) < 0 || !input) {
+                goto DI;
+            }
+        }
+    }
+
+    for (; entry; entry = entry->next) {
+        if (!strcasecmp(entry->source, input)) {
+            for (size_t i = 0; entry->translation[i]; ++i) {
+                putchar(entry->translation[i]);
+            }
+            goto DI;
+        }
+    }
+
+    for (size_t i = 0; input[i]; ++i) {
+        if (!isalpha(input[i])) {
+            putchar(input[i]);
+        } else {
+            int is_lowercase = islower(input[i]);
+            for (int j = 0; bioh[j][0]; ++j) {
+                if (*bioh[j][0] == toupper(input[i])) {
+                    if (i > 0) printf(" ");
+                    for (size_t k = 0; bioh[j][1][k]; ++k) {
+                        putchar(is_lowercase ? tolower(bioh[j][1][k]) : toupper(bioh[j][1][k]));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+DI:
+    putchar(' ');
+    free(input);
+}
+
+// Main function
+int main(int argc, char **argv) {
+    load_dictionary("dict.txt");
+    for (int i = 1; i < argc; ++i) {
+        encode_and_print(argv[i]);
+    }
+    puts("");
+    return 0;
+}

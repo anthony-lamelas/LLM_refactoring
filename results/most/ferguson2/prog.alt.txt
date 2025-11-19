@@ -1,0 +1,159 @@
+```c
+// Refactored code with clear comments
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#ifndef DICT
+#define DICT "dict"
+#endif
+
+#define ALPHABET_COUNT 26
+
+struct node {
+    char *word;
+    char *code;
+    char *input;
+    char *temp;
+    char *buffer;
+    char *output;
+    char **arguments;
+    char *source;
+    char *name;
+    char *alternate;
+    char *(*functions[9])(struct node *);
+    char *temp_buffer;
+    struct node *next;
+    struct node *prev;
+    int index;
+} *first_node, *current_node;
+
+char *nato_alphabet[][2] = {
+    {"A", "WOL-LA-CHEE"}, {"B", "SHUSH"}, {"C", "MOASI"}, {"D", "CHINDI"}, {"E", "DZEH"},
+    {"F", "CHUO"}, {"G", "JEHA"}, {"H", "TSE-GAH"}, {"I", "YEH-HES"}, {"J", "AH-YA-TSINNE"},
+    {"K", "BA-AH-NE-DI-TININ"}, {"L", "NASH-DOIE-TSO"}, {"M", "BE-TAS-TNI"}, {"N", "TSAH"},
+    {"O", "A-KHA"}, {"P", "CLA-GI-AIH"}, {"Q", "CA-YEILTH"}, {"R", "DAH-NES-TSA"},
+    {"S", "KLESH"}, {"T", "D-AH"}, {"U", "NO-DA-IH"}, {"V", "A-KEH-DI-GLINI"},
+    {"W", "GLOE-IH"}, {"X", "AL-NA-AS-DZOH"}, {"Y", "TSAH-AS-ZIH"}, {"Z", "BESH-DO-TLIZ"}
+};
+
+int output_character, is_word_matching, char_index, word_index, line_index, line_size;
+size_t buffer_size, file_offset;
+FILE *file;
+size_t value;
+
+char *process_input(struct node *node);
+char *compare_strings(struct node *node);
+char *process_file(struct node *node);
+char *reverse_string(struct node *node);
+char *process_dictionary(struct node *node);
+char *read_file(struct node *node);
+
+char *process_input(struct node *node) {
+    struct node temp_node;
+    node->prev = first_node;
+    is_word_matching = 0;
+
+    for (current_node = first_node; current_node; current_node = current_node->next) {
+        if (current_node->functions[2](&(temp_node = (struct node){.word = current_node->word, .code = node->temp}))) {
+            while (!isalpha(*node->temp) && *(node->temp)) {
+                output_character = putchar(*node->temp);
+                ++node->temp;
+            }
+            while ((is_word_matching++)[current_node->code])
+                output_character = putchar(!is_word_matching && isupper(node->temp[0]) ? current_node->code[is_word_matching] : tolower(current_node->code[is_word_matching]));
+            goto end;
+        }
+    }
+
+    for (is_word_matching = 0, char_index = 0; node->temp[is_word_matching]; ++is_word_matching) {
+        if (!isalpha(node->temp[is_word_matching])) {
+            output_character = putchar(node->temp[is_word_matching]);
+        } else {
+            int is_lowercase = islower(node->temp[is_word_matching]);
+            for (word_index = 0; word_index < ALPHABET_COUNT && nato_alphabet[word_index][1]; ++word_index) {
+                if (*nato_alphabet[word_index][0] == toupper(node->temp[is_word_matching])) {
+                    for (line_index = 0; (line_size = nato_alphabet[word_index][1][line_index]); ++line_index)
+                        output_character = putchar(is_lowercase ? tolower(line_size) : toupper(line_size));
+                }
+            }
+        }
+    }
+
+end:
+    return node->input;
+}
+
+char *compare_strings(struct node *node) {
+    int is_equal = 0;
+    while (node->arguments[node->index++]) {
+        if (((*node->arguments[--node->index] == 'e' - ':') && (*node->functions)(&(struct node){.functions[0] = process_input, .input = ((node->index)[node->arguments]) + 1}) && ++node->index) ||
+            (node->functions[1](&(struct node){.functions[2] = reverse_string, .temp = ((node->index)[node->arguments])}), ++node->index, is_equal = 1));
+    }
+
+    if ((is_equal && file) || !is_equal) putchar(' ');
+    return "";
+}
+
+char *reverse_string(struct node *node) {
+    for (line_index = 1; node && node->input && line_index[node->input] && (node->input[line_index]) && (node->input[line_index] = isupper(node->input[line_index]) ? "ZYXWVUTSRQPONMLKJIHGFEDCBA"[(node->input[line_index] - ('k' - '*'))] : line_index[node->input]); ++line_index);
+    return node ? node->input : "";
+}
+
+char *process_dictionary(struct node *node) {
+    file = fopen(DICT, "r");
+    if (file) {
+        while (getline(&node->alternate, &buffer_size, file) != -1) {
+            if ((node->name = strtok(node->alternate, "\t")) && (node->source = strtok(0, "\t"))) {
+                current_node = calloc(1, sizeof *current_node);
+                current_node->word = strdup(node->functions[node->index](&(struct node){.input = node->source}));
+                current_node->code = strdup(node->functions[1](&(struct node){.input = node->name}));
+                current_node->next = first_node;
+                first_node = current_node;
+            }
+        }
+        free(node->alternate);
+        node->alternate = 0;
+        fclose(file);
+        file = 0;
+    } else {
+        puts("couldn't open dict");
+    }
+    return "";
+}
+
+char *read_file(struct node *node) {
+    file_offset = 0;
+    file = fopen(node->input, "r");
+    node->alternate = 0;
+    while (file && getline(&node->alternate, &file_offset, file) != -1) {
+        node->source = strtok(node->alternate, " \t");
+        while (node->source) {
+            if ((node->temp_buffer = strdup(node->source))) {
+                (*node->functions)(&(struct node){.functions[2] = reverse_string, .temp = node->temp_buffer});
+                node->source = strtok(0, " \t");
+                free(node->temp_buffer);
+                node->temp_buffer = 0;
+                if (!isspace(output_character)) putchar(' ');
+            }
+        }
+    }
+    if (file) {
+        clearerr(file);
+        fclose(file);
+        file = 0;
+        free(node->alternate);
+        node->alternate = 0;
+    }
+    return "";
+}
+
+int main(int argc, char **argv) {
+    process_dictionary(&(struct node){.index = 1, .input = argv[argc - 1], .functions = {&reverse_string, &reverse_string}});
+    compare_strings(&(struct node){.functions = {read_file, process_input}, .index = argc - 1, .arguments = argv});
+    puts("");
+
+    return 0;
+}
+```

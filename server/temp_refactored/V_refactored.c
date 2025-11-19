@@ -1,0 +1,14 @@
+// Refactored code with clear comments
+#include <stdio.h>
+
+// Example macro definition for V (assuming its functionality based on usage)
+#define V(x) printf("Value: %d\n", (x))
+
+// Main function to iterate through values and apply macro 'V'
+int main() {
+    // Loop through numbers 1 to 172 and apply the macro 'V' to each
+    for (int i = 1; i <= 172; i++) {
+        V(i);
+    }
+    return 0;
+}

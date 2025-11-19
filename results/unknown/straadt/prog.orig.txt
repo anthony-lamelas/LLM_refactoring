@@ -1,0 +1,239 @@
+```c
+// Refactored code with clear comments
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define ARRAY_SIZE 1 << 20
+#define BUFFER_SIZE 1 << 29
+
+// Global static variables
+static double frequency_coefficient = 1.5e-3;
+static int max_iterations = 17e3;
+static int index_offset, iteration, max_iterations_expanded;
+static double data_buffer[ARRAY_SIZE], *end_of_data, uniform[4], x_value;
+
+// Constant arrays
+static unsigned static_values[] = {0x0ce97522, 0xc02972e5, 0xeceddaca, 0xfeedfaad};
+static int modifier_values[] = {
+    -2, 0, 7, 0, 3, 10,
+    -5, 0, 0, 2, 3, 0, 2, 2,
+    -2, 0, 7, 12, 3, 7, 5, 10,
+    0, 3, -5, -2, 7, 3,
+    -2, 2, -5, -10, -2, 5
+};
+
+static char *string_constants[] = {
+    "XBWFgnu!",
+    "ebub", "SJGG",
+    "\njust a moment.."
+};
+
+// Utility functions
+static int shift_offset(int x) {
+    return index_offset / (max_iterations << x);
+}
+
+static double compute_dp(int a, int c) {
+    return (double)((index_offset + max_iterations * c) % (max_iterations << a)) / (max_iterations << a);
+}
+
+static void add_to_buffer(short w) {
+    *buffer_pointer++ = (char) w;
+    *buffer_pointer++ = w >> 3 >> 5;
+}
+
+static double compute_q(int a) {
+    return compute_dp(a, 0);
+}
+
+static void add_string_to_buffer(char *s) {
+    for (char *q = s; *q; ++q, ++buffer_pointer) {
+        *buffer_pointer = *q - 1;
+    }
+}
+
+static double compute_qb(int p) {
+    return index_offset % p < p >> 2 ? 1 : -1;
+}
+
+static double* get_data_pointer(int n) {
+    end_of_data += n;
+    return end_of_data - n;
+}
+
+static void add_large_to_buffer(int l) {
+    add_to_buffer((short) l);
+    add_to_buffer((short) (l >> 13 >> 3));
+}
+
+// Main processing functions
+void process_values(double p, double g, double e, double r) {
+    uniform[2] += e * x_value;
+    uniform[0] += x_value * p * fmin(1, 1 - g);
+    uniform[3] += r * x_value;
+    uniform[1] += fmin(g + 1, 1) * x_value * p;
+}
+
+double compute_eq(double x, double a, double h, double c, double d, double e) {
+    double *z = get_data_pointer(2);
+    double y = a * x + z[0];
+    z[0] = x * h - d * y + z[1];
+    z[1] = c * x - y * e;
+    return y;
+}
+
+double compute_ap(double x, int n, double f, double d) {
+    double *j = get_data_pointer(n + 2);
+    double o;
+    int c = (int) j[n + 1];
+    o = j[c];
+    j[n] = o * (1 - d) + j[n] * d;
+    j[c] = x + j[n] * f;
+    if (++c >= n) c = 0;
+    j[n + 1] = c;
+    return o;
+}
+
+double compute_cm(double x, int n, double f) {
+    double *j = get_data_pointer(n + 2);
+    double o;
+    int c = (int) j[n + 1];
+    double u = j[c];
+    o = u - x;
+    j[c] = f * u + x;
+    if (++c >= n) c = 0;
+    j[n + 1] = c;
+    return o;
+}
+
+int main(void) {
+    int j, k, l, m;
+    char *buffer_pointer = buffer = malloc(BUFFER_SIZE);
+    char *temp_pointer, *output_pointer;
+    FILE *output_file;
+
+    max_iterations_expanded = (max_iterations * 5) << 8;
+
+    // Initialization
+    add_string_to_buffer(string_constants[2]);
+    add_large_to_buffer(36 + (max_iterations_expanded << 2));
+    add_string_to_buffer(string_constants[0]);
+    add_large_to_buffer(16);
+    add_to_buffer(1);
+    add_to_buffer(2);
+    add_large_to_buffer(1 << 18);
+    add_large_to_buffer(4 << 18);
+    add_to_buffer(4);
+    add_to_buffer(16);
+    add_string_to_buffer(string_constants[1]);
+    add_large_to_buffer(max_iterations_expanded << 2);
+
+    // Main processing loop
+    while (1) {
+        end_of_data = data_buffer;
+        for (int i = 0; i < 4; ++i) {
+            uniform[i] = 0;
+        }
+
+        l = ((shift_offset(3) + 32) % 64) - 61;
+        double t = tanh(compute_q((l < 0 ? 3 : l)));
+        x_value = tanh(50 * sin(t * 141 + t * (15e3 / (4 + t * 330))) * pow(1 - tanh(t), 9));
+        if (shift_offset(10)) x_value = 0;
+        process_values(0.5, 0, 0.07, 0.1);
+
+        x_value = 0;
+        for (int i = 0; i < 8; ++i) {
+            x_value += compute_qb(211 + (i * 113 + shift_offset(2) * 91) % 1291);
+        }
+        x_value = compute_eq(x_value, .973, -1.946, .973, -1.942, .951);
+        x_value = tanh(x_value * 2);
+        l = shift_offset(4) % 8 > 6;
+        switch (shift_offset(8)) {
+            case 0:
+                t = tanh(compute_q(shift_offset(4) % 4));
+                break;
+            case 2:
+                t = tanh(compute_q(2 - l));
+                break;
+            default:
+            case 1:
+                t = tanh(compute_q(1 - l));
+                break;
+        }
+        if (++index_offset > max_iterations_expanded) break;
+        x_value *= pow(1 - t, 4) * pow(compute_q(3), 2);
+        x_value = tanh(x_value * 1.4);
+        if (!(shift_offset(7) & 7) || shift_offset(10)) x_value = 0;
+        process_values(0.8, sin(index_offset * 1e-5), 0.16, 0.4);
+
+        t = 1 - (((shift_offset(2) & 63) > 61) ? tanh(compute_q(1)) / 6 : tanh(compute_dp(4, 8)));
+        x_value = index_offset & (1 << 12) ? (double) rand() / RAND_MAX - 0.5 : 0.1 * compute_qb(1400 - (int)(t * 301));
+        x_value = tanh(30 * x_value * pow(t, 40));
+        if (!(shift_offset(7) & 3) || shift_offset(10)) x_value = 0;
+        process_values(0.8, 0.3, 1, 0.3);
+
+        l = shift_offset(6) % 4;
+        k = (static_values[l > 2] >> ((shift_offset(3) & 7) << 2)) & 15;
+        double b = frequency_coefficient * index_offset * pow(2, (double) k / 12);
+        k = shift_offset(8) % 2;
+        m = ((static_values[2 + l % 2]) >> (shift_offset(1) & 31)) & 1;
+        x_value = m ? sin(b + 1.5 * sin(index_offset * 7e-5) + sin(index_offset * 3e-7) * (4 + 3 * sin(index_offset * 1.7e-7)) * sin(b * (1 + k))) : 0;
+        if (shift_offset(8)) x_value += ((sin(b * .501) > .95) - (sin(b * .498) > .8)) * 15 * pow(compute_q(3), 2);
+        t = 1 - tanh(compute_q(1));
+        x_value = tanh(25 * x_value * pow(t, 3));
+        if (shift_offset(10)) x_value = 0;
+        process_values(0.4, 0, 0.12, 0.02);
+
+        for (int i = 0; i < 3; ++i) {
+            k = shift_offset(1) % 32 + 3;
+            k -= k / 4 * 3;
+            l = shift_offset(6) & 1;
+            k = l ? 24 + modifier_values[6 + shift_offset(7) % 2 * 8 + shift_offset(3) % 8] : shift_offset(9) ? 24 + modifier_values[22 + (k + i) % 3 + shift_offset(4) % 4 * 3] : modifier_values[k % 3 + shift_offset(7) % 2 * 3] + (k / 3) * 12;
+            x_value = frequency_coefficient * index_offset * pow(2, ((double)(14 + k) + (i - 1) * .4) / 12) + sin(i + index_offset * (l ? 1e-4 : 3e-4)) * (l ? 4 : 1);
+            t = sin(x_value) + .3 * (fmod(x_value, 6.3) - 3);
+            x_value = t + .3 * (t > .9 * sin(index_offset * 6.3e-7) ? 1 : -1);
+            t = 1 - tanh(compute_q(l ? 2 : m ? 2 : 1));
+            x_value = tanh(x_value * pow(t, 9) * (shift_offset(10) ? pow(1 - compute_q(8), 3) : 1));
+            if (shift_offset(6) % 2 * !shift_offset(9) || !shift_offset(8)) x_value = 0;
+            process_values(1, sin(2 * i + index_offset * 3e-6), 0.3, 0.3);
+        }
+
+        x_value = compute_ap(uniform[3], (int)(max_iterations * 6.1), 0.2, 0.2);
+        process_values(1, -0.6, 0.1, 0);
+        x_value = compute_cm(uniform[3], (int)(max_iterations * 3.8), 0.2);
+        process_values(0.7, 0.6, 0.1, 0);
+
+        for (k = 0; k < 2; ++k) {
+            x_value = 0;
+            for (int i = 0; i < 8; ++i) {
+                x_value += compute_ap(uniform[2], 4001 + (i * 2131 + k * 1555) % 3491, 0.8, 0.5);
+            }
+            for (int i = 0; i < 4; ++i) {
+                x_value = compute_cm(x_value, 800 + ((i + shift_offset(8)) * 1337 + k * 1441) % 1303, 0.4);
+            }
+            x_value = tanh(x_value / 4);
+            process_values(0.3, k ? -1 : 1, 0, 0);
+        }
+
+        // Add final result to buffer
+        for (int i = 0; i < 2; ++i) {
+            add_to_buffer((short)(fmin(1, fmax(-1, uniform[i])) * 32e3));
+        }
+        if (!(index_offset % (max_iterations * 8))) {
+            putchar(string_constants[3][++j & 15]);
+            fflush(stdout);
+        }
+    }
+
+    temp_pointer = buffer_pointer;
+    add_string_to_buffer("opx!fokpz!");
+    output_pointer = buffer_pointer;
+    add_string_to_buffer("qsph/xbw");
+    output_file = fopen(output_pointer, "wb");
+    fwrite(buffer, 1, (unsigned long)(temp_pointer - buffer), output_file);
+    fclose(output_file);
+    puts(temp_pointer);
+    return 0;
+}
+```

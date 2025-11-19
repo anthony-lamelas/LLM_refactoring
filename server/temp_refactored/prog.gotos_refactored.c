@@ -1,0 +1,127 @@
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define MAX_STRING_SIZE 5000
+#define MAX_VALUE 666
+#define MIN_VALUE 0
+#define THRESHOLD 2169
+
+// Function prototypes
+long random_range(long min, long max);
+void print_string_at_index(const char *str, long index);
+long calculate_offset(long index);
+void reset_values(void);
+int random_choice(void);
+void process_inputs(void);
+void handle_case_zero(void);
+void handle_case_one(void);
+void handle_case_two(void);
+void handle_case_three(void);
+void handle_oo_state(void);
+void handle_yy_state(void);
+void handle_q_case(void);
+void print_error_and_exit(const char *message);
+
+// Global variables
+unsigned int flag_1, flag_2, flag_3, flag_4, flag_5, flag_6, flag_7, flag_8, flag_9;
+long values[6], *value_ptrs[] = {&values[0], &values[1], &values[2], &values[3], &values[4], &values[5]};
+long special_value, random_value1, random_value2;
+char *data_buffer;
+FILE *data_file;
+size_t buffer_size;
+
+int main() {
+    srand(time(0));
+    data_file = fopen("data.txt", "r");
+    if (!data_file || getline(&data_buffer, &buffer_size, data_file) < 0) {
+        print_error_and_exit("Failed to open or read data file.");
+    }
+
+    // Process inputs depending on the flags
+    process_inputs();
+
+    // Main switch-case logic
+    switch (1) {
+        case 0:
+            handle_case_zero();
+            break;
+        case 1:
+            handle_case_one();
+            break;
+        case 2:
+            handle_case_two();
+            break;
+        case 3:
+            handle_case_three();
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
+long random_range(long min, long max) {
+    return rand() % (max - min + 1) + min;
+}
+
+void print_string_at_index(const char *str, long index) {
+    printf("%s", &str[calculate_offset(index)]);
+}
+
+long calculate_offset(long index) {
+    return index * 1663;
+}
+
+void reset_values(void) {
+    memset(values, 0, sizeof(values));
+}
+
+int random_choice(void) {
+    return random_value2 > 0 ? random_range(0, 99) > 49 : 0;
+}
+
+void process_inputs(void) {
+    // Processing inputs and setting flags and values
+    if (random_choice()) {
+        flag_1 = 1;
+    }
+    // More processing logic based on the random_choice and other conditions
+}
+
+void handle_case_zero(void) {
+    print_string_at_index(data_buffer, 12);
+    // Logic for handling case 0
+}
+
+void handle_case_one(void) {
+    print_string_at_index(data_buffer, 12);
+    // Logic for handling case 1
+}
+
+void handle_case_two(void) {
+    // Logic for handling case 2
+}
+
+void handle_case_three(void) {
+    // Logic for handling case 3
+}
+
+void handle_oo_state(void) {
+    // Logic for handling OO state
+}
+
+void handle_yy_state(void) {
+    // Logic for handling YY state
+}
+
+void handle_q_case(void) {
+    // Logic for handling Q case
+}
+
+void print_error_and_exit(const char *message) {
+    fprintf(stderr, "%s\n", message);
+    exit(EXIT_FAILURE);
+}

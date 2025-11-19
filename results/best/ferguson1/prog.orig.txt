@@ -1,0 +1,311 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define DATA "datafile.txt"
+
+long random_range(long min, long max) {
+    return rand() % (max - min + 1) + min;
+}
+
+void print_message(const char *message) {
+    printf("%s", message);
+}
+
+void print_message_by_index(long index, char *buffer) {
+    printf("%s", &buffer[index * 1663]);
+}
+
+long get_index(long x) {
+    return x * 1663;
+}
+
+long conditional_random_check() {
+    extern long E;
+    return E > 0 ? random_range(0, 99) > 49 : 0;
+}
+
+int main() {
+    unsigned long m, D, Q, v, l, f, X, z, B, i, h, r, u, d, e;
+    long O, R, E, G, N, T, A, I, L, *o[] = {&O, &R, &E, &G, &O, &N};
+    long a, t[7] = {0}, q, M, b = 666, c, W;
+    char *y = NULL, *p;
+    FILE *K;
+    size_t J;
+    
+    srand(time(0));
+    K = fopen(DATA, "r");
+    if (!K || getdelim(&y, &J, EOF, K) < 0) {
+        return 666;
+    }
+    
+    while (1) {
+        if (z) {
+            goto label_A;
+        }
+        
+        E *= 5;
+        print_message_by_index(12, y);
+        
+        if (!z) {
+            goto label_PP;
+        }
+        
+        goto label_PP;
+        
+        if (b < 1) {
+            if (a) {
+                print_message_by_index(40, y);
+                goto label_PP;
+            }
+            if (f) {
+                print_message_by_index(41, y);
+                goto label_PP;
+            }
+            print_message_by_index(45, y);
+            goto label_S;
+        }
+        
+        if (M > 2169) {
+            print_message_by_index(47, y);
+        } else {
+            print_message_by_index(45, y);
+        }
+        
+        label_PP:
+        goto label_G;
+        
+        label_S:
+        if (b < 1 || M < 0 || M > 2169) {
+            break;
+        }
+        
+        for (X = 1; X < 7; ++X) {
+            if (*o[X] < 0) {
+                *o[X] = 0;
+                break;
+            }
+            
+            if (X == 2) {
+                *o[X] += t[X] * 5;
+            } else {
+                *o[X] += t[X];
+            }
+        }
+        
+        printf("%s", &y[get_index(11)], R, E, G, O, N, T, b, M);
+        if (random_range(0, 1)) {
+            goto label_I;
+        }
+        
+        if (R < 14) {
+            print_message_by_index(37, y);
+        }
+        
+        if (z) {
+            z = 0;
+            if (conditional_random_check()) {
+                if (random_range(0, 9) > 4) {
+                    print_message_by_index(52, y);
+                    R += 23;
+                    if (!random_range(0, 9)) {
+                        goto label_r;
+                    }
+                } else {
+                    goto label_F;
+                }
+            } else {
+                goto label_qq;
+            }
+        }
+        
+        print_message_by_index(42, y);
+        while (scanf(&y[get_index(2)], &r) != 1) {
+            while (getchar() != '\n');
+        }
+        
+        switch (r) {
+            case 1:
+                z = 1;
+                M -= 45;
+                break;
+            case 2:
+                goto label_T;
+            case 3:
+                goto label_X;
+            default:
+                goto label_y;
+        }
+        
+        label_y:
+        print_message_by_index(42, y);
+        
+        label_T:
+        l = 1;
+        if (E < 9) {
+            print_message_by_index(16, y);
+        } else {
+            goto label_l;
+        }
+        
+        label_l:
+        l = 0;
+        f = z = 0;
+        
+        if (R < 1) {
+            goto label_e;
+        }
+        
+        if (R > 23) {
+            R -= 23;
+        } else if (R > 18) {
+            R -= 18;
+        } else if (R > 13) {
+            R -= 13;
+        }
+        
+        switch (q = random_range(0, 23)) {
+            case 1:
+                print_message_by_index(95, y);
+                R += 5;
+                break;
+            case 18:
+                print_message_by_index(26, y);
+                goto label_Z;
+            case 13:
+                print_message_by_index(28, y);
+                break;
+            case 2:
+                O -= 40;
+                print_message_by_index(71, y);
+                break;
+            case 3:
+                print_message_by_index(76, y);
+                b -= 70;
+                goto label_W;
+            case 4:
+                print_message_by_index(77, y);
+                N -= 7;
+                M -= 7;
+                break;
+            case 5:
+            case 10:
+                if (q < 6) {
+                    print_message_by_index(56, y);
+                    goto label_D;
+                } else {
+                    print_message_by_index(62, y);
+                    M -= 50;
+                    b -= 35;
+                }
+                goto label_Z;
+            case 9:
+            case 19:
+                print_message_by_index(30, y);
+                goto label_Z;
+            case 20:
+                print_message_by_index(32, y);
+                break;
+            case 21:
+                print_message_by_index(31, y);
+                break;
+            case 6:
+                goto label_g;
+            case 16:
+            case 22:
+                print_message_by_index(49, y);
+                goto label_Z;
+            case 17:
+                print_message_by_index(72, y);
+                goto label_Z;
+            case 7:
+                print_message_by_index(83, y);
+                M -= 10;
+                goto label_Z;
+            case 8:
+                print_message_by_index(86, y);
+                R -= 30;
+                G -= 20;
+                O -= 40;
+                break;
+            default:
+                if (q > 10) {
+                    goto label_k;
+                }
+                if (q > 7) {
+                    if (N < 5) {
+                        print_message_by_index(99, y);
+                        goto label_M;
+                    }
+                    print_message_by_index(13, y);
+                    N -= 5;
+                }
+                goto label_Z;
+        }
+        
+        label_Z:
+        if (O > 39 && !random_range(0, 9)) {
+            goto label_O;
+        }
+        
+        if (M < 951) {
+            goto label_W;
+        }
+        
+        if (G < 36) {
+            goto label_b;
+        }
+        
+        if (random_range(0, 9) > 2) {
+            goto label_n;
+        }
+        
+        print_message_by_index(96, y);
+        
+        if (random_range(0, 1)) {
+            goto label_p;
+        }
+        
+        for (X = 1; X < 6; ++X) {
+            if (*o[X] < 0) {
+                *o[X] = 0;
+            }
+        }
+        
+        goto label_j;
+        
+        label_p:
+        if (random_range(0, 9) < 3) {
+            goto label_t;
+        }
+        
+        print_message_by_index(21, y);
+        M -= 99;
+        goto label_n;
+        
+        label_t:
+        print_message_by_index(22, y);
+        M -= 85;
+        
+        label_n:
+        if (m) {
+            goto label_u;
+        }
+        
+        m = 1;
+        
+        if (random_range(0, 9) > 5) {
+            print_message_by_index(23, y);
+            goto label_z;
+        }
+        
+        label_z:
+        continue;
+    }
+    
+    return 0;
+}
+```

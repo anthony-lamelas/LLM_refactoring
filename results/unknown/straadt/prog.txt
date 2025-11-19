@@ -1,0 +1,257 @@
+```c
+// Refactored code with clear comments
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define BUFFER_SIZE (1 << 29)
+
+// Global static variables
+static double frequency_multiplier = 1.5e-3;
+static double time, buffer[1 << 20], *end_pointer, unit[4], current_value;
+static int base_frequency = 17000, index, iteration, max_iterations;
+
+static unsigned int frequency_codes[] = {
+    0x0ce97522, 0xc02972e5, 0xeceddaca, 0xfeedfaad,
+};
+
+static int note_offsets[] = {
+    -2, 0, 7, 0, 3, 10, -5, 0, 0, 2, 3, 0, 2, 2,
+    -2, 0, 7, 12, 3, 7, 5, 10, 0, 3, -5, -2, 7, 3, -2, 2, -5, -10, -2, 5
+};
+
+static char *messages[] = {
+    "XBWFgnu!", "ebub", "SJGG", "\njust a moment.."
+};
+
+static char *pointer, main_buffer[BUFFER_SIZE];
+
+static double calculate_phase(int a, int c) {
+    return (double)((iteration + base_frequency * c) % (base_frequency << a)) / (base_frequency << a);
+}
+
+static void write_to_buffer(short value) {
+    *pointer++ = (char)value;
+    *pointer++ = value >> 8;
+}
+
+static double generate_random(int a) {
+    return calculate_phase(a, 0);
+}
+
+static void copy_to_buffer(const char *str) {
+    for (const char *q = str; *q; ++q, ++pointer) {
+        *pointer = *q - 1;
+    }
+}
+
+static double random_sign(int p) {
+    return iteration % p < p >> 2 ? 1 : -1;
+}
+
+static double *allocate_buffer(int n) {
+    end_pointer += n;
+    return end_pointer - n;
+}
+
+static void write_long_to_buffer(int l) {
+    write_to_buffer((short)l);
+    write_to_buffer((short)(l >> 13));
+}
+
+static void apply_filter(double input, double gain, double damping, double resonance) {
+    unit[2] += damping * current_value;
+    unit[0] += current_value * input * fmin(1, 1 - gain);
+    unit[3] += resonance * current_value;
+    unit[1] += fmin(gain + 1, 1) * current_value * input;
+}
+
+static double filter(double x, double a, double h, double c, double d, double e) {
+    double *z = allocate_buffer(2), result = a * x + z[0];
+    z[0] = x * h - d * result + z[1];
+    z[1] = c * x - result * e;
+    return result;
+}
+
+static double apply_smoothing(double x, int n, double f, double decay) {
+    double *buffer = allocate_buffer(n + 2);
+    double output;
+    int current_position = (int)buffer[n + 1];
+    
+    output = buffer[current_position];
+    buffer[n] = output * (1 - decay) + buffer[n] * decay;
+    buffer[current_position] = x + buffer[n] * f;
+    
+    if (++current_position >= n) current_position = 0;
+    buffer[n + 1] = current_position;
+    
+    return output;
+}
+
+static double apply_comb_filter(double x, int n, double f) {
+    double *buffer = allocate_buffer(n + 2);
+    double output, u;
+    int current_position = (int)buffer[n + 1];
+    
+    u = buffer[current_position];
+    output = u - x;
+    buffer[current_position] = f * u + x;
+    
+    if (++current_position >= n) current_position = 0;
+    buffer[n + 1] = current_position;
+    
+    return output;
+}
+
+static int calculate_period(int x) {
+    return iteration / (base_frequency << x);
+}
+
+int main(void) {
+    int j, k, l, m;
+    char *output_pointer = pointer = main_buffer, *temp_pointer, *filename;
+    FILE *output_file;
+
+    max_iterations = (base_frequency * 5) << 8;
+    
+    copy_to_buffer(messages[2]);
+    write_long_to_buffer(36 + (max_iterations << 2));
+    copy_to_buffer(messages[0]);
+    write_long_to_buffer(16);
+    write_to_buffer(1);
+    write_to_buffer(2);
+    write_long_to_buffer(1 << 18);
+    write_long_to_buffer(4 << 18);
+    write_to_buffer(4);
+    write_to_buffer(16);
+    copy_to_buffer(messages[1]);
+    write_long_to_buffer(max_iterations << 2);
+    
+    for (temp_pointer = pointer;;) {
+        end_pointer = buffer;
+        
+        for (j = 0; j < 4; ++j) {
+            unit[j] = 0;
+        }
+        
+        l = ((calculate_period(3) + 32) % 64) - 61;
+        time = tanh(generate_random((l < 0 ? 3 : l)));
+        current_value = tanh(50 * sin(time * 141 + time * (15000 / (4 + time * 330))) * pow(1 - tanh(time), 9));
+        
+        if (calculate_period(10)) current_value = 0;
+        apply_filter(.5, 0, .07, .1);
+
+        current_value = 0;
+        for (j = 0; j < 8; ++j) {
+            current_value += random_sign(211 + (j * 113 + calculate_period(2) * 91) % 1291);
+        }
+        
+        current_value = filter(current_value, .973, -1.946, .973, -1.942, .951);
+        current_value = tanh(current_value * 2);
+        l = calculate_period(4) % 8 > 6;
+        
+        switch (calculate_period(8)) {
+            case 0:
+                time = tanh(generate_random(calculate_period(4) % 4));
+                break;
+            case 2:
+                time = tanh(generate_random(2 - l));
+                break;
+            default:
+            case 1:
+                time = tanh(generate_random(1 - l));
+                break;
+        }
+        
+        if (++iteration > max_iterations) break;
+        current_value *= pow(1 - time, 4) * pow(generate_random(3), 2);
+        current_value = tanh(current_value * 1.4);
+        
+        if (!(calculate_period(7) & 7) || calculate_period(10)) current_value = 0;
+        apply_filter(.8, sin(iteration * 1e-5), .16, .4);
+
+        time = 1 - (((calculate_period(2) & 63) > 61) ? tanh(generate_random(1)) / 6 : tanh(calculate_phase(4, 8)));
+        current_value = iteration & (1 << 12) ? (double)(rand()) / RAND_MAX - .5 : .1 * random_sign(1400 - (int)(time * 301));
+        current_value = tanh(30 * current_value * pow(time, 40));
+        
+        if (!(calculate_period(7) & 3) || calculate_period(10)) current_value = 0;
+        apply_filter(.8, .3, 1, .3);
+
+        l = calculate_period(6) % 4;
+        k = (frequency_codes[l > 2] >> ((calculate_period(3) & 7) << 2)) & 15;
+        time = frequency_multiplier * iteration * pow(2, (double)k / 12);
+        k = calculate_period(8) % 2;
+        m = ((frequency_codes[2 + l % 2]) >> (calculate_period(1) & 31)) & 1;
+        
+        if (m) {
+            current_value = sin(time + 1.5 * sin(iteration * 7e-5) + sin(iteration * 3e-7) * (4 + 3 * sin(iteration * 1.7e-7)) * sin(time * (1 + k)));
+        } else {
+            current_value = 0;
+        }
+        
+        if (calculate_period(8)) {
+            current_value += ((sin(time * .501) > .95) - (sin(time * .498) > .8)) * 15 * pow(generate_random(3), 2);
+        }
+        
+        time = 1 - tanh(generate_random(1));
+        current_value = tanh(25 * current_value * pow(time, 3));
+        
+        if (calculate_period(10)) current_value = 0;
+        apply_filter(.4, 0, .12, .02);
+
+        for (j = 0; j < 3; ++j) {
+            k = calculate_period(1) % 32 + 3;
+            k -= k / 4 * 3;
+            l = calculate_period(6) & 1;
+            k = l ? 24 + note_offsets[6 + calculate_period(7) % 2 * 8 + calculate_period(3) % 8] : calculate_period(9) ? 24 + note_offsets[22 + (k + j) % 3 + calculate_period(4) % 4 * 3] : note_offsets[k % 3 + calculate_period(7) % 2 * 3] + (k / 3) * 12;
+            current_value = frequency_multiplier * iteration * pow(2, ((double)(14 + k) + (j - 1) * .4) / 12) + sin(j + iteration * (l ? 1e-4 : 3e-4)) * (l ? 4 : 1);
+            time = sin(current_value) + .3 * (fmod(current_value, 6.3) - 3);
+            current_value = time + .3 * (time > .9 * sin(iteration * 6.3e-7) ? 1 : -1);
+            time = 1 - tanh(generate_random(l ? 2 : m ? 2 : 1));
+            current_value = tanh(current_value * pow(time, 9) * (calculate_period(10) ? pow(1 - generate_random(8), 3) : 1));
+            
+            if (calculate_period(6) % 2 * !calculate_period(9) || !calculate_period(8)) current_value = 0;
+            apply_filter(1, sin(2 * j + iteration * 3e-6), .3, .3);
+        }
+
+        current_value = apply_smoothing(unit[3], (int)(base_frequency * 6.1), .2, .2);
+        apply_filter(1, -.6, .1, 0);
+        current_value = apply_comb_filter(unit[3], (int)(base_frequency * 3.8), .2);
+        apply_filter(.7, .6, .1, 0);
+
+        for (k = 0; k < 2; ++k) {
+            current_value = 0;
+            for (j = 0; j < 8; ++j) {
+                current_value += apply_smoothing(unit[2], 4001 + (j * 2131 + k * 1555) % 3491, .8, .5);
+            }
+            for (j = 0; j < 4; ++j) {
+                current_value = apply_comb_filter(current_value, 800 + ((j + calculate_period(8)) * 1337 + k * 1441) % 1303, .4);
+            }
+            current_value = tanh(current_value / 4);
+            apply_filter(.3, k ? -1 : 1, 0, 0);
+        }
+
+        for (j = 0; j < 2; ++j) {
+            write_to_buffer((short)(fmin(1, fmax(-1, unit[j])) * 32000));
+        }
+        
+        if (!(iteration % (base_frequency * 8))) {
+            putchar(messages[3][++index & 15]);
+            fflush(stdout);
+        }
+    }
+    
+    temp_pointer = pointer;
+    copy_to_buffer("opx!fokpz!");
+    filename = pointer;
+    copy_to_buffer("qsph/xbw");
+    
+    output_file = fopen(filename, "wb");
+    fwrite(output_pointer, 1, (unsigned long)(temp_pointer - output_pointer), output_file);
+    fclose(output_file);
+    
+    puts(temp_pointer);
+    
+    return 0;
+}
+```

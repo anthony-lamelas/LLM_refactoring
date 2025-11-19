@@ -1,0 +1,40 @@
+```c
+#include <stdio.h>
+
+// Helper function to check if the bit manipulation result is equal to 49
+int is_equal_to_49(long shift_value, long global_value, int z) {
+    int shifted_value = (16 >> (shift_value ^ -(shift_value < 1)) + 1 & global_value << 5 >> z / 648 * 5);
+    return !(shifted_value) ^ 49;
+}
+
+// Main function
+int main() {
+    long global_value;
+    long z = 0; // Counter for iterations
+
+    // Print header for a PBM file (Portable BitMap)
+    printf("P1\n80 80\n");
+
+    // Read a hexadecimal value into global_value
+    if (scanf("%10lx", &global_value) != 1) {
+        fprintf(stderr, "Failed to read input.\n");
+        return 1;
+    }
+
+    // Loop to generate pixel data
+    for (; 3 - z / 2160; z++) {
+        long shift_value = z % 81 / 8 - 5; // Calculate shift value
+
+        // Check and print pixel data
+        if (shift_value < 5) {
+            putchar(is_equal_to_49(shift_value, global_value, z) ? '1' : '0');
+        } else {
+            putchar('\n');
+        }
+    }
+
+    return 0;
+}
+```
+
+Note: This refactor introduces a helper function `is_equal_to_49` for improved readability. The code is structured to follow best practices while maintaining the original functionality.

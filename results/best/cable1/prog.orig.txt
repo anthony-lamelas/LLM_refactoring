@@ -1,0 +1,166 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <omp.h>
+
+// Define data types for clarity
+typedef int8_t C;
+typedef int I;
+typedef float F;
+typedef struct {
+    C *c;
+    F *f;
+} tensor_t;
+
+// Constants definition
+enum {
+    Z = 32,
+    W = 64,
+    E = 2 * W,
+    D = Z * E,
+    H = 86 * E,
+    V = '}\0'
+};
+
+// Function prototypes
+I process_data(I e, F *output, I p, F *v, tensor_t *X);
+I initialize_memory(C **memory_block, size_t size);
+void compute_step1(I k, F *L, I D, F *v, tensor_t *e);
+void compute_step2(I k, F *L, I H, F *K, tensor_t *d);
+
+// Global variables
+C *P[V], X[H], Y[D], y[H];
+F *A, *G[2], *T, w, b, c;
+F Q[D];
+I *unicode_values = U" 炾ોİ䃃璱ᝓ၎瓓甧染ɐఛ瓁", U, s, p, f, R, z, $, B[D];
+I file_descriptor, result, main_loop_control, buffer[D], open();
+tensor_t r, L, J, O[Z], l, a, K, v, k;
+Q m, e[4], d[3], n;
+
+// Function to process data
+I process_data(I e, F *output, I p, F *v, tensor_t *X) {
+    w = 1e-5;
+    for (I i = 0; i < (e ^ V ? D : 0); i++) {
+        w += r[i] * r[i] / D;
+    }
+
+    if (e) {
+        for (I i = 0; i < D; i++) {
+            output[i] = r[i] / sqrt(w) * i[A + e * D];
+        }
+    }
+
+    for (I k = 0; k < $; k++) {
+        for (I i = 0; i < W; i++) {
+            l[k] = w = fmax(fabs(output[i]) / ~-E, i ? w : 0);
+        }
+
+        for (I i = 0; i < W; i++) {
+            y[i + k * W] = *output++ / w;
+        }
+    }
+
+    #pragma omp parallel for
+    for (I h = 0; h < p; h++) {
+        for (I i = 0; i < $; i++) {
+            I _ = 0, t = h * $ + i;
+            for (I k = 0; k < W; k++) {
+                _ += X->c[t * W + k] * y[i * W + k];
+            }
+            v[h] = _ * X->f[t] * l[i] + !!i * v[h];
+        }
+    }
+
+    for (I i = 0; i < D - c; i++) {
+        i[r] += v[i];
+    }
+
+    return 0;
+}
+
+// Function to initialize memory
+I initialize_memory(C **memory_block, size_t size) {
+    *memory_block = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return (*memory_block == MAP_FAILED) ? -1 : 0;
+}
+
+// Function to compute step 1
+void compute_step1(I k, F *L, I D, F *v, tensor_t *e) {
+    for (I i = 0; i < 3; i++) {
+        process_data(k, L, D, i ? G[~-i] + k * D * D + R * D : v, e[i] + k);
+    }
+}
+
+// Function to compute step 2
+void compute_step2(I k, F *L, I H, F *K, tensor_t *d) {
+    for (I i = 0; i < H; i++) {
+        a[i] *= K[i] / (exp(-a[i]) + 1);
+    }
+    process_data(V, a, D, L, d[$ = H / $, 2] + k);
+}
+
+int main() {
+    if (initialize_memory((C **)&A, 8e9) == -1) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    for (I i = 0; i < 2; i++) {
+        if (i[G] = malloc(3e9)) {
+            exit(puts("Memory allocation failed"));
+        }
+    }
+
+    for (I i = 0; i < V; i++) {
+        i[P] = (C *)A + 4;
+        A += (I)*A;
+    }
+
+    for (I i = 0; i < V; i++) {
+        A += 1088 * V;
+    }
+
+    for (C *o; ;) {
+        if (s >= D) {
+            $ = s = 0;
+        } else if (p < U || printf("%s", $[P])) {
+            if (!(*_$ ? $ = *++_ : 0)) {
+                if ($ < 3 && p >= U) {
+                    printf("\n\n> ");
+                    if (scanf("%[^\n]%*c", Y)) {
+                        U = *B = 1;
+                    } else {
+                        exit(EXIT_SUCCESS);
+                    }
+                    p = printf(o = X, "[INST] %s%s [/INST]", s ? "" : "<<SYS>>\nS\n<</SYS>>\n\n", Y);
+                    z = p -= z;
+                    U++[o += z, B] = f;
+                    for (f = 0; !f; z -= !f) {
+                        for (f = V; --f && f[P][z] | memcmp(f[P], o, z););
+                    }
+                    p < U ? $ = B[p++] : fflush(0);
+                }
+            }
+        }
+
+        for (I i = 0; i < D; i++) {
+            R = $ * D + i;
+            r[i] = m->c[R] * m->f[R / W];
+            R = s++;
+        }
+
+        for (I k = 0; k < Z; k++) {
+            f = k * D * D;
+            $ = W;
+            compute_step1(k, L, D, i ? G[~-i] + f + R * D : v, e[i] + k);
+            compute_step2(k, L, H, i ? K : a, d[i] + k);
+        }
+    }
+
+    return 0;
+}
+```

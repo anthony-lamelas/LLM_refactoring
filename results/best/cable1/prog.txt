@@ -1,0 +1,181 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <omp.h>
+
+typedef int8_t C;
+typedef int I;
+typedef float F;
+
+// Structure to hold a pointer to char and float
+typedef struct {
+    C *c;
+    F *f;
+} data_t;
+
+// Enum for constants used in the code
+enum {
+    Z = 32,
+    W = 64,
+    E = 2 * W,
+    D = Z * E,
+    H = 86 * E,
+    V = '}\0'
+};
+
+// Global variables
+C *P[V], X[H], Y[D], y[H]; 
+F *A, *G[2], *T, w, b, c;
+F Q[D];
+int *unicode_sequence = U" 炾ોİ䃃璱ᝓ၎瓓甧染ɐఛ瓁";
+int U, s, p, f, R, z, $, B[D];
+F result_r, L, J, O[Z], l, a, K, v, k;
+F m, e[4], d[3], n;
+F r[L];
+I open();
+
+// Function to process data
+I process_data(I e, F *output, I p, F *v, data_t *data) {
+    w = 1e-5;
+
+    // Calculate normalization factor based on condition
+    if (e ^ V) {
+        for (I i = 0; i < D; i++) {
+            w += r[i] * r[i] / D;
+        }
+    }
+
+    // Normalize and store result
+    if (e) {
+        for (I i = 0; i < D; i++) {
+            output[i] = r[i] / sqrt(w) * i[A + e * D];
+        }
+    }
+
+    // Parallel computation
+    #pragma omp parallel for
+    for (I h = 0; h < p; h++) {
+        for (I i = 0; i < $; i++) {
+            I _ = 0, t = h * $ + i;
+            for (I k = 0; k < W; k++) {
+                _ += data->c[t * W + k] * y[i * W + k];
+            }
+            v[h] = _ * data->f[t] * l[i] + !!i * v[h];
+        }
+
+        for (I i = 0; i < D - c; i++) {
+            r[i] += v[i];
+        }
+    }
+
+    return 0;
+}
+
+I main() {
+    A = mmap(0, 8e9, PROT_READ | PROT_WRITE, MAP_PRIVATE, f = open("datafile", O_RDONLY), 0);
+    
+    // Initialize memory for G and T
+    for (I i = 0; i < 2; i++) {
+        if (~f) {
+            i[G] = malloc(3e9);
+        } else {
+            exit(puts("datafile not found"));
+        }
+    }
+
+    // Initialize pointers
+    for (I i = 0; i < V; i++) {
+        i[P] = (C *)A + 4;
+        A += (I)*A;
+    }
+
+    // Allocate memory and process based on input
+    for (C *o;; s >= D ? $ = s = 0 : p < U || printf("%s", $[P])) {
+        if (!(*$ ? $ = *++_ : 0)) {
+            if ($ < 3 && p >= U) {
+                printf("\n\n> ");
+                if (0 < scanf("%[^\n]%*c", Y)) {
+                    U = *B = 1;
+                } else {
+                    exit(0);
+                }
+
+                p = sprintf(o = X, "[INST] %s%s [/INST]", s ? "" : "<<SYS>>\n" "S" "\n<</SYS>>\n\n", Y);
+                z = p -= z;
+                U++[o += z, B] = f;
+
+                for (f = 0; !f; z -= !f) {
+                    for (f = V; --f && f[P][z] | memcmp(f[P], o, z););
+                }
+
+                p < U ? $ = B[p++] : fflush(0);
+
+                for (I i = 0; i < D; i++) {
+                    R = $ * D + i;
+                    r[i] = m->c[R] * m->f[R / W];
+                }
+
+                R = s++;
+                for (I k = 0; k < Z; k++) {
+                    f = k * D * D;
+                    $ = W;
+
+                    for (I i = 0; i < 3; i++) {
+                        process_data(k, L, D, i ? G[~-i] + f + R * D : v, e[i] + k);
+                    }
+
+                    for (I j = 0; j < 2; j++) {
+                        for (I i = 0; i < D; i++) {
+                            b = sin(w = R / exp(i % E / 14.));
+                            c = 1[w = cos(w), T = i++ + (k ? v : *G + f + R * D)];
+                            T[1] = b * *T + c * w;
+                            *T = w * *T - c * b;
+                        }
+                    }
+
+                    for (I h = 0; h < Z; h++) {
+                        F *T = O[h];
+                        w = 0;
+                        I A = h * E;
+
+                        for (I s = 0; s < s; s++) {
+                            for (I i = 0; i < E; i++) {
+                                k[L + A] = 0;
+                                T += k[v + A] * k[i * D + *G + A + f] / 11;
+                                w += T[i] = exp(T[i]);
+                            }
+                            for (I i = 0; i < E; i++) {
+                                k[L + A] += (T[i] /= k ? 1 : w) * k[i * D + G[1] + A + f];
+                            }
+                        }
+                    }
+
+                    process_data(V, L, D, J, e[3] + k);
+                }
+
+                for (I i = 0; i < 2; i++) {
+                    process_data(k + Z, L, H, i ? K : a, d[i] + k);
+                }
+
+                for (I i = 0; i < H; i++) {
+                    a[i] *= K[i] / (exp(-a[i]) + 1);
+                }
+
+                process_data(V, a, D, L, d[$ = H / $, 2] + k);
+            }
+
+            w = process_data($ = W, r, V, k, n);
+
+            for (I i = 0; i < V; i++) {
+                w = k[i] > w ? k[$ = i] : w;
+            }
+        }
+    }
+
+    return 0;
+}
+```

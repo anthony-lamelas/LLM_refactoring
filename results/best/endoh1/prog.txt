@@ -1,0 +1,222 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+
+void define_macro(const char *name, const char *value) {
+    printf("#define %s %s\n", name, value);
+}
+
+void include_file() {
+    puts("#include __FILE__");
+}
+
+void undef_macro(const char *name) {
+    printf("#undef %s\n", name);
+}
+
+void if_statement(const char *condition) {
+    printf("#if %s\n", condition);
+}
+
+void else_statement() {
+    puts("#else");
+}
+
+void endif_statement() {
+    puts("#endif");
+}
+
+void print_undef_sequence(const char *base) {
+    for (int i = 31; i--;) {
+        printf("#undef %s%d\n", base, i);
+    }
+}
+
+void generate_macro_sequence(const char *base) {
+    define_macro(base, "0");
+    for (int i = 31; --i;) {
+        printf("#if (%s)/%d&1\n", base, 1 << i);
+        printf("#define %s%d %s%d|%d\n", base, i-1, base, i, 1 << i);
+        else_statement();
+        printf("#define %s%d %s%d\n", base, i-1, base, i);
+        endif_statement();
+    }
+    if_statement("s>0");
+    undef_macro(base);
+    define_macro(base, base);
+    else_statement();
+    undef_macro(base);
+    define_macro(base, base);
+    endif_statement();
+}
+
+void generate_combined_macro_sequence(const char *base) {
+    define_macro(base, "c(A,s)");
+    generate_macro_sequence("sA");
+    define_macro(base, "c(B,s)");
+    generate_macro_sequence("sB");
+    define_macro(base, "c(C,s)");
+    generate_macro_sequence("sC");
+    undef_macro(base);
+    printf("#define %s %sA,%sB,%sC\n", base, base, base, base);
+}
+
+void print_if_sequence(const char *d, const char *m, int e, int j) {
+    printf("#if (c(%c,Z))/%s%%%s==%d\n", j, d, m, e);
+}
+
+void generate_sequence(const char *a, const char *b) {
+    for (int i = 10; i--; endif_statement()) {
+        print_if_sequence(a, "10", i, 'j');
+        printf("#define %s\n", b, i);
+    }
+}
+
+void generate_expression_sequence(const char *v, const char *p, const char *q, const char *r) {
+    printf("#define %s(x,a,b) x(A(a),%s(b)),x(B(a),%s(b)),x(C(a),%s(b))\n", v, p, q, r);
+}
+
+void define_macro_sequence(const char *x) {
+    define_macro("i", "N(o,t,h)");
+    define_macro("M", "m(d(i,i))");
+    generate_macro_sequence("M");
+    define_macro("j", "d(g,O(U,i,M))");
+    if_statement("j<0");
+    printf("#define %s 0,0,0\n", x);
+    else_statement();
+    printf("#define %s O(U,O(k,u,j),d(i,i))\n", x);
+    endif_statement();
+    generate_combined_macro_sequence(x);
+    undef_macro("i");
+    print_undef_sequence("M");
+    undef_macro("j");
+    endif_statement();
+}
+
+int main(void) {
+    int i, j;
+
+    // Define initial macros and expressions
+    printf("#define p 0,500,4000\n");
+    define_macro("q", "2000");
+    printf("#define r 300,300,300\n");
+    printf("#define s(x) 900,200+x*700,900\n");
+    printf("#define t -2000,4000,1000\n");
+    printf("#define u 50000,50000,50000\n");
+    printf("#define v(x) 500-x,500-x,500\n");
+    
+    // Start of conditional and macro definitions
+    if_statement("S");
+    define_macro("V", "N(o,P,p)");
+    define_macro("G", "d(Q,Q)");
+    define_macro("f", "d(V,Q)");
+    define_macro("Z", "l(f)-k(G,(d(V,V)-l(q)))");
+    if_statement("Z>0");
+    define_macro("M", "m(Z)");
+    generate_macro_sequence("M");
+    define_macro("R", "U(-M-f,G)");
+    if_statement("R<0");
+    undef_macro("R");
+    define_macro("R", "U(M-f,G)");
+    if_statement("R<0");
+    undef_macro("R");
+    endif_statement();
+    endif_statement();
+    endif_statement();
+    if_statement("R");
+    generate_macro_sequence("R");
+    print_undef_sequence("M");
+    define_macro("h", "N(K,P,O(k,Q,R))");
+    define_macro("g", "O(U,N(o,h,p),q)");
+    define_macro_sequence("D");
+    print_undef_sequence("M");
+    undef_macro("V");
+    undef_macro("G");
+    undef_macro("f");
+    undef_macro("Z");
+    if_statement("R>10");
+    define_macro("F", "N(K,O(k,g,10),h)");
+    define_macro("I", "N(o,Q,O(k,g,d(g,Q)*2))");
+    generate_combined_macro_sequence("F");
+    generate_combined_macro_sequence("I");
+    undef_macro("P");
+    undef_macro("Q");
+    define_macro("P", "F");
+    define_macro("Q", "I");
+    undef_macro("h");
+    undef_macro("g");
+    print_undef_sequence("R");
+    include_file();
+    undef_macro("V");
+    define_macro("V", "N(k,N(K,D,w),r)");
+    else_statement();
+    undef_macro("h");
+    undef_macro("g");
+    print_undef_sequence("R");
+    if_statement("c(B,Q)");
+    define_macro("R", "U(-2*S-c(B,P),c(B,Q))");
+    if_statement("R<0||20000<R");
+    undef_macro("R");
+    endif_statement();
+    endif_statement();
+    if_statement("R");
+    generate_macro_sequence("R");
+    define_macro("h", "N(K,P,O(k,Q,R))");
+    printf("#define g 0,S,0\n");
+    define_macro_sequence("E");
+    if_statement("R>10");
+    define_macro("w", "N(k,O(k,E,l(c(A,h))+l((c(C,h)-c(C,p)))<l(q)?100:S),s((T(c(A,h))==T(c(C,h)))))");
+    else_statement();
+    define_macro("w", "v(c(B,Q)/2)");
+    endif_statement();
+    generate_combined_macro_sequence("w");
+    define_macro("V", "w");
+    endif_statement();
+    else_statement();
+    define_macro("S", "1000");
+    printf("#define K(a,b) (a+b)\n");
+    printf("#define o(a,b) (a-(b))\n");
+    printf("#define k(a,b) ((a)*(b)/S)\n");
+    printf("#define U(a,b) ((a)*S/(b))\n");
+    define_macro("l(a)", "k(a,a)");
+    printf("#define n(a,b) (b?(U(a,b)+b)/2:0)\n");
+    define_macro("m(x)", "n(x,n(x,n(x,n(x,n(x,n(x,(x)/2))))))");
+    define_macro("T(x)", "(x>0?x:S-x)/S%2");
+    define_macro("A(x,y,z)", "x");
+    define_macro("B(x,y,z)", "y");
+    define_macro("C(x,y,z)", "z");
+    printf("#define c(a,b) a(b)\n");
+    printf("#define L(a,b) a(A(b)),a(B(b)),a(C(b))\n");
+    generate_expression_sequence("N", "A", "B", "C");
+    generate_expression_sequence("O", "", "", "");
+    printf("#define d(a,b) (k(A(a),A(b))+k(B(a),B(b))+k(C(a),C(b)))\n");
+    printf("#define Q (S*X/W*2-S),(S-S*Y/H*2),S\n");
+    printf("#define P 0,0,0\n");
+    include_file();
+    define_macro("e(x)", "m(x<0?0:x>S?S:x)*255/S");
+    define_macro("Z", "L(e,V)");
+    
+    // Loop through specific range
+    for (j = 64; j++ < 67;) {
+        print_if_sequence("100", "10", 0, 'j');
+        define_macro("x(a)", "a");
+        else_statement();
+        generate_sequence("100", "x(a) %d##a");
+        endif_statement();
+        print_if_sequence("10", "100", 0, 'j');
+        define_macro("y(a)", "a");
+        else_statement();
+        generate_sequence("10", "y(a) x(%d##a)");
+        endif_statement();
+        generate_sequence("1", "z y(%d)");
+        puts("z");
+        undef_macro("z");
+        undef_macro("y");
+        undef_macro("x");
+    }
+    
+    // End of main function
+    endif_statement();
+    return 0;
+}
+```

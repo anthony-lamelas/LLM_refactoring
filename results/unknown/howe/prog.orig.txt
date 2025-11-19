@@ -1,0 +1,424 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <locale.h>
+#include <ncurses.h>
+#include <regex.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+// Constants
+#define BUF 4096
+#define MODE 0644
+
+// Global Variables
+int cursor_y, cursor_x, z, w;
+char *file_name, *search_query;
+char buffer[BUF], *buffer_start = buffer, *buffer_end, *current_position, *highlight_start, *highlight_end;
+long cursor_pos, previous_cursor_pos, scroll_top, scroll_bottom, line_length, search_offset = -1;
+regex_t regex_expression;
+
+// Function Prototypes
+void process_key(int max_keys);
+long get_buffer_offset(char *s);
+char *get_buffer_position(long offset);
+int get_utf8_length(int byte);
+long get_text_offset(long offset);
+long move_cursor_back(long offset);
+void swap_buffers();
+void swap_content(long offset);
+int get_character_width(char *s, int current_col);
+long find_line_start(long offset);
+long advance_columns(long offset, int current_col, int target_col);
+long wrap_line(long start_offset, long end_offset);
+long move_cursor_to_next_line(long offset);
+void clear_line();
+void update_screen();
+void clear_screen();
+void move_cursor_left();
+void move_cursor_right();
+void move_cursor_up();
+void move_cursor_down();
+void move_to_line_start();
+void move_to_word_start();
+void move_cursor_top();
+void move_cursor_bottom();
+void move_cursor_down_one_line();
+void move_cursor_up_one_line();
+void move_to_next_word();
+void go_to_end_of_file();
+void insert_mode();
+void copy_selection();
+void paste_selection();
+void delete_selection();
+void write_to_file();
+void reset_file_name();
+void search();
+void toggle_selection();
+void execute_command(int max_keys);
+
+// Function Implementations
+long get_buffer_offset(char *s) {
+    return s - buffer - (s < buffer_end ? 0 : buffer_end - buffer_start);
+}
+
+char *get_buffer_position(long offset) {
+    return buffer + offset + (buffer + offset < buffer_start ? 0 : buffer_end - buffer_start);
+}
+
+int get_utf8_length(int byte) {
+    return 1 + (byte > 193) + (byte > 223) + (byte > 239);
+}
+
+long get_text_offset(long offset) {
+    return offset + (offset < get_buffer_offset(current_position) ? get_utf8_length(*get_buffer_position(offset)) : 0);
+}
+
+long move_cursor_back(long offset) {
+    while (0 < offset && (192 & *get_buffer_position(--offset)) == 128);
+    return offset;
+}
+
+void swap_buffers() {
+    char *temp_start = highlight_start;
+    highlight_start = buffer_start;
+    buffer_start = temp_start;
+
+    char *temp_end = highlight_end;
+    highlight_end = buffer_end;
+    buffer_end = temp_end;
+
+    long temp_pos = previous_cursor_pos;
+    previous_cursor_pos = cursor_pos;
+    cursor_pos = temp_pos;
+    scroll_bottom = cursor_pos + 1;
+}
+
+void swap_content(long offset) {
+    char *position = get_buffer_position(offset);
+    while (position < buffer_start)
+        *--buffer_end = *--buffer_start;
+    while (buffer_end < position)
+        *buffer_start++ = *buffer_end++;
+    highlight_start = buffer_start;
+    highlight_end = buffer_end;
+    previous_cursor_pos = cursor_pos;
+}
+
+int get_character_width(char *s, int current_col) {
+    wint_t wide_char;
+    mbtowc(&wide_char, s, 4);
+    if (wide_char == '\t') {
+        return 8 - ((current_col & 7));
+    }
+    int width = wcwidth(wide_char);
+    return width < 1 ? 1 : width;
+}
+
+long find_line_start(long offset) {
+    while (0 < offset && *get_buffer_position(--offset) != '\n');
+    return (offset + 1) * (0 < offset);
+}
+
+long advance_columns(long offset, int current_col, int target_col) {
+    char *position;
+    while (current_col < target_col && (position = get_buffer_position(offset)) < current_position && *position != '\n') {
+        current_col += get_character_width(position, current_col);
+        offset = get_text_offset(offset);
+    }
+    return offset;
+}
+
+long wrap_line(long start_offset, long end_offset) {
+    char *position;
+    int current_col = 0;
+    long temp_offset = start_offset;
+    while (start_offset < end_offset && (position = get_buffer_position(start_offset = get_text_offset(start_offset))) < current_position) {
+        current_col += get_character_width(position, current_col);
+        if (COLS <= current_col) {
+            temp_offset = start_offset;
+            current_col = 0;
+        }
+    }
+    return temp_offset;
+}
+
+long move_cursor_to_next_line(long offset) {
+    long line_start = find_line_start(offset);
+    long wrap_position = wrap_line(line_start, offset);
+    if (line_start < wrap_position)
+        return wrap_line(line_start, wrap_position - 1);
+    return wrap_line(find_line_start(line_start - 1), line_start - 1);
+}
+
+void clear_line() {
+    printw("%*s", COLS - getcurx(stdscr), "");
+}
+
+void update_screen() {
+    char *position;
+    int i, j;
+    long start, end, current_offset = get_buffer_offset(current_position);
+    if (cursor_pos < scroll_top)
+        scroll_top = wrap_line(find_line_start(cursor_pos), cursor_pos);
+    else if (scroll_bottom <= cursor_pos && cursor_pos < move_cursor_to_next_line(scroll_bottom))
+        scroll_top = move_cursor_to_next_line(scroll_top);
+    else if (scroll_bottom <= cursor_pos) {
+        scroll_bottom = scroll_top;
+        for (scroll_top = cursor_pos, i = LINES - 1 - (cursor_pos == current_offset); 0 < --i && scroll_bottom < scroll_top;) {
+            scroll_top = move_cursor_to_next_line(scroll_top);
+        }
+        if (scroll_top < scroll_bottom)
+            scroll_top = scroll_bottom;
+    }
+    erase();
+    standout();
+    printw("%s %ldB", file_name, cursor_pos);
+    clear_line();
+    if (search_offset < 0)
+        start = end = search_offset;
+    else if (cursor_pos < search_offset) {
+        start = cursor_pos;
+        end = search_offset;
+    } else {
+        start = search_offset;
+        end = cursor_pos;
+    }
+    for (i = 1, j = 0, scroll_bottom = scroll_top; standend(), i < LINES;) {
+        if (cursor_pos == scroll_bottom) {
+            cursor_y = i;
+            cursor_x = j;
+        }
+        if (current_position <= (position = get_buffer_position(scroll_bottom)))
+            break;
+        if (start <= scroll_bottom && scroll_bottom < end)
+            standout();
+        int text_length = get_utf8_length(*position);
+        mvaddnstr(i, j, position, text_length);
+        scroll_bottom += text_length;
+        j += get_character_width(position, j);
+        if (*position == '\n' || COLS <= j) {
+            j = 0;
+            i++;
+        }
+    }
+    if (i++ < LINES) {
+        standout();
+        mvaddstr(i, 0, "^D");
+    }
+    move(cursor_y, cursor_x);
+    refresh();
+}
+
+void clear_screen() {
+    clear();
+    z = 0;
+}
+
+void move_cursor_left() {
+    cursor_pos = move_cursor_back(cursor_pos);
+}
+
+void move_cursor_right() {
+    cursor_pos = get_text_offset(cursor_pos);
+}
+
+void move_cursor_up() {
+    cursor_pos = advance_columns(move_cursor_to_next_line(cursor_pos), 0, cursor_x);
+}
+
+void move_cursor_down() {
+    cursor_pos = advance_columns(move_cursor_to_next_line(cursor_pos), 0, cursor_x);
+}
+
+void move_to_line_start() {
+    cursor_pos = advance_columns(find_line_start(cursor_pos), 0, z - 1);
+    z = 0;
+}
+
+void move_to_word_start() {
+    while (0 < cursor_pos && isspace(*get_buffer_position(cursor_pos - 1)))
+        --cursor_pos;
+    while (0 < cursor_pos && !isspace(*get_buffer_position(cursor_pos - 1)))
+        --cursor_pos;
+}
+
+void move_cursor_top() {
+    cursor_pos = scroll_top;
+}
+
+void move_cursor_bottom() {
+    cursor_pos = wrap_line(find_line_start(scroll_bottom - 1), scroll_bottom - 1);
+}
+
+void move_cursor_down_one_line() {
+    int i;
+    for (cursor_pos = scroll_bottom, i = 1; i < cursor_y; i++)
+        cursor_pos = move_cursor_to_next_line(cursor_pos);
+    cursor_pos = advance_columns(cursor_pos, 0, cursor_x);
+    scroll_top = cursor_pos < get_buffer_offset(current_position) ? scroll_bottom : scroll_top;
+    for (scroll_bottom = cursor_pos; i < LINES; i++)
+        scroll_bottom = move_cursor_to_next_line(scroll_bottom);
+}
+
+void move_cursor_up_one_line() {
+    for (int i = LINES - 1; 0 < i--;)
+        cursor_pos = move_cursor_to_next_line(cursor_pos);
+    for (scroll_top = cursor_pos; 1 < cursor_y--;)
+        scroll_top = move_cursor_to_next_line(scroll_top);
+    cursor_pos = advance_columns(cursor_pos, 0, cursor_x);
+}
+
+void move_to_next_word() {
+    long current_offset = get_buffer_offset(current_position);
+    while (cursor_pos < current_offset && !isspace(*get_buffer_position(cursor_pos)))
+        ++cursor_pos;
+    while (cursor_pos < current_offset && isspace(*get_buffer_position(cursor_pos)))
+        ++cursor_pos;
+}
+
+void go_to_end_of_file() {
+    long current_offset = get_buffer_offset(current_position);
+    for (cursor_pos = current_offset * (!z); cursor_pos < current_offset && 1 < z; z--) {
+        cursor_pos = advance_columns(cursor_pos, 0, 999);
+        cursor_pos += cursor_pos < current_offset;
+    }
+    scroll_top = current_offset;
+}
+
+void insert_mode() {
+    int a, t;
+    long current_offset = get_buffer_offset(current_position);
+    swap_content(cursor_pos);
+    while ((a = getch()) != 3 && a != 27) {
+        t = get_utf8_length(a);
+        if (a == 8) {
+            while (current_offset < get_buffer_offset(current_position) && (192 & *--buffer_start) == 128);
+        } else if (buffer_start + t < buffer_end) {
+            do {
+                *buffer_start++ = a;
+                scroll_bottom++;
+            } while (0 < --t && (a = getch()));
+        }
+        cursor_pos = get_buffer_offset(buffer_end);
+        update_screen();
+    }
+    z = 0;
+}
+
+void copy_selection() {
+    long start = search_offset;
+    if (search_offset < 0) {
+        start = cursor_pos;
+        execute_command(14);
+    }
+    if (start < cursor_pos) {
+        start ^= cursor_pos;
+        cursor_pos ^= start;
+        start ^= cursor_pos;
+    }
+    free(search_query);
+    swap_content(cursor_pos);
+    search_query = strndup(buffer_end, line_length = start - cursor_pos);
+    search_offset = -1;
+}
+
+void paste_selection() {
+    copy_selection();
+    buffer_end += line_length;
+    cursor_pos = get_buffer_offset(buffer_end);
+}
+
+void delete_selection() {
+    ungetch('l');
+    paste_selection();
+}
+
+void write_to_file() {
+    int file;
+    swap_content(0);
+    write(file = creat(file_name, MODE), buffer_end, current_position - buffer_end);
+    close(file);
+}
+
+void reset_file_name() {
+    file_name = 0;
+}
+
+void search() {
+    regmatch_t matches[1];
+    swap_content(get_buffer_offset(current_position));
+    *buffer_start = 0;
+    if (cursor_pos + line_length < get_buffer_offset(current_position) && !regexec(&regex_expression, get_buffer_position(cursor_pos + line_length), 1, matches, REG_NOTBOL))
+        cursor_pos += line_length + matches->rm_so;
+    else if (!regexec(&regex_expression, buffer, 1, matches, 0))
+        cursor_pos = matches->rm_so;
+    else {
+        line_length = 0;
+        return;
+    }
+    line_length = matches->rm_eo - matches->rm_so + w;
+}
+
+void toggle_selection() {
+    echo();
+    standout();
+    mvaddch(0, 0, '/');
+    clear_line();
+    mvgetnstr(0, 1, buffer_start, buffer_end - buffer_start);
+    regfree(&regex_expression);
+    if (regcomp(&regex_expression, buffer_start, REG_EXTENDED | REG_NEWLINE))
+        beep();
+    else {
+        w = buffer_start[0] == '$' && !buffer_start[1];
+        search();
+    }
+    z = 0;
+}
+
+void execute_command(int max_keys) {
+    int original_z = z, a;
+    for (z = 0; isdigit(a = getch());)
+        z = z * 10 + a - '0';
+    z = original_z && z ? original_z * z : z ? z : original_z;
+    for (int j = 0; "hjklbwHJKL|G/nixydPu\\WQ\003"[j] && a != "hjklbwHJKL|G/nixydPu\\WQ\003"[j]; j++);
+    if (j < max_keys) {
+        do (*((void (*[24])(void)) {
+            move_cursor_left, move_cursor_down, move_cursor_up, move_cursor_right, move_to_word_start, move_to_next_word,
+            move_cursor_top, move_cursor_down_one_line, move_cursor_up_one_line, move_cursor_bottom,
+            move_to_line_start, go_to_end_of_file,
+            toggle_selection, search,
+            insert_mode, delete_selection,
+            copy_selection, paste_selection, delete_selection, swap_buffers,
+            toggle_selection, write_to_file, reset_file_name, reset_file_name,
+            clear_screen
+        })[j])(); while (1 < z--);
+    }
+    z = 0;
+}
+
+int main(int argc, char **argv) {
+    setlocale(LC_ALL, "");
+    if (!initscr())
+        return 1;
+    raw();
+    buffer_end = current_position = buffer + BUF;
+    if (0 < (argc = open(file_name = *++argv, 0))) {
+        buffer_start += read(argc, buffer, current_position - buffer);
+        close(argc);
+        if (buffer_start < buffer || current_position <= buffer_start)
+            return 2;
+    }
+    scroll_bottom = 1;
+    while (file_name) {
+        noecho();
+        update_screen();
+        execute_command(99);
+    }
+    endwin();
+    return 0;
+}
+```

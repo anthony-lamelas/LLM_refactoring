@@ -1,0 +1,554 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+// Define structure for handling various data types
+typedef struct node {
+    union {
+        char *str_val;
+        double num_val;
+    };
+    char *name;
+    char op_type, op_prec, op_assoc;
+    struct node *next, *child, *parent, *(*func)(void);
+    int ref_count;
+} *Node;
+
+// Global variables
+Node head, tail;
+int flag, (*string_length)(const char *) = strlen, (*string_compare)(const char *, const char *) = strcmp;
+char *buffer, *input_pointer, current_char, is_running = 0, g_buffer[99], *(*string_duplicate)(const char *) = strdup;
+
+// Function prototypes
+Node create_node(int op_type);
+Node find_node(Node *node_list);
+Node add_node(Node *node_list);
+void skip_whitespace(void);
+void skip_comments(void);
+int find_char_position(const char *chars);
+int check_end_of_expression(void);
+int match_function_name(const char *name);
+int match_variable_name(const char *name);
+void process_block(void);
+double evaluate_node(Node node);
+Node evaluate_expression(Node node);
+int is_valid_identifier(void);
+void parse_identifier(void);
+Node parse_expression(int precedence);
+Node parse_statement(int block_mode);
+void release_node(Node node, Node limit, int release_children);
+void clean_up(Node limit);
+Node execute_block(int block_mode);
+Node print_node(Node node);
+
+// Create a new node and initialize it
+Node create_node(int op_type) {
+    Node new_node = calloc(1, sizeof(struct node));
+    new_node->next = tail;
+    new_node->op_type = op_type;
+    return tail = new_node;
+}
+
+// Find a node in the node list by name
+Node find_node(Node *node_list) {
+    Node current = *node_list;
+    while (current) {
+        if (!string_compare(g_buffer, current->name)) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+// Add a new node to the node list
+Node add_node(Node *node_list) {
+    Node new_node = create_node(4);
+    new_node->name = string_duplicate(g_buffer);
+    new_node->next = *node_list;
+    new_node->next = create_node(0);
+    return *node_list = new_node;
+}
+
+// Skip whitespace characters and comments
+void skip_whitespace(void) {
+    int is_comment;
+    while ((is_comment = (*input_pointer == '/' && input_pointer[1] == '/')) || isspace(*input_pointer)) {
+        if (is_comment) {
+            while (*input_pointer && *input_pointer != '\n') input_pointer++;
+        } else {
+            input_pointer++;
+        }
+    }
+}
+
+// Skip comments
+void skip_comments(void) {
+    skip_whitespace();
+    if (*input_pointer) input_pointer++;
+}
+
+// Find the position of a character in the given string
+int find_char_position(const char *chars) {
+    char *pos = strchr(chars, *input_pointer);
+    return pos ? pos - chars : -1;
+}
+
+// Check if the current token is the end of an expression
+int check_end_of_expression(void) {
+    return find_char_position(";)]") != -1;
+}
+
+// Match a function name
+int match_function_name(const char *name) {
+    int len = string_length(name);
+    if (!strncmp(name, input_pointer, len) && !isalnum(input_pointer[len])) {
+        input_pointer += len;
+        return 1;
+    }
+    return 0;
+}
+
+// Match a variable name
+int match_variable_name(const char *name) {
+    int len = string_length(name);
+    if (!strncmp(name, input_pointer, len) && !isalnum(input_pointer[len])) {
+        input_pointer += len;
+        return 1;
+    }
+    return 0;
+}
+
+// Process a code block
+void process_block(void) {
+    int depth = 1;
+    while (*input_pointer && depth) {
+        current_char = *input_pointer++;
+        depth += (current_char == '{') - (current_char == '}');
+    }
+}
+
+// Evaluate a node and return its value
+double evaluate_node(Node node) {
+    char *end_ptr;
+    return (node->op_type & 1) ? node->num_val : (node->op_type & 2) ? strtod(node->str_val, &end_ptr) : 0;
+}
+
+// Evaluate an expression and return the resulting node
+Node evaluate_expression(Node node) {
+    Node result_node = create_node(2);
+    char *res_str = "[object]", node_op_type = node->op_type;
+    if (node_op_type & 1) {
+        sprintf(g_buffer, "%g", node->num_val);
+        res_str = g_buffer;
+    } else if (node_op_type & 2) {
+        res_str = node->str_val;
+    }
+    result_node->name = string_duplicate(res_str);
+    return result_node;
+}
+
+// Check if the current character is a valid identifier start
+int is_valid_identifier(void) {
+    return *input_pointer == '_' || isalnum(*input_pointer);
+}
+
+// Parse an identifier
+void parse_identifier(void) {
+    char *dest = g_buffer;
+    while (is_valid_identifier()) {
+        *dest++ = *input_pointer++;
+    }
+    *dest = '\0';
+}
+
+// Parse an expression with given precedence level
+Node parse_expression(int precedence) {
+    int idx = 0, op_prec, next_prec, is_prefix, is_right_assoc, is_unary, has_operand, unary_op;
+    double left_val, right_val;
+    char *dest, op_char;
+    Node left_node, right_node, temp_node;
+    skip_whitespace();
+
+    if (check_end_of_expression()) {
+        return create_node(0);
+    }
+
+    op_prec = find_char_position("-+!~");
+    if (op_prec > -1) {
+        input_pointer++;
+    }
+
+    current_char = *input_pointer;
+    if (current_char == '(') {
+        input_pointer++;
+        left_node = parse_expression(0);
+        skip_comments();
+    } else if (current_char == '[' || current_char == '{') {
+        left_node = create_node(4);
+        input_pointer++;
+        skip_comments();
+    } else if (current_char == '"' || current_char == '\'') {
+        dest = g_buffer;
+        input_pointer++;
+        left_node = create_node(2);
+        while (*input_pointer != current_char) {
+            char ch = *input_pointer++;
+            if (ch == '\\') {
+                ch = *input_pointer++;
+                ch = ch == 'n' ? '\n' : ch == 'x' ? strtol(input_pointer, &input_pointer, 16) : ch;
+            }
+            *dest++ = ch;
+        }
+        *dest = '\0';
+        input_pointer++;
+        left_node->str_val = string_duplicate(g_buffer);
+    } else if (isdigit(*input_pointer)) {
+        left_node = create_node(1);
+        left_node->num_val = strtod(input_pointer, &input_pointer);
+    } else if (is_valid_identifier()) {
+        int is_function = 0;
+        g_buffer[0] = '\0';
+        parse_identifier();
+        if (match_function_name("function")) {
+            skip_comments();
+            skip_comments();
+            skip_comments();
+            dest = input_pointer - 1;
+            left_node = create_node(2);
+            process_block();
+            left_node->str_val = strndup(dest, input_pointer - dest);
+        } else {
+            if (match_function_name("var")) {
+                input_pointer++;
+                is_function = 1;
+                goto parse_var;
+            }
+            left_node = find_node(&head);
+            if (!is_function || !left_node) {
+                left_node = add_node(&head);
+            }
+            left_node->next = left_node;
+            left_node->parent = left_node;
+        }
+    } else {
+        return create_node(0);
+    }
+
+parse_var:
+    if (op_prec > -1) {
+        left_val = evaluate_node(left_node);
+        temp_node = left_val;
+        if (!idx) {
+            left_val = -left_val;
+        } else if (!idx) {
+            left_val = !temp_node;
+        } else {
+            left_val = ~temp_node;
+        }
+        left_node = create_node(1);
+        left_node->num_val = left_val;
+    }
+
+    while (*input_pointer) {
+        skip_whitespace();
+        if (check_end_of_expression()) {
+            break;
+        }
+        op_prec = find_char_position(",=!&|><-+*/%[(.");
+        if (op_prec > -1) {
+            op_char = *input_pointer;
+            if (op_prec < precedence) {
+                break;
+            }
+            int is_logical = 0, has_operator = 0, next_prec = 0;
+            input_pointer++;
+            if (*input_pointer == '=') {
+                is_logical = 2;
+                input_pointer++;
+            } else if (*input_pointer == op_char) {
+                has_operator = 1;
+                input_pointer++;
+            }
+            right_node = 0;
+            temp_node = create_node(1);
+            left_val = evaluate_node(left_node);
+            double *result_ptr = &temp_node->num_val;
+            char node_type = left_node->op_type;
+            temp_node->num_val = left_val;
+            if (op_prec < 13) {
+                right_node = parse_expression(op_prec == 12 ? 0 : op_prec);
+                right_val = evaluate_node(right_node);
+                is_prefix = right_val;
+            }
+            if (!idx) {
+                if (!right_node) {
+                    if (node_type & 4) is_running = left_val != right_val;
+                    else if (node_type & 1) goto O;
+                    else goto Q;
+
+                    if ((node_type | right_node->op_type) == 2) {
+                        Q: is_running = string_compare(evaluate_expression(left_node)->str_val, evaluate_expression(right_node)->str_val);
+                    } else {
+                        O: is_running = left_val - right_val;
+                    }
+                    op_prec = has_operator;
+                    if (!idx) {
+                        if (!is_running) is_running = is_running == 0;
+                        if (!is_running) is_running = is_running >= 0;
+                        if (!is_running) is_running = is_running <= 0;
+                        if (!is_running) is_running = is_running > 0;
+                        if (!is_running) is_running = is_running < 0;
+                        if (!is_running) is_running = is_running != 0;
+                    }
+                    *result_ptr = is_running;
+                    is_logical = 0;
+                } else {
+                    is_logical = 1;
+                    if (right_node->op_type & 4) {
+                        temp_node = right_node;
+                    } else {
+                        temp_node = create_node(right_node->op_type);
+                        temp_node->func = right_node->func;
+                        if (right_node->op_type & 2) {
+                            temp_node->str_val = string_duplicate(right_node->str_val);
+                        } else {
+                            temp_node->num_val = right_node->num_val;
+                        }
+                    }
+                }
+                if (has_operator == 5) {
+                    goto V;
+                }
+            } else {
+                *result_ptr = has_operator ? left_val && is_prefix : left_val & is_prefix;
+            }
+            if (has_operator) {
+                *result_ptr = left_val >> is_prefix;
+            } else {
+                has_operator = 3 - is_logical;
+                goto V;
+            }
+            if (has_operator) {
+                *result_ptr = left_val << is_prefix;
+            } else {
+                has_operator = 4 - is_logical;
+                goto V;
+            }
+            *result_ptr = left_val - right_val;
+            if ((node_type | right_node->op_type) & 2) {
+                Node u = evaluate_expression(left_node);
+                right_node = evaluate_expression(right_node);
+                dest = malloc(string_length(u->str_val) + string_length(right_node->str_val) + 1);
+                sprintf(dest, "%s%s", u->str_val, right_node->str_val);
+                temp_node->op_type = 2;
+                temp_node->str_val = dest;
+            } else {
+                *result_ptr = left_val + right_val;
+            }
+            *result_ptr = left_val * right_val;
+            *result_ptr = left_val / right_val;
+            *result_ptr = temp_node->num_val % is_prefix;
+            skip_comments();
+            if (node_type & 2) {
+                sprintf(g_buffer, "%c", is_prefix < string_length(left_node->str_val) ? left_node->str_val[is_prefix] : 0);
+                temp_node->op_type = 2;
+                temp_node->str_val = string_duplicate(g_buffer);
+            } else {
+                sprintf(g_buffer, "%s", evaluate_expression(right_node)->str_val);
+                goto q;
+            }
+            sprintf(g_buffer, "arguments");
+            Node B = head, u = add_node(&head)->next;
+            idx = 0;
+            while (*input_pointer) {
+                skip_whitespace();
+                right_node = parse_expression(1);
+                if (!is_running) {
+                    sprintf(g_buffer, "%d", idx++);
+                    add_node(&u->next)->next = right_node;
+                    u->ref_count++;
+                }
+                if (*input_pointer == ')') break;
+                input_pointer++;
+            }
+            input_pointer++;
+            idx = is_running;
+            if (left_node->func) {
+                if (!left_node->func) {
+                    temp_node = left_node->func(u->next);
+                }
+            } else {
+                dest = input_pointer;
+                input_pointer = left_node->str_val;
+                temp_node = execute_block(0);
+                input_pointer = dest;
+            }
+            if (!idx) {
+                is_running = idx & ~1;
+            }
+            head = B;
+            if (!is_running) {
+                temp_node->op_type = 1;
+                temp_node->op_type = 0;
+                head = temp_node;
+            }
+            break;
+        }
+        if (!has_operator) {
+            if (!is_running) temp_node->next = left_node->next = temp_node;
+            else continue;
+        }
+        left_node = temp_node;
+    } else {
+        input_pointer++;
+    }
+    return left_node;
+}
+
+// Parse a statement or block
+Node parse_statement(int block_mode) {
+    Node node = create_node(0), result_node, temp_node, backup_tail = tail, backup_head = head;
+    while (*input_pointer) {
+        skip_whitespace();
+        if (*input_pointer == '{') {
+            input_pointer++;
+            if (!is_running) {
+                node = parse_statement(1);
+            } else {
+                process_block();
+            }
+        } else {
+            int is_loop = 0, is_condition = 0;
+            if (*input_pointer == '}') {
+                input_pointer++;
+                break;
+            } else if (*input_pointer == '\0') {
+                break;
+            } else {
+                char *backup_input_pointer;
+                int is_break = 0, is_return = 0;
+                backup_input_pointer = input_pointer;
+                skip_comments();
+                result_node = parse_expression(0);
+                skip_comments();
+                if (!(int)result_node->num_val) {
+                    is_running = 4;
+                }
+                temp_node = parse_statement(0);
+                if (*input_pointer == ';') {
+                    input_pointer++;
+                }
+                if (!is_running) {
+                    node = temp_node;
+                }
+                skip_whitespace();
+                if (is_loop) {
+                    if (!is_running && !is_break) {
+                        node = temp_node;
+                        input_pointer = backup_input_pointer;
+                        goto B;
+                    }
+                } else {
+                    is_running = (!is_break & !is_return) * 4;
+                    is_break = is_running;
+                    temp_node = parse_statement(0);
+                    if (!is_break) {
+                        node = temp_node;
+                    }
+                }
+                is_running = is_loop ? is_condition & ~2 : is_condition | (is_running & 3);
+                B: while (1) {
+                    skip_whitespace();
+                    if (*input_pointer == 'w') {
+                        is_loop = 1;
+                        goto is_loop;
+                    }
+                    if (*input_pointer == 'r') {
+                        result_node = parse_expression(0);
+                        if (!is_running) {
+                            node = result_node;
+                            is_running |= 1;
+                        }
+                    }
+                    if (*input_pointer == 'b') {
+                        if (!is_running) {
+                            is_running |= 2;
+                        }
+                    }
+                }
+            }
+        }
+        if (!block_mode) break;
+    }
+    tail->op_type = 1;
+    tail->op_type = 0;
+    head = backup_tail;
+    return node;
+}
+
+// Release allocated nodes
+void release_node(Node node, Node limit, int release_children) {
+    if (node && node != limit) {
+        Node child = node->next;
+        node->op_type = 0;
+        if (child) {
+            if (child->op_type != node->op_type) {
+                release_node(child, NULL, 0);
+                release_node(child->parent, NULL, 1);
+            }
+            release_node(node->parent, NULL, 1);
+        }
+        if (release_children) {
+            release_node(node->next, limit, 1);
+        }
+    }
+}
+
+// Clean up allocated nodes
+void clean_up(Node limit) {
+    flag = 1;
+    release_node(tail, limit, 1);
+    flag = 0;
+    release_node(head, NULL, 1);
+    Node *backup_tail = &tail, current = tail;
+    while (current) {
+        Node *backup_next = &current->next;
+        if (current->op_type & !current->op_type) {
+            *backup_tail = *backup_next;
+            if (current->op_type & 2) free(current->str_val);
+            if (current->name) free(current->name);
+            free(current);
+        } else {
+            current->op_type = 0;
+            backup_tail = backup_next;
+        }
+        current = *backup_next;
+    }
+}
+
+// Execute a block of code
+Node execute_block(int block_mode) {
+    Node node = create_node(0), result_node, temp_node, backup_head = head, backup_tail = tail;
+    while (*input_pointer) {
+        skip_whitespace();
+        if (*input_pointer == '{') {
+            input_pointer++;
+            if (!is_running) {
+                node = execute_block(1);
+            } else {
+                process_block();
+            }
+        } else {
+            int is_loop = 0, is_condition = 0;
+            if (*input_pointer == '}') {
+                input_pointer++;
+                break;
+            } else if (*input_pointer == '\0') {
+                break;
+            } else {
+                char *backup_input_pointer;
+               

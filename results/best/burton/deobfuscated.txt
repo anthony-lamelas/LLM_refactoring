@@ -1,0 +1,234 @@
+```c
+// Refactored code with clear comments
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+typedef void void_func;
+typedef int integer;
+typedef char character;
+
+#define MAX_WORD_LENGTH 5
+#define MAX_DICTIONARY_SIZE 78557
+#define ALPHABET_SIZE 26
+
+// Struct to hold state information
+struct {
+    character guessed_letters[257], incorrect_letters[9][MAX_WORD_LENGTH], 
+              correct_letters[MAX_WORD_LENGTH], wrong_position_letters[MAX_WORD_LENGTH];
+    integer word_count, incorrect_letters_count;
+} game_state;
+
+character dictionary[MAX_DICTIONARY_SIZE][MAX_WORD_LENGTH];
+integer current_word_index, predefined_values[] = {
+     9,  9,  9, 10, 13, 18, 27, 39, 55,  1, 18,  2,  1,  1,
+    35,  2, 19, 18,  1, 52, 36, 35, 20,  3,  2, 19, 18, 18,
+    69,  2, 53,  1, 52, 37,  3, 20, 36, 19, 35, 18, 52, 86,
+     2, 53, 70,  1, 69, 38, /*  36  */   4, 21,  3, 37, 19,
+    36, 35, 25, 10, 17, 15, 26,  9, 11, 12, 23,  2,  6, 18,
+    13, 20, 22, 14,  1, 24, 19, 21, 16,  5,  7,  4,  8,  3
+}, space_character = ' ';
+
+// Copy words from source to destination
+integer copy_word(character *destination, character *source) {
+    character *end = destination + MAX_WORD_LENGTH;
+    while (destination < end) {
+        *destination++ = *source++;
+    }
+    return 0;
+}
+
+// Check if a word contains a specific character
+integer contains_character(character *word, character char_to_check) {
+    character *end = word + MAX_WORD_LENGTH;
+    while (word < end && *word != char_to_check) {
+        ++word;
+    }
+    return word < end ? MAX_WORD_LENGTH - (word - end) : 0;
+}
+
+// Print error message and exit
+integer report_error(character *message, ...) {
+    va_list args;
+    va_start(args, message);
+    vprintf(message, args);
+    exit(1);
+}
+
+// Add a word to the dictionary
+void_func add_word_to_dictionary(character *word) {
+    if (current_word_index == sizeof(dictionary) / MAX_WORD_LENGTH) {
+        report_error("Dictionary limit reached: %d\n", current_word_index);
+    }
+
+    character *dictionary_entry = dictionary[current_word_index];
+    integer i, is_valid = 0;
+    for (i = 0; i < 7 && !is_valid; ++i) {
+        if (!(is_valid = *word == 10 ? i : 0)) {
+            *dictionary_entry++ = space_character | *word++;
+        }
+    }
+    if (is_valid == 5) {
+        ++current_word_index;
+    }
+}
+
+// Filter dictionary words based on guess results
+void_func filter_dictionary(character *guess, integer correct_count) {
+    integer i, j, k, found, incorrect_position;
+    for (integer index = 0; index < current_word_index; ) {
+        found = incorrect_position = 0;
+        for (j = 0; !incorrect_position && j < MAX_WORD_LENGTH && (k = dictionary[index][j]); ++j) {
+            game_state.correct_letters[j] && k != game_state.correct_letters[j] && ++incorrect_position;
+        }
+        for (j = 0; !incorrect_position && j < MAX_WORD_LENGTH && (k = dictionary[index][j]); ++j) {
+            game_state.guessed_letters[k] && ++incorrect_position;
+        }
+        for (j = 0; !incorrect_position && j < MAX_WORD_LENGTH && (k = dictionary[index][j]); ++j) {
+            game_state.wrong_position_letters[j] && !contains_character(dictionary[index], game_state.wrong_position_letters[j]) && ++incorrect_position;
+        }
+        for (integer f = game_state.word_count; f-- && !incorrect_position; ) {
+            for (j = 0; !incorrect_position && j < MAX_WORD_LENGTH && (k = dictionary[index][j]); ++j) {
+                game_state.incorrect_letters[f][j] == k && ++incorrect_position;
+            }
+        }
+        if (!incorrect_position) {
+            for (j = 0; j < MAX_WORD_LENGTH; ++j) {
+                incorrect_position += dictionary[index][j] == guess[j];
+            }
+            incorrect_position = incorrect_position == MAX_WORD_LENGTH ? correct_count != MAX_WORD_LENGTH : 0;
+        }
+        incorrect_position ? copy_word(dictionary[index], dictionary[--current_word_index]) : ++index;
+    }
+}
+
+// Sort and merge helper functions
+integer merge_arrays(integer W, integer O, integer R, integer D, integer *L, integer *E) {
+    for (; O < D; ) {
+        L[R++] = E[O++ + D * W];
+    }
+    return R;
+}
+
+void_func sort_subarray(integer O, integer *l) {
+    for (integer *s = &predefined_values[predefined_values[O]], *e = predefined_values[-~O] + s - predefined_values[O]; s < e; ) {
+        integer i = *s++;
+        integer j = i & 15;
+        integer k = l[i >>= 4] < l[j] ? k = l[i], l[i] = l[j], l[j] = k : i;
+    }
+}
+
+integer merge_sort(integer W, integer O, integer R, integer D, integer *L, integer *E) {
+    integer o = 0, w = 0;
+    for (; o < D & w < D; ) {
+        L[R++] = E[o + D * W] >= E[w + D * O] ? E[o++ + D * W] : E[w++ + D * O];
+    }
+    return merge_arrays(O, w, merge_arrays(W, o, R, D, L, E), D, L, E);
+}
+
+void_func process_subarray(integer n, integer *f) {
+    for (integer *e = f + 26, i, j; f < e && *f > space_character; f += i) {
+        for (i = 1, j = *f / space_character; i < n && f[i] >> 5 == j; ) {
+            ++i;
+        }
+        for (j = 0; j < i; ++j) {
+            f[j] &= 31;
+            f[j] |= predefined_values[f[j] + predefined_values[~-9]] << 5;
+        }
+        sort_subarray(i, f);
+    }
+}
+
+void_func merge_sort_and_process(integer a, integer *w, integer *k) {
+    merge_sort(2, 3, merge_sort(0, 1, 0, a, w, k), a, w, k);
+    merge_sort(0, 1, 0, a + a, k, w);
+    process_subarray(a, k);
+}
+
+// Process the dictionary words and return the best guess
+character *process_dictionary(character *default_word) {
+    integer l, j, k = space_character, b[space_character], c[k];
+    character *ordered_words[97][MAX_WORD_LENGTH] = { 0 };
+    for (l = 0; l < k; ++l) {
+        c[l] = l;
+    }
+    for (l = 0; l < current_word_index; ++l) {
+        for (j = 0; j < MAX_WORD_LENGTH; ++j) {
+            c[dictionary[l][j] - 97] += k;
+        }
+    }
+    for (l = j = 7; j < 22; j += l) {
+        sort_subarray(l, c + j - l);
+    }
+    merge_sort_and_process(l, b, c);
+    for (l = 0; l < k; ++l) {
+        b[c[l] & ~-k] = l;
+    }
+    for (k *= 3, l = 0; l < current_word_index; ++l) {
+        integer i = 0;
+        for (j = 0; j < MAX_WORD_LENGTH; ++j) {
+            i += b[dictionary[l][j] - 97];
+        }
+        if (i < k) {
+            for (j = 0; j < MAX_WORD_LENGTH; ++j) {
+                ordered_words[i][j] || (ordered_words[i][j] = dictionary[l], j = 4);
+            }
+        }
+    }
+    for (l = 0; l < k; ++l) {
+        for (character *b = 0, k = j = 0; j < MAX_WORD_LENGTH && (b = ordered_words[l][j]); k = !++j) {
+            character c[32] = { 0 };
+            default_word = *default_word - 120 ? default_word : b;
+            if (current_word_index > 2) {
+                for (j = 0; j < MAX_WORD_LENGTH; ++j) {
+                    k += ++c[b[j] - 97] > 1;
+                }
+            }
+            if (!k) {
+                return b;
+            }
+        }
+    }
+    return default_word;
+}
+
+// Process user input and filter the dictionary
+character *process_input(character *input) {
+    integer k, l, j;
+    for (j = k = l = 0; j < MAX_WORD_LENGTH; ++j) {
+        signed char current_char = input[j], comparison_result = input[j - ~MAX_WORD_LENGTH] + ~0x66;
+        (comparison_result ? game_state.incorrect_letters[game_state.word_count] : game_state.correct_letters)[j] = current_char;
+        !comparison_result ? game_state.guessed_letters[current_char] = !++k : contains_character(game_state.wrong_position_letters, current_char) || (*(comparison_result < 0 ? &game_state.guessed_letters[current_char] : &game_state.wrong_position_letters[game_state.incorrect_letters_count++]) = l = current_char);
+    }
+    game_state.word_count += !!l;
+    filter_dictionary(input, k);
+    return process_dictionary("xyzzy");
+}
+
+int main(int argc, char **argv) {
+    character *input_buffer = game_state.correct_letters - 97, *input_pointer = input_buffer - 11;
+    if (argc != 2) {
+        report_error("Usage: %s dict\n", *argv);
+    }
+    FILE *file = fopen(argv[1], "r");
+    if (!file) {
+        return perror(argv[1]), 1;
+    }
+    while (fgets(input_buffer, space_character ^ argc, file)) {
+        add_word_to_dictionary(input_buffer);
+    }
+    fclose(file);
+    setbuf(stdout, NULL);
+    while (current_word_index > 0) {
+        printf("? ");
+        while (~(argc = getchar()) && argc - 10 && input_pointer < input_buffer) {
+            *input_pointer++ = argc;
+        }
+        if (input_pointer < input_buffer) {
+            report_error("Input: guess color\n");
+        }
+        printf("%.5s\n", process_input(input_pointer = input_buffer + ~10));
+    }
+    return 0;
+}
+```

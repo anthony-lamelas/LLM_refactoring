@@ -1,0 +1,207 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define DICT "dict"
+
+// Structure to hold dictionary entries and related data
+struct dictionary_entry {
+    char *word;
+    char *code;
+    char *str;
+    char *temp;
+    char *aux;
+    char **args;
+    char *secondary_str;
+    char *name;
+    char *buffer;
+    char *(*functions[9])(struct dictionary_entry *);
+    struct dictionary_entry *next;
+    struct dictionary_entry *prev;
+    struct dictionary_entry *entry;
+    int index;
+} *first_entry, *current_entry;
+
+// Navajo code mapping array
+char *navajo_codes[][2] = {
+    {"A", "WOL-LA-CHEE"}, {"B", "SHUSH"}, {"C", "MOASI"}, {"D", "CHINDI"},
+    {"E", "DZEH"}, {"F", "CHUO"}, {"G", "JEHA"}, {"H", "TSE-GAH"},
+    {"I", "YEH-HES"}, {"J", "AH-YA-TSINNE"}, {"K", "BA-AH-NE-DI-TININ"},
+    {"L", "NASH-DOIE-TSO"}, {"M", "BE-TAS-TNI"}, {"N", "TSAH"},
+    {"O", "A-KHA"}, {"P", "CLA-GI-AIH"}, {"Q", "CA-YEILTH"},
+    {"R", "DAH-NES-TSA"}, {"S", "KLESH"}, {"T", "D-AH"},
+    {"U", "NO-DA-IH"}, {"V", "A-KEH-DI-GLINI"}, {"W", "GLOE-IH"},
+    {"X", "AL-NA-AS-DZOH"}, {"Y", "TSAH-AS-ZIH"}, {"Z", "BESH-DO-TLIZ"}
+};
+
+size_t buffer_size;
+FILE *dictionary_file;
+
+// Function prototypes
+char *process_word(struct dictionary_entry *entry);
+char *process_dictionary(struct dictionary_entry *entry);
+char *translate_entry(struct dictionary_entry *entry);
+char *translate_all_entries(struct dictionary_entry *entry);
+char *translate_word(struct dictionary_entry *entry);
+char *read_dictionary(struct dictionary_entry *entry);
+char *read_file(struct dictionary_entry *entry);
+
+// Process a single word for translation
+char *process_word(struct dictionary_entry *entry) {
+    entry->entry = entry->prev;
+    int char_output = 0;
+    int index = 0;
+
+    while (entry->entry) {
+        struct dictionary_entry temp_entry = {.word = entry->entry->word, .code = entry->temp};
+
+        if (entry->functions[2](&temp_entry)) {
+            while (!isalpha(*entry->temp) && *entry->temp) {
+                char_output = putchar(*entry->temp);
+                ++entry->temp;
+            }
+
+            while (char_output = *entry->entry->code ? (entry->entry->code[index]) : 0) {
+                int offset = char_output - 'a';
+                char_output = putchar(isupper(entry->temp[0]) ? entry->entry->code[offset] : tolower(entry->entry->code[offset]));
+                index++;
+            }
+            goto end;
+        }
+
+        entry->entry = entry->entry->prev;
+    }
+
+    for (int i = 0; entry->temp[i]; ++i) {
+        if (!isalpha(entry->temp[i])) {
+            char_output = putchar(entry->temp[i]);
+        } else {
+            int is_lower = islower(entry->temp[i]);
+            for (int j = 0; j < 26; ++j) {
+                if (*navajo_codes[j][0] == toupper(entry->temp[i])) {
+                    for (int k = 0; navajo_codes[j][1][k]; ++k) {
+                        char_output = putchar(is_lower ? tolower(navajo_codes[j][1][k]) : toupper(navajo_codes[j][1][k]));
+                    }
+                    char_output = putchar('!');
+                    break;
+                }
+            }
+        }
+    }
+
+end:
+    if (!isspace(char_output)) {
+        putchar(' ');
+    }
+
+    return entry->str;
+}
+
+// Translate all words in a dictionary entry
+char *translate_entry(struct dictionary_entry *entry) {
+    while (entry->args[entry->index++]) {
+        if (*entry->args[--entry->index] == 'e' && *entry->functions[1](&((struct dictionary_entry) {.functions[0] = process_word, .entry = entry->entry}))) {
+            ++entry->index;
+        } else {
+            *entry->functions[1](&((struct dictionary_entry) {.functions[2] = translate_entry, .temp = entry->args[entry->index], .prev = entry->entry}));
+            ++entry->index;
+        }
+    }
+
+    return "";
+}
+
+// Translate a single word
+char *translate_word(struct dictionary_entry *entry) {
+    if (*entry->word && *entry->code && entry->word[1] && entry->code[1]) {
+        while (*entry->word && *entry->code) {
+            while (!isalpha(*entry->word) && entry->word++) {}
+            while (!isalpha(*entry->code) && entry->code++) {}
+
+            if (!*entry->code || !*entry->word || tolower(*entry->word) != tolower(*entry->code)) {
+                break;
+            }
+
+            ++entry->word;
+            ++entry->code;
+        }
+    }
+
+    return !*entry->word && !*entry->code ? "" : 0;
+}
+
+// Read and process dictionary file
+char *read_dictionary(struct dictionary_entry *entry) {
+    dictionary_file = fopen(DICT, "r");
+
+    if (dictionary_file) {
+        while (getline(&entry->buffer, &buffer_size, dictionary_file) != -1) {
+            if ((entry->name = strtok(entry->buffer, "\t")) && (entry->secondary_str = strtok(0, "\t"))) {
+                current_entry = calloc(1, sizeof *current_entry);
+                current_entry->word = strdup(entry->entry ? entry->functions[entry->index](&((struct dictionary_entry) {.str = entry->secondary_str})) : entry->functions[0](&((struct dictionary_entry) {.str = entry->name})));
+                current_entry->code = strdup(entry->entry ? entry->functions[1](&((struct dictionary_entry) {.str = entry->name})) : entry->functions[entry->index](&((struct dictionary_entry) {.str = entry->secondary_str})));
+                current_entry->entry = first_entry;
+                first_entry = current_entry;
+            }
+        }
+
+        free(entry->buffer);
+        entry->buffer = NULL;
+
+        fclose(dictionary_file);
+        dictionary_file = NULL;
+    } else {
+        puts("couldn't open dict");
+    }
+
+    return "";
+}
+
+// Read and process input file
+char *read_file(struct dictionary_entry *entry) {
+    buffer_size = 0;
+    dictionary_file = fopen(entry->str, "r");
+    entry->buffer = NULL;
+
+    while (dictionary_file && getline(&entry->buffer, &buffer_size, dictionary_file) != -1) {
+        entry->secondary_str = strtok(entry->buffer, " \t");
+
+        while (entry->secondary_str) {
+            if ((entry->temp = strdup(entry->secondary_str))) {
+                entry->functions[0](&((struct dictionary_entry) {.functions[2] = translate_word, .temp = entry->temp}));
+                entry->secondary_str = strtok(0, " \t");
+                free(entry->temp);
+                entry->temp = NULL;
+
+                if (!isspace(char_output)) {
+                    putchar(' ');
+                }
+            }
+        }
+    }
+
+    if (dictionary_file) {
+        clearerr(dictionary_file);
+        fclose(dictionary_file);
+        dictionary_file = NULL;
+
+        free(entry->buffer);
+        entry->buffer = NULL;
+    }
+
+    return "";
+}
+
+int main(int argc, char **argv) {
+    struct dictionary_entry main_entry = {.index = 1, .str = argv[argc - 1], .functions = { &process_word, &process_word }};
+
+    read_dictionary(&(struct dictionary_entry) {.functions = {read_file, process_word}, .entry = 0, .index = argc, .args = argv, .prev = first_entry});
+    translate_entry(&main_entry);
+
+    puts("");
+    return 0;
+}
+```

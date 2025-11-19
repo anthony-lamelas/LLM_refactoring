@@ -1,0 +1,318 @@
+
+Generated: 2025-11-19 17:10:22
+
+Total files compared: 76
+
+Compilation Results:
+  Original files compiled:    0/76 (0.0%)
+  Refactored files compiled:  0/76 (0.0%)
+  Both compiled successfully: 0/76 (0.0%)
+
+Execution Results:
+  Outputs match: 0/0 (N/A of successfully compiled pairs)
+
+DETAILED RESULTS:
+
+1. deobfuscated.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+2. dups.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+3. gen.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+4. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+5. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+6. reveal.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+7. run.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+8. unob.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+9. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+10. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+11. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+12. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+13. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+14. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+15. addpadding.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+16. bytecheck.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+17. bytecount.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+18. byteread.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+19. bytetest.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+20. commented.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+21. lencount.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+22. mbcheck.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+23. printer.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+24. prog.alt.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+25. prog.alt2.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+26. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+27. prog.gotos.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+28. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+29. V.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+30. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+31. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+32. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+33. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+34. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+35. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+36. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+37. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+38. deobfus.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+39. prog.alt.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+40. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+41. prog.obfus.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+42. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+43. prog.pre-format.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+44. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+45. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+46. prog.alt.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+47. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+48. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+49. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+50. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+51. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+52. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+53. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+54. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+55. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+56. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+57. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+58. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+59. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+60. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+61. prog.alt.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+62. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+63. prog.nomain.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+64. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+65. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+66. prog.jit.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+67. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+68. prog.sdl.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+69. prog.win.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+70. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+71. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+72. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+73. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+74. prog.alt.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+75. prog.c
+   Original compiled: ✗
+   Refactored compiled: ✗
+
+76. prog.orig.c
+   Original compiled: ✗
+   Refactored compiled: ✗

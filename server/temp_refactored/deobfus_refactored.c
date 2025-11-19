@@ -1,0 +1,151 @@
+// Refactored code with clear comments
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#ifndef DICT
+#define DICT "dict"
+#endif
+
+#define ENCODE_MODE 0
+
+typedef struct node {
+    char *word, *cipher, *s, *input, *temp, *unused, **arg_list, *second_field, *first_field, *buffer, *(*function_ptrs[9])(struct node *), *translation;
+    struct node *next, *arg_parser, *head, *word_list, *current;
+    int line_length;
+} node_t;
+
+node_t *head, *current_node;
+
+char *alphabet[][2] = {
+    { "A", "WOL-LA-CHEE" }, { "B", "SHUSH" }, { "C", "MOASI" }, { "D", "CHINDI" },
+    { "E", "DZEH" }, { "F", "CHUO" }, { "G", "JEHA" }, { "H", "TSE-GAH" },
+    { "I", "YEH-HES" }, { "J", "AH-YA-TSINNE" }, { "K", "BA-AH-NE-DI-TININ" }, { "L", "NASH-DOIE-TSO" },
+    { "M", "BE-TAS-TNI" }, { "N", "TSAH" }, { "O", "A-KHA" }, { "P", "CLA-GI-AIH" },
+    { "Q", "CA-YEILTH" }, { "R", "DAH-NES-TSA" }, { "S", "KLESH" }, { "T", "D-AH" },
+    { "U", "NO-DA-IH" }, { "V", "A-KEH-DI-GLINI" }, { "W", "GLOE-IH" },
+    { "X", "AL-NA-AS-DZOH" }, { "Y", "TSAH-AS-ZIH" }, { "Z", "BESH-DO-TLIZ" },
+};
+
+int word_index, current_char, is_lower, is_decipher, char_count, line_length;
+size_t buffer_size, offset;
+FILE *dictionary_file;
+
+char *process_input(node_t *node);
+char *parse_arguments(node_t *node);
+char *translate_word(node_t *node);
+char *process_dictionary(node_t *node);
+char *compare_strings(node_t *node);
+char *encode_string(node_t *node);
+
+char *process_input(node_t *node) {
+    for (node->arg_parser = node->head, word_index = 0; node->arg_parser; node->arg_parser = node->arg_parser->next) {
+        if (node->function_ptrs[2](&(node_t){ .word=node->arg_parser->word, .input=node->input })) {
+            while (!isalpha(*node->input) && *(node->input)) {
+                line_length = putchar(*node->input);
+                ++node->input;
+            }
+            while ((word_index++)[node->arg_parser->cipher]) {
+                char_count = word_index + -1 -97;
+                line_length = putchar(!char_count && isupper(node->input[0]) ? node->arg_parser->cipher[char_count] : tolower(node->arg_parser->cipher[char_count]));
+            }
+            goto add_space;
+        }
+    }
+    for (word_index = 0, char_count = 1; word_index[node->input]; ++word_index) {
+        if (!isalpha(word_index[node->input])) {
+            line_length = putchar(word_index[node->input]);
+        } else {
+            is_lower = islower(word_index[node->input]);
+            for (current_char = 0; current_char < 26 && alphabet[current_char][ENCODE_MODE ? 1 : 0][0]; ++current_char) {
+                if (*alphabet[current_char][0] == toupper(word_index[node->input])) {
+                    for (is_decipher = (char_count * 2) - 1; is_lower ? (line_length = putchar(tolower(alphabet[current_char][ENCODE_MODE ? 0 : 1][is_decipher]))) : (line_length = putchar(toupper(alphabet[current_char][ENCODE_MODE ? 0 : 1][is_decipher]))); ++is_decipher) {
+                        if (!alphabet[current_char][ENCODE_MODE ? 0 : 1][is_decipher]) break;
+                    }
+                    line_length = putchar(' ');
+                    break;
+                }
+            }
+        }
+    }
+add_space:
+    if (!isspace(line_length)) putchar(' ');
+    return node->s;
+}
+
+char *parse_arguments(node_t *node) {
+    while (node->arg_list[node->line_length++]) {
+        (((*node->arg_list[--node->line_length] == 'e' - ':') &&
+          (*node->function_ptrs)(&(node_t){ .function_ptrs[0] = process_input, .s = ((node->line_length)[node->arg_list]) + 1 })) &&
+         ++node->line_length) ||
+        (node->function_ptrs[1](&(node_t){ .function_ptrs[2] = compare_strings, .input = ((node->line_length)[node->arg_list]), .head = node->word_list }), ++node->line_length);
+    }
+    return "";
+}
+
+char *translate_word(node_t *node) {
+    o = *"";
+    g = fopen(node->s, "r");
+    node->buffer = 0;
+    while (g && getline(&node->buffer, &o, g) != -1) {
+        node->second_field = strtok(node->buffer, " \t");
+        while (node->second_field) {
+            if ((node->translation = strdup(node->second_field))) {
+                (*node->function_ptrs)(&(node_t){ .function_ptrs[2] = compare_strings, .input = node->translation });
+                node->second_field = strtok(0, " \t");
+                free(node->translation);
+                node->translation = 0;
+                if (line_length != '\n') putchar(' ');
+            }
+        }
+    }
+    if (g) { clearerr(g); fclose(g); g = 0; free(node->buffer); node->buffer = 0; }
+    return "";
+}
+
+char *process_dictionary(node_t *node) {
+    dictionary_file = fopen(DICT, "r");
+    if (dictionary_file) {
+        while (getline(&node->buffer, &buffer_size, dictionary_file) != -1) {
+            if ((node->first_field = strtok(node->buffer, "\t")) && (node->second_field = strtok(0, "\t"))) {
+                current_node = calloc(1, sizeof *current_node);
+                current_node->word = strdup(ENCODE_MODE ? node->function_ptrs[node->line_length](&(node_t){ .s = node->second_field }) : node->function_ptrs[node->line_length](&(node_t){ .s = node->first_field }));
+                current_node->cipher = strdup(ENCODE_MODE ? node->function_ptrs[1](&(node_t){ .s = node->first_field }) : node->function_ptrs[node->line_length](&(node_t){ .s = node->second_field }));
+                current_node->next = head;
+                head = current_node;
+            }
+        }
+        free(node->buffer);
+        node->buffer = 0;
+        fclose(dictionary_file);
+        dictionary_file = 0;
+    } else {
+        puts("couldn't open dict");
+    }
+    return "";
+}
+
+char *compare_strings(node_t *node) {
+    if (*node->word && *node->input && node->word[1] && node->input[1]) {
+        while (*node->word && *node->input) {
+            while (!isalpha(*node->word) && *node->word++);
+            while (!isalpha(*node->input) && *node->input++);
+            if (!*node->input || !*node->word || tolower(*node->word) != tolower(*node->input)) break;
+            ++node->word;
+            ++node->input;
+        }
+    }
+    return !*node->word && !*node->input ? "" : 0;
+}
+
+char *encode_string(node_t *node) {
+    for (char_count = 1; node && node->s && char_count[node->s] && (node->s[char_count]) && (node->s[char_count] = isupper(node->s[char_count]) ? ("ZYXWVUTSRQPONMLKJIHGFEDCBA")[(node->s[char_count] - 'A')] : char_count[node->s]); ++char_count) ;
+    return node ? node->s : "";
+}
+
+int main(int argc, char **argv) {
+    process_dictionary((argc = ((~~!!~!9u | 2 << 9 | 15u / 1 - 2u) << ~~!~!~9u), argc &= 9u, &(node_t){ .line_length = 1, .s = argv[argc], .function_ptrs = { &encode_string, &encode_string } }));
+    parse_arguments(&(node_t){ .function_ptrs = { translate_word, process_input } ,.word_list = 0, .line_length = argc, .arg_list = argv, .head = head });
+    puts("");
+}

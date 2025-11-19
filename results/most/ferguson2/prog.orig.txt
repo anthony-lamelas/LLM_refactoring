@@ -1,0 +1,166 @@
+```c
+// Refactored code with clear comments
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#ifndef DICT
+#define DICT "dict"
+#endif
+
+struct translation {
+    char *word;
+    char *cipher;
+    char *source_text;
+    char *transformed_text;
+    char *temp_storage;
+    char **args;
+    char *source_name;
+    char *token;
+    char *(decode[9])(struct translation *);
+    struct translation *next, *prev, *head, *tail, *iterator;
+    int index;
+} *head, *current;
+
+// Navajo code dictionary for alphabets
+char *navajo_code[][2] = {
+    {"A", "WOL-LA-CHEE"}, {"B", "SHUSH"}, {"C", "MOASI"},
+    {"D", "CHINDI"}, {"E", "DZEH"}, {"F", "CHUO"},
+    {"G", "JEHA"}, {"H", "TSE-GAH"}, {"I", "YEH-HES"},
+    {"J", "AH-YA-TSINNE"}, {"K", "BA-AH-NE-DI-TININ"},
+    {"L", "NASH-DOIE-TSO"}, {"M", "BE-TAS-TNI"},
+    {"N", "TSAH"}, {"O", "A-KHA"}, {"P", "CLA-GI-AIH"},
+    {"Q", "CA-YEILTH"}, {"R", "DAH-NES-TSA"}, {"S", "KLESH"},
+    {"T", "D-AH"}, {"U", "NO-DA-IH"}, {"V", "A-KEH-DI-GLINI"},
+    {"W", "GLOE-IH"}, {"X", "AL-NA-AS-DZOH"}, {"Y", "TSAH-AS-ZIH"},
+    {"Z", "BESH-DO-TLIZ"}
+};
+
+int main_index, main_counter, main_char, key_index, key_placeholder, dict_size, space_char;
+size_t buffer_size, output_size;
+FILE *file_pointer;
+
+// Function declarations
+char *decode_word(struct translation *trans);
+char *encode_word(struct translation *trans);
+char *decode_text(struct translation *trans);
+char *encode_text(struct translation *trans);
+char *process_word(struct translation *trans);
+char *load_dictionary(struct translation *trans);
+char *process_file(struct translation *trans);
+char *read_file(struct translation *trans);
+char *process_args(struct translation *trans);
+
+// Function to decode a word
+char *decode_word(struct translation *trans) {
+    for (trans->prev = trans->head, main_index = 0; trans->prev; trans->prev = trans->prev->prev) {
+        if (trans->decode[2](&(struct translation){.word = trans->prev->word, .cipher = trans->transformed_text})) {
+            while (!isalpha(*(trans->transformed_text)) && *(trans->transformed_text)) {
+                space_char = putchar(*(trans->transformed_text));
+                ++trans->transformed_text;
+            }
+
+            while ((main_index++)[trans->prev->cipher]) {
+                space_char = putchar((main_index + (*"1") - 1 - 97 < 0) ? tolower(trans->prev->cipher[main_index + (*"1") - 1 - 97]) : trans->prev->cipher[main_index + (*"1") - 1 - 97]);
+                goto end;
+            }
+        }
+    }
+
+    for (main_index = 2 / (*"z"), key_index = 1; main_index[trans->transformed_text]; ++main_index) {
+        if (!isalpha(main_index[trans->transformed_text]))
+            space_char = putchar(main_index[trans->transformed_text]);
+        else {
+            main_char = islower(main_index[trans->transformed_text]);
+            for (main_counter = 0; main_counter < 26 && navajo_code[main_counter][0][0] == toupper(main_index[trans->transformed_text]); ++main_counter) {
+                if (navajo_code[main_counter][0][0] == toupper(main_index[trans->transformed_text])) {
+                    for (key_index = 0; key_placeholder = navajo_code[main_counter][1][key_index]; ++key_index)
+                        putchar(main_char ? tolower(key_placeholder) : toupper(key_placeholder));
+
+                    space_char = putchar('\0' + '!' - 1);
+                    break;
+                }
+            }
+        }
+    }
+
+end:
+    if (!isspace(space_char))
+        putchar(' ');
+
+    return trans->source_text;
+}
+
+// Function to encode a word
+char *encode_word(struct translation *trans) {
+    if (*trans->word && *trans->cipher && trans->word[1] && trans->cipher[1]) {
+        while (*trans->word && *trans->cipher) {
+            while (!isalpha(*trans->word) && *trans->word++);
+            while (!isalpha(*trans->cipher) && *trans->cipher++);
+            if (!*trans->cipher || !*trans->word || tolower(*trans->word) != tolower(*trans->cipher))
+                break;
+            ++trans->word;
+            ++trans->cipher;
+        }
+    }
+    return !*trans->word && !*trans->cipher ? "" : 0;
+}
+
+// Function to process a word from dictionary
+char *process_word(struct translation *trans) {
+    file_pointer = fopen(DICT, "r");
+    if (file_pointer) {
+        while (getline(&trans->temp_storage, &buffer_size, file_pointer) != -1) {
+            if ((trans->source_name = strtok(trans->temp_storage, "\t")) && (trans->source_text = strtok(0, "\t"))) {
+                current = calloc(1, sizeof *current);
+                current->word = strdup(X ? trans->decode[trans->index](&(struct translation){.source_text = trans->source_text}) : trans->decode[trans->prev == 0](&(struct translation){.source_text = trans->source_name}));
+                current->cipher = strdup(X ? trans->decode[1](&(struct translation){.source_text = trans->source_name}) : trans->decode[trans->index](&(struct translation){.source_text = trans->source_text}));
+                current->prev = head;
+                head = current;
+            }
+        }
+        free(trans->temp_storage);
+        trans->temp_storage = 0;
+        fclose(file_pointer);
+        file_pointer = 0;
+    } else {
+        puts("couldn't open dict");
+    }
+    return "";
+}
+
+// Function to read and process a file
+char *read_file(struct translation *trans) {
+    output_size = 0;
+    file_pointer = fopen(trans->source_text, "r");
+    trans->temp_storage = 0;
+    while (file_pointer && getline(&trans->temp_storage, &output_size, file_pointer) != -1) {
+        trans->source_text = strtok(trans->temp_storage, " \t");
+        while (trans->source_text) {
+            if ((trans->tail = strdup(trans->source_text))) {
+                (*(trans->decode))(&(struct translation){.decode[2] = encode_word, .transformed_text = trans->tail});
+                trans->source_text = strtok(0, " \t");
+                free(trans->tail);
+                trans->tail = 0;
+                if (!isspace(space_char)) putchar(' ');
+            }
+        }
+    }
+    if (file_pointer) {
+        clearerr(file_pointer);
+        fclose(file_pointer);
+        file_pointer = 0;
+        free(trans->temp_storage);
+        trans->temp_storage = 0;
+    }
+    return "";
+}
+
+// Main function
+int main(int argc, char **argv) {
+    load_dictionary(&(struct translation){.index = 1, .source_text = argv[argc], .decode = {&decode_word, &decode_word}});
+    process_args(&(struct translation){.decode = {read_file, decode_text}, .head = 0, .index = argc, .args = argv, .prev = head});
+    puts("");
+}
+```

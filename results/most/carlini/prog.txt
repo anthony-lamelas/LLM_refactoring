@@ -1,0 +1,135 @@
+```c
+// Refactored code with clear comments
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+
+#define MAX_SIZE (1 << 24)
+
+typedef int int_type;
+
+char *encoded_string = 
+    "8 {}	o;	({ #} U{t *	;1}	&x;_;	k}rI}6{Y}O{{ p{}	O}}A Z}	x o{ >} W{ } V{	q{	.}t;	n{{ P{U{m;; >; }{&;{	{  e{	g}	}{ w	o { R};_{1;6}N}7{	(V{6} G;E}3} k{Y}T}4}Y;	C{ {[5;S;	L	J{	 s;,} {@{ [{ c;5; J{ m;	D}g{*{	^;	ec;	w;T;D;	{W}1;I; a}	{@*{y}l .}D{:	a}{	&	v}	] }w	b{	};	x{	z}	g}H}#;%;v2{ n} [{&;	n;U}a} ;	 ;	H}Yc F{; m	=}W;	V};i{}f}c;H}	{l{ p;	b}_;v} H{	`{{		r;w}3{X;C;O} O} B}z} {	b{ d;V{8  	},	}9}	d{*{	a{ Jb{t{${	;6{}@}-	e{q{W}}B{	e;	; }0{ -;x}}Q; } x{ L~}	J}	Sn}{/	G;X;	y{9}UY} 7}#d{e;l;	?{}	^{M}{	S} K;	+{ .{r{ z}Vu;} O{[;8{}g}	C{ U;a{={$ m}{}_}	{ 8}	o} Z{ u;=;c;	;Q;G; H^}X; M{ 6{[ '{	/;1}	g;		 E} ;[{	v{?;c; }; -P 3{ V	} @} >;}52}c{ YF}	^[;z;	R{a} `{V~} =}	r	3}p}{[g;)}	R -;4}	g{{	z}^;}V; b	1}n}	F;	R;{s;l}{c;	E${u}o} e; @}	,} ';S;	=	:[{ D}4};}} 1;2{	^{A{w !}	n}2} 5{8}z{ &;o;	I}	u}{	]; A}s;	S;9 {	3;T;p;9;=}d	G , M}iw{	}X} 8;;}{ }Ew}	{	=l	?{	u ,} ;k{	1}N;	]}	3{1{{>}c;	Q}M i{ I{.{	o}L{	?@}@{2; Y;O -> K}	.{V; X}D;	< E}	; 5{ /{ ;;a{	&	;P{}{p{Z{}	X }+;	q; 9|{z;y	7} g{G;I{	O{ ;	^}(}	_:} }h G	A{;{-{ ~}}	a{ u{	)}	7{Y{ L}; /;	m[;b{W	|; ]} &	h;;	} &}_} ;Y}	3	8{*;	S;}	O{0w;0{ :; `{	D{3{	y{	ae{	N; *{t} 	}X}aB});{	x{ #;{	};	J	; 8} }{2;	.; }	E;W};{&{{	b{Y;	^;		;	h	: +} C{}j}=;	d{	Q}N;;N{	)4 ={	q{f}D;p} 2}%	K} }LY{ b{	W RK{  F;	w1f{ J{	|;n}	E};	;	 t; O;L;{.9} <;	B{F	;	0{ w; b{&}l;	{ 9{Q{ }	K}; E;; {9	W;C}_{	9 o;	o{p} % Z;}	QZ;	6	Q}	I{	{p}s} }	} _}	b{	{v{	q{X;[{%}	J		 )E;	;V} P}	t{ {{p	P	;	B}R{E.0{ !}h;7 x} 8}`;C}s{x	;D;x;	%{ w};	s$ ; y *;j{}{{{{8X;	G{4w; t e{) ?}{{x;5;	{*}}/}F 5}| s}E;&} j w{s C{	}	n{ t}Z;	{2;+}s	^} {	_; {} *{k}	S; , v2{	q;	5 }a}m{ }0; 	{ }!};	N} ;8K	{	W}W;	qO{C{	o{e}+	p} =; ;<;W{; V	pP} %;	n}	;{}$J} } V{s;	v{ B; ,8; j;		1{]{; <;	I} 	Q}	; q} 3{ /{7{H}{ r{ A}{;);	O{	3{	2	L{d 6{J{ Z;5; {	V{;{q;	B{u}+D; @ 5 s %	{	>;}	z{	q}	#}	W}d}}}	9{		`}+{C},;I	za{m; -}E}}]N{d} #} U} .{}	{ N;7{w	G	b; }} k } E{	({L{} D{	|{)}>G;}{ {t}=}	f}	;X}) b;>}h} ;;;} ?(;=; G;m	u0; }U;	A;u} Y} ; d}{2;p;	V.}	E};	;^},} {	{;F}4} 	; Y; z;>}	<{O;y{ K{  ;){	n{ 2}q	^l.;	5F	 ;6;; K} (;t;a{ C	Z}T;	p{	yt{K{g;5} ; _{   ; ={}N{;  f{} S;^;!{C;{ x{	{k{V{/{ *{	D{$}	U	#{	}	`{fa(;R%{	#} 9 e} S<;	A};=;K	-{ a;@{5 KW	 0;T}{(} C;	:q{n;{{${ ,}	}A{ '{	_i;	}	4;	; ~} q})}>	~;/;0;O;}	F}A D{;/{G{	@;	U} _{	Z [;	N{E;~	z;`{ {Z}{ Y{r $}	0G}	m    ";
+
+int_type index, q[MAX_SIZE], buffer[MAX_SIZE], result[MAX_SIZE], lookup_table[9], *pointer, num_k, int_i, memory[MAX_SIZE], param, divisor = 1968, size_n, int_g, *temp[MAX_SIZE], count_k[MAX_SIZE], char_c, char_e, char_e_next, *char_u, char_y, int_f;
+char text[MAX_SIZE], *var_text;
+long long global_c = 1;
+
+// Function declarations
+int_type* process(int_type *Q);
+int_type calculate(int_type O);
+int_type decode(int_type K, int_type O);
+void decode_values(int_type H, int_type O);
+int main(int x, char **O);
+
+// Process the encoded data
+int_type* process(int_type *Q) {
+    int_type N, *f = Q, *o, p;
+    while ((N = *pointer++) < 9) {
+        int_type a = (pointer - buffer) / 4, b = 0;
+        o = Q - 1;
+        if (N < 6) {
+            *pointer = N;
+            num_k = 1 + (N > 1) + (N > 4);
+            for (int i = 0; i < num_k; i++) {
+                int_i = *pointer++;
+                N = pointer[i + 1] = int_i < 200000 ? a - int_i : memory[int_i = int_i - 200000];
+                if (N) temp[N][count_k[N]++] = a;
+            }
+            pointer += 4;
+        } else if (N != 7) {
+            int_i = *pointer++;
+            num_k = *pointer++;
+            for (int i = 0; i < num_k; i++) memory[i] = a += *pointer++;
+            num_k = MAX_SIZE;
+            for (int i = 0; i < num_k; i++) result[i] = q[i];
+            process(result + lookup_table[int_i]);
+        } else {
+            a = 0;
+            int_i = --*pointer++;
+            param = num_k = *pointer++;
+            if (int_i) {
+                for (int i = 0; i < num_k; i++) {
+                    b += Q[param];
+                    f[a += *pointer++] += b;
+                }
+                Q = f;
+            } else {
+                Q += param * 2;
+            }
+        }
+        f = o;
+    }
+    return Q;
+}
+
+// Calculate a value based on input
+int_type calculate(int_type O) {
+    if (global_c < divisor) {
+        global_c *= divisor;
+        param *= divisor;
+        num_k = *pointer++;
+        param += (num_k - 1 - (num_k > 10) - (num_k > 13) - (num_k > 34) - (num_k > 92)) << 4;
+        num_k = *pointer++;
+        param += num_k < 33 ? (num_k ^ 8) * 2 % 5 : (num_k ^ 6) % 3 * 4 + (int)*(pointer++) ^ 8 * 2 % 5 + 4;
+    }
+    int_type *x = buffer + O * 2;
+    num_k = global_c * ~*x / (*x + x[1] + 2);
+    int_i = param >= num_k;
+    param -= num_k * int_i;
+    global_c = int_i ? global_c - num_k : num_k;
+    x[int_i]++;
+    return int_i;
+}
+
+// Decode a value
+int_type decode(int_type K, int_type O) {
+    int_type g = 1 << K, f = 1;
+    O *= 99;
+    while (!calculate(++K + O)) {}
+    K--;
+    for (int i = 0; i < K; i++) f = f * 2 | calculate(O);
+    return f - g;
+}
+
+// Decode values into buffer
+void decode_values(int_type H, int_type O) {
+    for (param = 0; param < H; param++) {
+        num_k = 1 << O;
+        for (int i = 0; i < num_k; i++) buffer[int_g++ * 4 + 1] = result[i] >> param & 1;
+    }
+}
+
+// Main function
+int main(int x, char **O) {
+    if (x < 2) exit(42);
+    fcntl(0, 4, O_NONBLOCK);
+
+    int_type *Q = q, num_k, i, j = decode(9, 0);
+    while (j--) {
+        if (calculate(1)) {
+            pointer = Q - decode(4, 2) - 1;
+            num_k = decode(1, 3) + 1;
+            for (int i = 0; i < num_k; i++) *pointer++ = *pointer++;
+        } else {
+            *pointer++ = (1 - 2 * calculate(8)) * decode(3, 9);
+        }
+    }
+
+    Q = q;
+    num_k = size_n = *pointer++;
+    var_text = text + size_n;
+    char_y = *pointer++;
+    for (int i = 0; i < num_k; i++) temp[i] = malloc(7e4);
+    num_k = *pointer++;
+    for (int i = 0; i < num_k; i++) lookup_table[i] = *pointer++;
+    int_i = *pointer++;
+    pointer = buffer;
+    Q = process(q + int_i);
+    int_g = *pointer++;
+    FILE *file = fopen(O[1], "r");
+    num_k = 4096;
+    for (int i = 0; i < num_k; i++) result[i] = fgetc(file);
+    decode_values(8, 12);
+    int_g = *pointer++;
+    num_k = 16

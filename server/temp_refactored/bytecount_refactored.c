@@ -1,0 +1,55 @@
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
+
+// Function to open the file and handle errors
+FILE *open_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error: couldn't open data file\n");
+        exit(EXIT_FAILURE);
+    }
+    return file;
+}
+
+// Function to process the file and print the string locations
+void process_file(FILE *file) {
+    char *buffer = NULL;
+    size_t buffer_length = 0;
+    size_t string_index = 1; // Start index at 1 due to file padding
+
+    while (getdelim(&buffer, &buffer_length, '\0', file) != -1) {
+        // Print the index and string, skipping the first character if it is '\a'
+        printf("<%zu>\n%s\n", string_index, *buffer == '\a' ? buffer + 1 : buffer);
+        ++string_index;
+    }
+
+    free(buffer);
+}
+
+int main(int argc, char **argv) {
+    char *filename = "data.src"; // Default filename
+    int option;
+
+    // Parse command line arguments
+    while ((option = getopt(argc, argv, "i:")) != -1) {
+        switch (option) {
+            case 'i':
+                filename = optarg;
+                break;
+            case ':':
+            case '?':
+                fprintf(stderr, "Usage: %s [-i filename]\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    // Open the file and process its contents
+    FILE *file = open_file(filename);
+    process_file(file);
+    fclose(file);
+
+    return 0;
+}

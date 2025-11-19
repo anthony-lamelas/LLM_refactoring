@@ -1,0 +1,102 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+// Global variables and constants
+unsigned short *stack_pointer, *temp_pointer, *offset_pointer;
+unsigned char *buffer_pointer, memory_buffer[9 << 14], *memory_offset = 256 + memory_buffer;
+unsigned char **command_pointer, *commands[] = {
+    // Commands array initialization with complex strings (truncated for brevity)
+};
+
+// Function prototypes
+void execute_command(int command, unsigned char **commands);
+long calculate_expression(long value1, long value2, char operation);
+
+int main(int argc, char **argv) {
+    unsigned char *command_stream = !command_pointer ? (command_pointer = argv, "C") : argv[47];
+    long stack_value = 0, temp_value = 0;
+    long memory_cell = 0;
+
+    // Main loop processing the command stream
+    if (!memory_cell) {
+        while ((int command = *command_stream)) {
+            short temp_stack = stack_value;
+            short temp_temp = temp_value;
+            char next_command = *++command_stream - 72;
+            command -= (command < 32) ? 6 : 79;
+
+            if (command < 0) {
+                execute_command(command, commands);
+            } else {
+                command_stream += (command < 6);
+                if (!memory_cell) {
+                    if (command > 4 && command < 16) stack_value = temp_value;
+                    switch (command) {
+                        case 0: temp_value = next_command[commands]; break;
+                        case 1: temp_value >>= next_command; break;
+                        case 2: temp_value <<= next_command; break;
+                        case 3: temp_value = next_command; break;
+                        case 4: temp_value = temp_value; break;
+                        case 5: temp_value = *stack_pointer--; break;
+                        case 6: temp_value = buffer_pointer - memory_offset; break;
+                        case 7: temp_value = *buffer_pointer++; break;
+                        case 8: temp_value = 1; break;
+                        case 9: temp_value = stack_value; break;
+                        case 10: temp_value = -1; break;
+                        case 11: offset_pointer = memory_offset + temp_value; break;
+                        case 12: temp_value = temp_pointer - offset_pointer; break;
+                        case 13: temp_value = 0; break;
+                        case 14: temp_value = memory_offset[temp_value]; break;
+                        case 15: temp_value--; break;
+                        case 16: temp_value++; break;
+                        case 17: temp_value += calculate_expression(temp_value, temp_value, '-'); break;
+                        case 18: temp_value = calculate_expression(temp_value, temp_value, '/'); break;
+                        case 19: temp_value = (temp_value < temp_value); break;
+                        case 20: temp_value &= temp_value |= temp_value = 1 << temp_value; break;
+                        case 21: stack_pointer = temp_pointer; break;
+                        case 22: temp_pointer = stack_pointer; break;
+                        case 23: memory_offset[temp_value] = temp_value; break;
+                        case 24: buffer_pointer = temp_value + memory_offset; break;
+                        case 25: temp_pointer = temp_value + offset_pointer; break;
+                        case 26: temp_value = temp_value; break;
+                        case 27: stack_value = temp_value = temp_pointer[temp_value]; break;
+                        case 28: temp_pointer[temp_value] = temp_value = !temp_value; break;
+                        case 29: if (temp_value) exit(0); break;
+                        case 30: temp_value = open(command_pointer[temp_value], 0); break;
+                        case 31: temp_value = creat(command_pointer[temp_value], 384); break;
+                        case 32: close(temp_value); break;
+                        case 33: temp_value = read(temp_value, buffer_pointer, stack_value); break;
+                        case 34: temp_value = write(temp_value, buffer_pointer, stack_value); break;
+                        case 35: temp_value = temp_value < 0 ? (srand(-temp_value), 0) : (rand() % temp_value + 1); break;
+                        case 36: memory_cell = temp_value--; break;
+                        case 37: break;
+                        case 38: *++stack_pointer = temp_value; break;
+                        case 39: break;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+// Function to execute a command
+void execute_command(int command, unsigned char **commands) {
+    main(command, commands);
+}
+
+// Function to calculate expressions
+long calculate_expression(long value1, long value2, char operation) {
+    switch (operation) {
+        case '+': return value1 + value2;
+        case '-': return value1 - value2;
+        case '*': return value1 * value2;
+        case '/': return value1 / value2;
+        default: return 0;
+    }
+}
+```

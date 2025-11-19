@@ -1,0 +1,137 @@
+```c
+// Refactored code with clear comments
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <math.h>
+
+#define SAMPLE_RATE 704000
+
+// Musical data sequences
+const char *notes_sequence_1 = "~\\^__a^\\Z~\\\\^_ZZffa~\\^__a^\\Z~\\\\^_\\Zaaaca~_~ac_aaacaZ~\\^_\\aca~ZZZ\\ccaZZ\\Zaa_ZZ\\Z_a^\\ZZa_ZZ\\Zcca~ZZ\\Zf^_^\\ZZ\\Z_a^\\ZZa_~__\\_a~^\\Z~\\\\^_\\Zffaca_\\\\^_\\_a^\\Z~\\\\^_\\Z~acca_~ac_aaacaZ~\\^_\\aca~ZZZ\\ccaZZ\\Zaa_ZZ\\Z_a^\\ZZa_ZZ\\ZccaZZ\\Zf^_^\\ZZ\\Z_a^\\ZZa_~ZZ\\ZccaZZ\\Zaa_ZZ\\Z_a^\\ZZa_ZZ\\";
+const char *duration_sequence_1 = "?<<<<<=;?E<<<<><><>D<<<<<=;?E<<<<<><<<<?=C;<<<<<<<>>B<<<><<?;;;;;==@;;;;==@;;;;><=;><>B;;;;==?;;;;;><;;>;;;;><=;><>@B<<<<?=<<@@<<<<<@<<><<><<<<<<><<@@<<<<<?;<<>@C;<<<<<<<>>B<<<><<?;;;;;==@;;;;==@;;;;><=;><>B;;;;==@;;;;><;;>;;;;><=;><>@<;;;;==@;;;;==@;;;;><=;><>B;;;";
+
+const char *notes_sequence_2 = "~L~N~K~L~L~N~K~L~L~N~K~D~D~B~B~D~D~B~B~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L~D~D~B~B~D~D~B~B~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L~L~N~K~L";
+const char *duration_sequence_2 = ";?;???;>@?;???;>@?;???;???;>@D@?;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;???;";
+
+const char *pattern_1[] = {
+    "ZxZxZxZxZxZxZl`<^<ZxZ>_>^>ZxZ<Nb@NZxZ<NTRd<NZxZ<QNQb>ZxZ>Q[<b<ZxZ>QVQRZxZBh<RZxZBh<RWh<ZxZ<h<QWhBZtOJVg<hDZnh<OJg<hHZjh@Jg<hHZjh@Jg<hHZjh@Jg<hHZjh@Jg<hJZhh@Jg<Qh@Yh>Zhh@Jg<a<h>Yh>Zhh@Jg<Xa<h<Yh@ZH~",
+    "ZxZxZxZ>]<^<ZxZ@^<_<NZxZ>Na<RNZxZ>MQRSNZxZ<RPLRLQZxZ<a<VQRQZxZ>QVQRZxZ@a<RZxZBa<RZxZBa>Wh<Zv_<Wh<WhDZlXOXOWh<WhFZjh@Wh<WhFZjXYh>Jg<hFZjhBJg<hFZjhBJWhJZhhBJWh<Qb<Xi<h<Zfi>h<JWh<Qb<XYh@Zbh<i<h<JWh>a<YhBZbh@QXJWh>i>hDZbh<a>JWXiBhBZdi<Ra<JXiFZP~",
+    "ZxZxZxZ>]<^<ZxZ@^<_<NZxZ>Na<RNZxZ>MQRSNZxZ<RPLRLQZxZ<a<VQRQZxZ>QVQRZxZ@a<RZxZBa<RZxZBa>Wh<Zv_<Wh<WhDZlXOXOWh<WhFZjh@Wh<WhFZjXYh>Jg<hFZjhBJg<hFZjhBJWhJZhhBJWh<Qb<Xi<h<Zfi>h<JWh<Qb<XYh@Zbh<i<h<JWh>a<YhBZbh@QXJWh>i>hDZbh<a>JWXiBhBZdi<Ra<JXiFZP~",
+    "ZxZxZxZxZL`BZxZ>N_<^<ZxZ>TQRSTZxZ<TQKb<TZxZ<La<RTZxZ>a>KRQZxZ>Va<RZxZ@f<RZxZBa<RWZxZ>WQh<Wh<ZtOXOWJh<Wh@Znh@g<h<WhBZjhBg<JWhFZhhDWJWhFZhhDWJWhFZhXYh@WJhHZhXYh@WJhHZhXi<h>WJh>a<Rh<ZhXi<h>WJh>b<Qh<ZhXi<h>WJh>a>h<ZhXi>h<WJh>YQh>ZP~",
+    "ZxZxZxZxZL`BZxZ>N_<^<ZxZ>TQRSTZxZ<TQKb<TZxZ<La<RTZxZ>a>KRQZxZ>Va<RZxZ@f<RZxZBa<RWZxZ>WQh<Wh<ZtOXOWJh<Wh@Znh@g<h<WhBZjhBg<JWhFZhhDWJWhFZhhDWJWhFZhXYh@WJhHZhXYh@WJhHZhXi<h>WJh>a<Rh<ZhXi<h>WJh>b<Qh<ZhXi<h>WJh>a>h<ZhXi>h<WJh>YQh>ZP~",
+    "ZxZxZxZ>]<^<ZxZ@^<_<NZxZ>Na<RNZxZ>MQRSNZxZ<RPLRLQZxZ<a<VQRQZxZ>QVQRZxZ@a<RZxZBa<RZxZBa>Wh<Zv_<Wh<WhDZlXOXOWh<WhFZjh@Wh<WhFZjXYh>Jg<hFZjhBJg<hFZjhBJWhJZhhBJWh<Qb<Xi<h<Zfi>h<JWh<Qb<XYh@Zbh<i<h<JWh>a<YhBZbh@QXJWh>i>hDZbh<a>JWXiBhBZdi<Ra<JXiFZP~",
+    "ZxZxZxZxZxZxZl`<^<ZxZ>_>^>ZxZ<Nb@NZxZ<NTRd<NZxZ<QNQb>ZxZ>Q[<b<ZxZ>QVQRZxZBh<RZxZBh<RWh<ZxZ<h<QWhBZtOJVg<hDZnh<OJg<hHZjh@Jg<hHZjh@Jg<hHZjh@Jg<hHZjh@Jg<hJZhh@Jg<Qh@Yh>Zhh@Jg<a<h>Yh>Zhh@Jg<Xa<h<Yh@ZH~"
+};
+
+// File paths
+const char *audio_playback_path = "/usr/bin/aplay";
+const char *raw_audio_file = "r.raw";
+
+// RGB color values
+int color_values[] = {
+    9474192, 11302972, 13664348, 14718064, 6572056, 4466688, 9985064, 13660272,
+    14715016, 15507616, 8677424, 11549756, 12605528, 13158600, 4210752, 2895872
+};
+
+int frequency_table[64], buffer_offset = 0;
+unsigned char *audio_buffer;
+
+// Initialize the frequency table
+void initialize_frequencies() {
+    for (int i = 0; i < 64; i++) {
+        frequency_table[i] = 440 * pow(2, (i - 45) / 12.0);
+    }
+}
+
+// Process notes and durations to produce an audio buffer
+void generate_audio_buffer(const char *notes, const char *durations) {
+    const char *note_ptr = notes;
+    const char *duration_ptr = durations;
+
+    while (*note_ptr) {
+        int duration = (*duration_ptr - 58) * 1000;
+        int frequency = *note_ptr > 'z' ? 0 : 8000 / frequency_table[*note_ptr - 58];
+
+        for (int j = 0; j < duration; j++, buffer_offset++) {
+            if (frequency && (j % frequency < frequency / 2)) {
+                audio_buffer[buffer_offset] += (j > duration / 2) ? 32 : 63;
+            }
+        }
+        note_ptr++;
+        duration_ptr++;
+    }
+}
+
+// Play audio using the specified command or write to a file
+void play_audio() {
+    int is_playing = 0;
+    FILE *audio_pipe;
+
+    if (!fork()) {
+        if ((audio_pipe = fopen(audio_playback_path, "r"))) {
+            fclose(audio_pipe);
+            audio_pipe = popen(audio_playback_path, "w");
+            is_playing = 1;
+        } else {
+            audio_pipe = fopen(raw_audio_file, "w");
+        }
+
+        if (audio_pipe) {
+            fwrite(audio_buffer, SAMPLE_RATE, 1, audio_pipe);
+        }
+
+        if (!is_playing) {
+            fclose(audio_pipe);
+        } else {
+            pclose(audio_pipe);
+        }
+
+        while (1);
+    }
+}
+
+// Render the visual representation of the music
+void render_visual() {
+    const char **current_pattern;
+    int x, color_index, repeat_count, char_offset;
+
+    while (1) {
+        current_pattern = &pattern_1[buffer_offset++ & 7];
+        x = 0;
+        printf("\x1b[1;1H");
+
+        while (**current_pattern < '~') {
+            char_offset = **current_pattern - 58;
+            repeat_count = char_offset < 16 ? 1 : char_offset < 32 ? 2 : *(++(*current_pattern)) - 56;
+            char_offset &= 15;
+
+            printf("\x1b[48;2;%d;%d;%dm", (color_values[char_offset] >> 16) & 255,
+                   (color_values[char_offset] >> 8) & 255, color_values[char_offset] & 255);
+
+            for (int i = 0; i < repeat_count; i++, x++) {
+                printf(x % 80 ? " " : "\n ");
+            }
+            (*current_pattern)++;
+        }
+        usleep(SAMPLE_RATE / 3);
+    }
+}
+
+int main() {
+    initialize_frequencies();
+
+    if (!(audio_buffer = calloc(SAMPLE_RATE, 1))) {
+        return 1;
+    }
+
+    generate_audio_buffer(notes_sequence_1, duration_sequence_1);
+    buffer_offset = 0;
+    generate_audio_buffer(notes_sequence_2, duration_sequence_2);
+
+    play_audio();
+    render_visual();
+
+    return 0;
+}
+```

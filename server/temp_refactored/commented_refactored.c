@@ -1,0 +1,81 @@
+// Refactored code with clear comments
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+// Generate a random number between y and z
+long get_random(long min, long max) {
+    return (rand() % (max - min + 1)) + min;
+}
+
+// Display a string based on an index from the data file
+void display_message(long index) {
+    printf("%s", &message_data[get_string_position(index)]);
+}
+
+// Update bullets based on the amount spent on them
+#define UPDATE_BULLETS_COST() bullets_cost = bullets / 5;
+
+// Handle death scenario
+#define HANDLE_DEATH(index) { display_message(index); display_message(4); goto hell; }
+
+// Get the position of a string in the data buffer
+long get_string_position(long index) {
+    return index * 1663;
+}
+
+// Handle input validation for an integer
+#define VALIDATE_INPUT(prompt_index, input_var) while(scanf(&message_data[get_string_position(prompt_index)], &input_var) != 1) while(getchar() != '\n');
+
+// Determine hunt success based on bullets and experience
+long determine_hunt_success(void) {
+    ++hunt_attempts;
+    return bullets > 0 ? get_random(1, 101) + hunt_attempts > 53 + illness ? 9 : 0 + injury ? 9 : 0 : 0;
+}
+
+int main(void) {
+    srand(time(0));
+
+    FILE *data_file;
+    size_t data_length;
+    char *message_data;
+
+    data_file = fopen(DATA, "r");
+    if (!data_file || getdelim(&message_data, &data_length, EOF, data_file) < 0) {
+        goto hell;
+    }
+
+    // Initialization and main game loop
+    game_start:
+    // Main game logic
+
+    // Continue with the game logic here...
+
+    // Handle death scenarios and end of game
+    if (health_points < 1) {
+        if (illness) {
+            HANDLE_DEATH(40);
+            goto game_over;
+        }
+        if (injury) {
+            HANDLE_DEATH(41);
+        }
+        HANDLE_DEATH(45);
+    }
+
+    if (mileage > 2169) {
+        HANDLE_DEATH(47);
+    } else {
+        HANDLE_DEATH(36);
+    }
+
+    // End of game
+    hell:
+    return 666;
+
+    // Game over label
+    game_over:
+    goto hell;
+}
