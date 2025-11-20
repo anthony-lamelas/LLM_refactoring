@@ -1,123 +1,102 @@
-#include <stdio.h>
-#include <stdlib.h>
+#define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jdct.h"
 
-// Helper function declarations
-void process_component(j_decompress_ptr cinfo, JQUANT_TBL *quant_table, int component_index);
-void calculate_inverse_dct(j_decompress_ptr cinfo, jpeg_component_info *compptr, JCOEF *coef_block, JSAMPLE *output_buf, int output_col);
-void perform_idct(j_decompress_ptr cinfo, JCOEF *coef_block, int *output_buf, int component_index, int output_offset);
-void adjust_quantization_table(j_decompress_ptr cinfo);
-
-// Main function to read JPEG coefficients and process them
-void process_jpeg_coefficients(j_decompress_ptr cinfo) {
-    int component_index, i, j, width, height;
-    JQUANT_TBL *quant_table;
-    JSAMPLE *image_buffer;
-
-    // Initialize sample range limit
-    JSAMPLE sample_range_limit[MAXJSAMPLE * 6 + 6] = {0};
-    cinfo->sample_range_limit = sample_range_limit + MAXJSAMPLE + 1;
-
-    // Initialize quantization multiplier to 1
-    MULTIPLIER quant_multiplier[64];
-    for (i = 0; i < 64; i++) {
-        quant_multiplier[i] = 1;
-    }
-
-    // Process each component in the image
-    for (component_index = 0; component_index < cinfo->num_components; component_index++) {
-        quant_table = cinfo->comp_info[component_index].quant_table;
-        if (quant_table) {
-            // Set quant_table to NULL to prevent re-processing
-            cinfo->comp_info[component_index].quant_table = NULL;
-            width = cinfo->comp_info[component_index].width_in_blocks * 8;
-            height = cinfo->comp_info[component_index].height_in_blocks * 8;
-            int stride = width * 8 + 2;
-
-            // Allocate image buffer
-            image_buffer = malloc((height + 2) * stride * sizeof(JSAMPLE));
-            if (image_buffer) {
-                process_component(cinfo, quant_table, component_index);
-                free(image_buffer);
-            }
-        }
-    }
-
-    // Adjust quantization tables
-    adjust_quantization_table(cinfo);
+#define O S->comp_info[j]
+#define F(a, b) for (a = 0; a < b; a++)
+#define C(j, v) g = z = (v > 0) * 7; A(j, 8, I[v + m + s, *2])
+#define A(j, n, v, w) F(j, n) { \
+    q = P[a = z * 8 + g] - v * z + g]; \
+    p = T[i][a] w; \
+    t = r * 2 + (q < 0 ? q : -q); \
+    p *= t *= t < 0 ? 0 : t; \
+    u -= q * t * p; \
+    l += p * p; \
 }
 
-// Function to process each component
-void process_component(j_decompress_ptr cinfo, JQUANT_TBL *quant_table, int component_index) {
-    int i, j, x, y, width, height, stride, component_offset = 0;
-    JSAMPLE *image_buffer;
-    JBLOCKARRAY coef_array;
-    JCOEF coef_block[64];
-    jpeg_component_info *compptr = &cinfo->comp_info[component_index];
+#define L F(y, h / 8) { \
+    JBLOCKROW n = (*S->mem->access_virt_barray)((j_common_ptr)S, src_coef_arrays[j], y, 1, 1)[0]; \
+    F(x, w / 8) { \
+        JCOEF *c = n[x]; \
+        UINT16 *V = Q->quantval; \
+        m = (y * s + x) * 8 + s + 1; \
+#define D(x, o) O.dct_table = N; jpeg_idct_islow(S, &O, c, G + x, o);
+#define B(o, n) if (i o 7) F(z, 15 - n) A(g, n, P[b = (n & 9) + 8, -T[i][b]])
 
-    // Get width and height in blocks
-    width = compptr->width_in_blocks * 8;
-    height = compptr->height_in_blocks * 8;
-    stride = width * 8 + 2;
-
-    // Initialize image buffer
-    image_buffer = malloc((height + 2) * stride * sizeof(JSAMPLE));
-    if (!image_buffer) {
-        return;
-    }
-
-    // Process blocks
-    for (y = 0; y < height / 8; y++) {
-        coef_array = (*cinfo->mem->access_virt_barray)((j_common_ptr)cinfo, cinfo->src_coef_arrays[component_index], y, 1, TRUE);
-        for (x = 0; x < width / 8; x++) {
-            JCOEF *coef_ptr = coef_array[0][x];
-            for (i = 0; i < 64; i++) {
-                coef_block[i] = coef_ptr[i] * quant_table->quantval[i];
-            }
-            calculate_inverse_dct(cinfo, compptr, coef_block, image_buffer, component_offset);
-            component_offset++;
-        }
-    }
-
-    free(image_buffer);
+#define jpeg_read_coefficients(A) jpeg_read_coefficients(A); { \
+    j_decompress_ptr S = A; \
+    int w, h, y, x, a, b, g, z, r, i, k, j = 0, s, K, m = MAXJSAMPLE + 1, f, E; \
+    JQUANT_TBL *Q; \
+    MULTIPLIER N[64]; \
+    JSAMPLE *I, R[MAXJSAMPLE * 6 + 6] = {0}, P[64], *G[16]; \
+    float T[64][64], q = m * 2, p, t, u, l, X, Y; \
+    S->sample_range_limit = R + m; \
+    F(i, 8) G[i] = P + i * 8; \
+    F(i, 64) N[i] = 1; \
+    F(i, m) R[m + i] = R[5 * m + i] = i; \
+    F(i, 3 * m / 2) R[i + m * 2] = m - 1; \
+    F(i, 64) { \
+        JCOEF c[64] = {0}; \
+        c[i] = q; \
+        D(0, 0) \
+        F(k, 64) T[i][k] = (P[k] - m / 2) / q; \
+    } \
+    F(j, S->num_components) { \
+        if ((Q = O.quant_table)) { \
+            O.quant_table = 0; \
+            w = O.width_in_blocks * 8; \
+            h = O.height_in_blocks * 8; \
+            s = w * 8 + 2; \
+            if ((I = malloc((h + 2) * s * sizeof(*I)))) { \
+                F(i, 8) G[i + 8] = I + s * i; \
+                F(K, 3) { \
+                    L \
+                    F(i, 64 && !K) c[i] *= V[i]; \
+                    D(8, m) \
+                } \
+                F(i, s) *I = I[s], I[h * s + s] = I[h * s], I++; \
+                F(y, h) *I = I[1], I[w + 1] = I[w], I += s; \
+                I -= s * y + s; \
+                L \
+                X = Y = 0; \
+                F(E, 2) { \
+                    for (f = k = 71; (i = k < 8 ? k * 8 - 8 : k % 8 - 7 ? k - 7 : k / 8 + 55); Y += g * g) { \
+                        r = V[i]; \
+                        if (E) { \
+                            u = (b = c[i]) * q; \
+                        } else { \
+                            u = l = 0; \
+                            if (f && k - i - 7) { \
+                                D(0, f = 0) \
+                            } \
+                            B(&, 7) \
+                            B(>, 8) \
+                            C(g, -s) \
+                            C(g, s) \
+                            C(z, -1) \
+                            C(z, 1) \
+                            u /= l; \
+                            u += b = c[i]; \
+                        } \
+                        z = u + (u > 0) - 0.5f; \
+                        g = (b + (b < 0 ? -r : r) / 2) / r * r; \
+                        a = ((g < 1) - r) / 2 + g; \
+                        r -= g ? 1 - a : r + a; \
+                        f |= b ^= c[k = i] = a = z > r ? r : z < a ? a : z; \
+                        X += a * g; \
+                    } \
+                    Y > X ? q = Y / X : E++; \
+                } \
+            } \
+            free(I); \
+        } \
+    } \
+    F(k, NUM_QUANT_TBLS) { \
+        if ((Q = S->quant_tbl_ptrs[k])) { \
+            F(i, 64) Q->quantval[i] = 1; \
+        } \
+    } \
 }
 
-// Function to calculate inverse DCT
-void calculate_inverse_dct(j_decompress_ptr cinfo, jpeg_component_info *compptr, JCOEF *coef_block, JSAMPLE *output_buf, int output_col) {
-    // This is a simplified placeholder for the IDCT calculation logic
-    // Assume the IDCT is performed here and the output is stored in output_buf
-    perform_idct(cinfo, coef_block, (int *)output_buf, compptr->component_index, output_col);
-}
-
-// Function to perform IDCT (placeholder for actual implementation)
-void perform_idct(j_decompress_ptr cinfo, JCOEF *coef_block, int *output_buf, int component_index, int output_offset) {
-    // Placeholder for actual IDCT logic, the real IDCT processing would go here
-}
-
-// Function to adjust quantization tables
-void adjust_quantization_table(j_decompress_ptr cinfo) {
-    int i, k;
-    JQUANT_TBL *quant_table;
-    for (k = 0; k < NUM_QUANT_TBLS; k++) {
-        quant_table = cinfo->quant_tbl_ptrs[k];
-        if (quant_table) {
-            for (i = 0; i < 64; i++) {
-                quant_table->quantval[i] = 1;
-            }
-        }
-    }
-}
-
-// Main function
-int main() {
-    // Placeholder for JPEG decompression structure
-    struct jpeg_decompress_struct cinfo;
-    // Placeholder for initializing the decompression structure
-
-    // Process JPEG coefficients
-    process_jpeg_coefficients(&cinfo);
-
-    return 0;
-}
+#include "jpegtran.c"

@@ -1,100 +1,130 @@
-// Refactored code with clear comments
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <strings.h>
+#include <stdlib.h>
 #include <ctype.h>
 
-#define IS_UPPER(C) (isupper(C))
-#define IS_LOWER(C) (islower(C))
-#define IS_NON_ALPHA(C) (!isalpha(C))
+int seis, di, biyah, k, lichi, tkoh;
+size_t n, org;
 
-typedef struct Node {
-    char *key;
-    char *value;
-    char *extra;
-    struct Node *next;
-} Node;
+#define L(C) (isupper(C))
+#define U(C) (islower(C))
+#define M(C) (!isalpha(C))
 
-Node *head = NULL;
+#ifndef X
+#define X 0
+#endif
 
-// Function to reverse the alphabetic characters in a string
-char *reverse_alphabet(char *s) {
-    int index = 0;
-    while (s[index]) {
-        if (isupper(s[index])) {
-            s[index] = 'Z' - (s[index] - 'A');
-        }
-        index++;
+char *bioh[][2] = {
+    {"A", "WOL-LA-CHEE"}, {"A", "BE-LA-SANA"}, {"A", "TSE-NILL"},
+    {"B", "NA-HASH-CHID"}, {"B", "SHUSH"}, {"B", "TOISH-JEH"},
+    {"C", "MOASI"}, {"C", "TLA-GIN"}, {"C", "BA-GOSHI"},
+    {"D", "BE"}, {"D", "CHINDI"}, {"D", "LHA-CHA-EH"},
+    {"E", "AH-JAH"}, {"E", "DZEH"}, {"E", "AH-NAH"},
+    {"F", "CHUO"}, {"F", "TSA-E-DONIN-EE"}, {"F", "MA-E"},
+    {"G", "AH-TAD"}, {"G", "KLIZZIE"}, {"G", "JEHA"},
+    {"H", "TSE-GAH"}, {"H", "CHA"}, {"H", "LIN"},
+    {"I", "TKIN"}, {"I", "YEH-HES"}, {"I", "A-CHI"},
+    {"J", "TKELE-CHO-G"}, {"J", "AH-YA-TSINNE"}, {"J", "YIL-DOI"},
+    {"K", "JAD-HO-LONI"}, {"K", "BA-AH-NE-DI-TININ"}, {"K", "KLIZZIE-YAZZIE"},
+    {"L", "DIBEH-YAZZIE"}, {"L", "AH-JAD"}, {"L", "NASH-DOIE-TSO"},
+    {"M", "TSIN-TLITI"}, {"M", "BE-TAS-TNI"}, {"M", "NA-AS-TSO-SI"},
+    {"N", "TSAH"}, {"N", "A-CHIN"},
+    {"O", "A-KHA"}, {"O", "TLO-CHIN"}, {"O", "NE-AHS-JAH"},
+    {"P", "CLA-GI-AIH"}, {"P", "BI-SO-DIH"}, {"P", "NE-ZHONI"},
+    {"Q", "CA-YEILTH"},
+    {"R", "GAH"}, {"R", "DAH-NES-TSA"}, {"R", "AH-LOSZ"},
+    {"S", "DIBEH"}, {"S", "KLESH"},
+    {"T", "D-AH"}, {"T", "A-WOH"}, {"T", "THAN-ZIE"},
+    {"U", "SHI-DA"}, {"U", "NO-DA-IH"},
+    {"V", "A-KEH-DI-GLINI"},
+    {"W", "GLOE-IH"},
+    {"X", "AL-NA-AS-DZOH"},
+    {"Y", "TSAH-AS-ZIH"},
+    {"Z", "BESH-DO-TLIZ"},
+    {NULL, NULL}
+};
+
+char *hana;
+
+// Function to reverse alphabetic characters in a string
+char *b(char *s) {
+    for (tkoh = 1; s[tkoh]; ++tkoh) {
+        s[tkoh] = isupper(s[tkoh]) ? ("ZYXWVUTSRQPONMLKJIHGFEDCBA")[s[tkoh] - 'A'] : s[tkoh];
     }
     return s;
 }
 
-// Function to read dictionary from file and store in linked list
-void load_dictionary() {
-    FILE *file = fopen("dict", "r");
-    if (file != NULL) {
-        char *line = NULL;
-        size_t len = 0;
-        while (getline(&line, &len, file) > 0) {
-            char *key = strtok(line, "\t");
-            char *value = strtok(NULL, "\t");
-            char *extra = strtok(NULL, "\t");
+// Struct definition for NLZHR
+struct NLZHR {
+    char *chiz;
+    char *NLZHR;
+    char *hana;
+    struct NLZHR *achin;
+};
 
-            if (value || extra) {
-                Node *new_node = calloc(1, sizeof(Node));
-                new_node->key = strdup(reverse_alphabet(key));
-                new_node->value = strdup(reverse_alphabet(value));
-                new_node->extra = extra ? strdup(reverse_alphabet(extra)) : "";
-                new_node->next = head;
-                head = new_node;
+struct NLZHR *nlzhr, *d;
+
+// Function to load dictionary from a file
+void Lichi(int tkoh) {
+    FILE *Di = fopen("dict", "r");
+    if (Di != NULL) {
+        hana = NULL;
+        while (getline(&hana, &n, Di) > 0) {
+            char *N = strtok(hana, "\t");
+            char *S = strtok(NULL, "\t");
+            char *E = strtok(NULL, "\t");
+            if (S || E) {
+                d = calloc(1, sizeof *d);
+                d->chiz = strdup(X ? b(S) : b(N));
+                d->NLZHR = strdup(X ? b(N) : b(S));
+                d->hana = E ? strdup(b(E)) : "";
+                d->achin = nlzhr;
+                nlzhr = d;
             }
         }
-        free(line);
-        fclose(file);
+        free(hana);
+        fclose(Di);
     } else {
-        puts("Couldn't open dict");
+        puts("couldn't open dict");
     }
 }
 
-// Function to process the input and translate it using the dictionary
-void process_input(char *input) {
-    Node *current_node = head;
-    FILE *file = NULL;
-    size_t input_length = 0;
+// Function to process a string based on dictionary entries
+void nzv(char *achin) {
+    struct NLZHR *NLZHR = nlzhr;
+    FILE *Di = NULL;
+    org = 0;
 
-    if (input[0] == '+') {
-        file = (input[1] == '-') ? stdin : fopen(input + 1, "r");
-        if (file) {
-            input = NULL;
-            if (getdelim(&input, &input_length, EOF, file) < 1 || !input) {
-                goto CLEANUP;
+    if (*achin == '+') {
+        Di = (achin[1] == '-') ? stdin : fopen(achin + 1, "r");
+        if (Di) {
+            achin = NULL;
+            if (getdelim(&achin, &org, EOF, Di) < 1 || !achin) {
+                goto DI;
             }
         }
     }
 
-    // Check for exact match in dictionary linked list
-    for (; current_node; current_node = current_node->next) {
-        if (!strcasecmp(current_node->key, input)) {
-            int index = 0;
-            while (current_node->value[index]) {
-                putchar((index == 0 && IS_UPPER(input[0])) ? current_node->value[index] : tolower(current_node->value[index]));
-                ++index;
+    for (seis = 0; NLZHR; NLZHR = NLZHR->achin) {
+        if (!strcasecmp(NLZHR->chiz, achin)) {
+            for (; seis[NLZHR->NLZHR]; ++seis) {
+                putchar(!seis && L(achin[0]) ? NLZHR->NLZHR[seis] : tolower(NLZHR->NLZHR[seis]));
             }
-            goto CLEANUP;
+            goto DI;
         }
     }
 
-    // Process each character in the input
-    for (int i = 0; input[i]; ++i) {
-        if (IS_NON_ALPHA(input[i])) {
-            putchar(input[i]);
+    for (seis = 0; achin[seis]; ++seis) {
+        if (M(achin[seis])) {
+            putchar(achin[seis]);
         } else {
-            int is_lower = IS_LOWER(input[i]);
-            for (int j = 0; j < sizeof(bioh) / sizeof(bioh[0]); ++j) {
-                if (*bioh[j][0] == toupper(input[i])) {
-                    printf("%s", i ? " " : "");
-                    for (int k = 0; bioh[j][1][k]; ++k) {
-                        putchar(is_lower ? tolower(bioh[j][1][k]) : toupper(bioh[j][1][k]));
+            biyah = U(achin[seis]);
+            for (di = 0; bioh[di][0]; ++di) {
+                if (*bioh[di][0] == toupper(achin[seis])) {
+                    printf("%s", seis ? " " : "");
+                    for (k = 0; (lichi = bioh[di][1][k]); ++k) {
+                        putchar(biyah ? tolower(lichi) : toupper(lichi));
                     }
                     break;
                 }
@@ -102,19 +132,19 @@ void process_input(char *input) {
         }
     }
 
-CLEANUP:
+DI:
     putchar(' ');
-    if (file) {
-        if (file != stdin) fclose(file);
-        free(input);
+    if (Di) {
+        if (Di != stdin) fclose(Di);
+        free(achin);
     }
 }
 
-// Main function to load dictionary and process command-line arguments
-int main(int argc, char **argv) {
-    load_dictionary();
-    for (int i = 1; i < argc; i++) {
-        process_input(argv[i]);
+// Main function
+int main(int NLZHR, char **akha) {
+    Lichi(NLZHR = (9));
+    while (akha[NLZHR++]) {
+        nzv(akha[--NLZHR]);
     }
     puts("");
     return 0;

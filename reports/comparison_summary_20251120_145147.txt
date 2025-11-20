@@ -1,0 +1,489 @@
+
+Generated: 2025-11-20 14:51:47
+
+Total files compared: 76
+
+Compilation Results:
+  Original files compiled:    41/76 (53.9%)
+  Refactored files compiled:  31/76 (40.8%)
+  Both compiled successfully: 24/76 (31.6%)
+
+Execution Results:
+  Outputs match: 6/24 (25.0% of successfully compiled pairs)
+
+DETAILED RESULTS:
+
+1. deobfuscated.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+2. dups.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+3. gen.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/gen_refactored.c: In function ‘main’:
+temp_refactored/gen_refactored.c:70:5: warning...
+
+4. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+5. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+6. reveal.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+7. run.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/burton/run.c: In function ‘error’:
+../data/2024/best/burton/run.c:21:9: warning: i...
+   Refactored error: temp_refactored/run_refactored.c: In function ‘error’:
+temp_refactored/run_refactored.c:12:5: warnin...
+
+8. unob.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+9. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/cable1/prog.c:15:3: error: unknown type name ‘int8_t’
+   15 | a(int8_)C;a(in)I;a(f...
+   Refactored error: temp_refactored/prog_refactored.c:12:9: error: unknown type name ‘int8_t’
+   12 | TYPEDEF(int8_) C;
+...
+
+10. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/cable1/prog.orig.c:15:3: error: unknown type name ‘int8_t’
+   15 | a(int8_)C;a(in)...
+   Refactored error: temp_refactored/prog.orig_refactored.c:15:15: error: unknown type name ‘int8_t’
+   15 | TYPEDEF_ALIA...
+
+11. prog.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/best/codemeow/prog.c: In function ‘g’:
+../data/2024/best/codemeow/prog.c:10:34: warning...
+
+12. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/best/codemeow/prog.orig.c: In function ‘g’:
+../data/2024/best/codemeow/prog.orig.c:10:3...
+
+13. prog.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘main’:
+temp_refactored/prog_refactored.c:189:2: erro...
+
+14. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+15. addpadding.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/best/ferguson1/addpadding.c: In function ‘make_data’:
+../data/2024/best/ferguson1/addpa...
+
+16. bytecheck.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 1
+
+17. bytecount.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 1
+
+18. byteread.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 1
+
+19. bytetest.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/bytetest_refactored.c: In function ‘main’:
+temp_refactored/bytetest_refactored.c:25:...
+
+20. commented.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/commented.c: In function ‘main’:
+../data/2024/best/ferguson1/commented.c...
+   Refactored error: temp_refactored/commented_refactored.c: In function ‘shootSuccess’:
+temp_refactored/commented_refact...
+
+21. lencount.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/lencount.c: In function ‘main’:
+../data/2024/best/ferguson1/lencount.c:4...
+   Refactored error: temp_refactored/lencount_refactored.c: In function ‘main’:
+temp_refactored/lencount_refactored.c:46:...
+
+22. mbcheck.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 1
+
+23. printer.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/printer.c: In function ‘main’:
+../data/2024/best/ferguson1/printer.c:56:...
+   Refactored error: temp_refactored/printer_refactored.c: In function ‘main’:
+temp_refactored/printer_refactored.c:41:9:...
+
+24. prog.alt.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/best/ferguson1/prog.alt.c: In function ‘main’:
+../data/2024/best/ferguson1/prog.alt.c:1...
+
+25. prog.alt2.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/prog.alt2.c: In function ‘main’:
+../data/2024/best/ferguson1/prog.alt2.c...
+   Refactored error: temp_refactored/prog.alt2_refactored.c: In function ‘main’:
+temp_refactored/prog.alt2_refactored.c:4...
+
+26. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/prog.c: In function ‘main’:
+../data/2024/best/ferguson1/prog.c:19:9: err...
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘main’:
+temp_refactored/prog_refactored.c:56:19: erro...
+
+27. prog.gotos.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/prog.gotos.c: In function ‘main’:
+../data/2024/best/ferguson1/prog.gotos...
+   Refactored error: temp_refactored/prog.gotos_refactored.c: In function ‘main’:
+temp_refactored/prog.gotos_refactored.c...
+
+28. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/best/ferguson1/prog.orig.c: In function ‘main’:
+../data/2024/best/ferguson1/prog.orig.c...
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘main’:
+temp_refactored/prog.orig_refactored.c:3...
+
+29. V.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/best/ferguson1/V.c:1:3: error: expected declaration specifiers or ‘...’ before numeric ...
+
+30. prog.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog_refactored.c:40:19: error: ‘k’ undeclared here (not in a function)
+   40 | char...
+
+31. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘n’:
+temp_refactored/prog.orig_refactored.c:78:2...
+
+32. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+33. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+34. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/most/cable2/prog.c:3:27: error: ‘U’ undeclared here (not in a function)
+    3 | unsigne...
+   Refactored error: temp_refactored/prog_refactored.c:3:24: error: ‘U’ undeclared here (not in a function)
+    3 | unsig...
+
+35. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/most/cable2/prog.orig.c:3:27: error: ‘U’ undeclared here (not in a function)
+    3 | un...
+   Refactored error: temp_refactored/prog.orig_refactored.c:3:24: error: ‘U’ undeclared here (not in a function)
+    3 | ...
+
+36. prog.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘main’:
+temp_refactored/prog_refactored.c:189:13: err...
+
+37. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘main’:
+temp_refactored/prog.orig_refactored.c:1...
+
+38. deobfus.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/deobfus_refactored.c: In function ‘Z’:
+temp_refactored/deobfus_refactored.c:73:21: e...
+
+39. prog.alt.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.alt_refactored.c: In function ‘Z’:
+temp_refactored/prog.alt_refactored.c:73:42:...
+
+40. prog.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘Z’:
+temp_refactored/prog_refactored.c:95:20: error: ...
+
+41. prog.obfus.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/most/ferguson2/prog.obfus.c:13:6: error: variably modified ‘bioh’ at file scope
+   13 |...
+
+42. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘I’:
+temp_refactored/prog.orig_refactored.c:51:4...
+
+43. prog.pre-format.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/most/ferguson2/prog.pre-format.c:7:40: error: initializer element is not constant
+    7...
+   Refactored error: temp_refactored/prog.pre-format_refactored.c:8:42: error: initializer element is not constant
+    8 ...
+
+44. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/most/maffiodo/prog.c:11:69: error: ‘strlen’ undeclared here (not in a function)
+   11 |...
+   Refactored error: temp_refactored/prog_refactored.c:30:39: warning: initialization of ‘int (*)()’ from incompatible po...
+
+45. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/most/maffiodo/prog.orig.c:11:69: error: ‘strlen’ undeclared here (not in a function)
+  ...
+   Refactored error: temp_refactored/prog.orig_refactored.c:14:97: error: field ‘x’ has incomplete type
+   14 | #define D...
+
+46. prog.alt.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.alt_refactored.c:17:347: warning: unknown escape sequence: '\_'
+   17 |     "\v...
+
+47. prog.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘main’:
+temp_refactored/prog_refactored.c:27:31: warn...
+
+48. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+49. prog.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘P’:
+temp_refactored/prog_refactored.c:7:13: error: ‘...
+
+50. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘P’:
+temp_refactored/prog.orig_refactored.c:7:13...
+
+51. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+52. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘generateSoundWave’:
+temp_refactored/prog.orig_r...
+
+53. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/endoh2/prog.c:3:14: error: ‘H’ undeclared here (not in a function)
+    3 | /**/...
+   Refactored error: temp_refactored/prog_refactored.c:9:12: error: ‘H’ undeclared here (not in a function)
+    9 | char ...
+
+54. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/endoh2/prog.orig.c:3:14: error: ‘H’ undeclared here (not in a function)
+    3 |...
+   Refactored error: temp_refactored/prog.orig_refactored.c:9:28: error: ‘H’ undeclared here (not in a function)
+    9 | ...
+
+55. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/howe/prog.c:3:8: error: ‘BUF’ undeclared here (not in a function)
+    3 | char ...
+   Refactored error: temp_refactored/prog_refactored.c: In function ‘G’:
+temp_refactored/prog_refactored.c:132:47: warnin...
+
+56. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/howe/prog.orig.c:3:8: error: ‘BUF’ undeclared here (not in a function)
+    3 | ...
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘G’:
+temp_refactored/prog.orig_refactored.c:122:...
+
+57. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 1
+
+58. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 0
+   Refactored error: temp_refactored/prog.orig_refactored.c: In function ‘main’:
+temp_refactored/prog.orig_refactored.c:4...
+
+59. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 1
+
+60. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+   Outputs match: 0
+
+61. prog.alt.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov2/prog.alt.c:5:10: fatal error: jpeglib.h: No such file or directory
+ ...
+   Refactored error: temp_refactored/prog.alt_refactored.c:5:10: fatal error: jpeglib.h: No such file or directory
+    5 ...
+
+62. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov2/prog.c:4:10: fatal error: jpeglib.h: No such file or directory
+    4...
+   Refactored error: temp_refactored/prog_refactored.c:4:10: fatal error: jpeglib.h: No such file or directory
+    4 | #i...
+
+63. prog.nomain.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov2/prog.nomain.c:2:10: fatal error: jinclude.h: No such file or directo...
+   Refactored error: temp_refactored/prog.nomain_refactored.c:2:10: fatal error: jinclude.h: No such file or directory
+  ...
+
+64. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov2/prog.orig.c:4:10: fatal error: jpeglib.h: No such file or directory
+...
+   Refactored error: temp_refactored/prog.orig_refactored.c:4:10: fatal error: jpeglib.h: No such file or directory
+    4...
+
+65. prog.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov3/prog.c:4:10: fatal error: X11/Xlib.h: No such file or directory
+    ...
+   Refactored error: temp_refactored/prog_refactored.c:4:10: fatal error: X11/Xlib.h: No such file or directory
+    4 | #...
+
+66. prog.jit.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov3/prog.jit.c:42:10: fatal error: X11/Xlib.h: No such file or directory...
+   Refactored error: temp_refactored/prog.jit_refactored.c:1:1: error: stray ‘`’ in program
+    1 | ```c
+      | ^
+temp_r...
+
+67. prog.orig.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov3/prog.orig.c:4:10: fatal error: X11/Xlib.h: No such file or directory...
+   Refactored error: temp_refactored/prog.orig_refactored.c:4:10: fatal error: X11/Xlib.h: No such file or directory
+    ...
+
+68. prog.sdl.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov3/prog.sdl.c:3:10: fatal error: SDL.h: No such file or directory
+    3...
+   Refactored error: temp_refactored/prog.sdl_refactored.c:3:10: fatal error: SDL.h: No such file or directory
+    3 | #i...
+
+69. prog.win.c
+   Original compiled: 0
+   Refactored compiled: 0
+   Original error: ../data/2024/unknown/kurdyukov3/prog.win.c:3:10: fatal error: windows.h: No such file or directory
+ ...
+   Refactored error: temp_refactored/prog.win_refactored.c:3:10: fatal error: windows.h: No such file or directory
+    3 ...
+
+70. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+71. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+72. prog.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+73. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+74. prog.alt.c
+   Original compiled: 1
+   Refactored compiled: 1
+
+75. prog.c
+   Original compiled: 0
+   Refactored compiled: 1
+   Original error: ../data/2024/unknown/tmarrec/prog.c: In function ‘main’:
+../data/2024/unknown/tmarrec/prog.c:28:38: ...
+
+76. prog.orig.c
+   Original compiled: 1
+   Refactored compiled: 1

@@ -1,12 +1,11 @@
-// Refactored code with clear comments
 #include <stdio.h>
 
-// Example macro definition for V (assuming its functionality based on usage)
-#define V(x) printf("Value: %d\n", (x))
+// Macro definition for the repetitive operation
+#define V(num) printf("Value: %d\n", num)
 
-// Main function to iterate through values and apply macro 'V'
+// Main function
 int main() {
-    // Loop through numbers 1 to 172 and apply the macro 'V' to each
+    // Loop through numbers 1 to 172 and apply macro V
     for (int i = 1; i <= 172; i++) {
         V(i);
     }

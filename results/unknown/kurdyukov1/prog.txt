@@ -1,43 +1,25 @@
-```c
-// Refactored code with clear comments
 #include <time.h>
 #include <stdio.h>
 
-// Define constants for the calculation
-#define TIME_OFFSET 592531
-#define TIME_FACTOR 2551443
-#define WIDTH 44
+// Global variables
+int a, b = 44, x, y, z;
 
-// Declare global variables
-int time_factor, width, x, y, z;
-
-// Function to perform the main calculations and display output
-void render_pattern() {
-    // Check if time_factor is not initialized
-    if (!time_factor) {
-        // Initialize variables on the first run
-        time_factor = TIME_FACTOR;
-        x = -WIDTH;
-        y = 2 - WIDTH;
-        z = ((time(0) - TIME_OFFSET) % time_factor << 9) / time_factor;
+// Main function
+int main() {
+    if (!a) {
+        a = 2551443;
+        x = -b;
+        y = 2 - b;
+        z = ((time(0) - 592531) % a << 9) / a;
     } else {
-        // Determine character to display
         putchar(
-            ++x >= time_factor ? x = -WIDTH, y += 4, '\n' :
-            x < 0 ? x = x * x + y * y < WIDTH * WIDTH ? time_factor = 1 - x, -1 : x + 1, ' ' :
-            "#."[(x < time_factor * (~z & 255) >> 8) ^ z >> 8]
+            ++x >= a ? (x = -b, y += 4, 10) :
+            x < 0 ? (x = x * x + y * y < b * b ? a = 1 - x, -1 : x + 1, 32) :
+            "#."[(x < a * (~z & 255) >> 8) ^ z >> 8]
         );
-        
-        // Recursively call the main function if the condition is met
-        if (y <= WIDTH) {
-            render_pattern();
+        if (y > b) {
+            return 0;
         }
     }
+    return main();
 }
-
-// Entry point of the program
-int main() {
-    render_pattern();
-    return 0;
-}
-```

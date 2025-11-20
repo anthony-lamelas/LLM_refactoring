@@ -1,193 +1,139 @@
-```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#define ARRAY_SIZE 8
-#define MASK_BITS 24
-#define OPERATION_MASK 127
-#define BUFFER_SIZE 33
-
-// Helper function to perform bitwise operations
-#define BITWISE_OPERATION(n, t, o) \
-    case n: \
-        b = (t)c o (t)b; \
-        break;
-
-#define EXECUTE_BITWISE_OPERATIONS(n, t, a, b, c, d) \
-    BITWISE_OPERATION(n, t, a) \
-    BITWISE_OPERATION(n + 1, t, b) \
-    BITWISE_OPERATION(n + 2, t, c) \
-    BITWISE_OPERATION(n + 3, t, d)
-
-// Macro to handle different types of integer operations
-#define INTEGER_OPERATIONS(n, t) \
-    EXECUTE_BITWISE_OPERATIONS(n, t, +, -, |, ^) \
-    EXECUTE_BITWISE_OPERATIONS(n + 4, t, &, *, /, %) \
-    EXECUTE_BITWISE_OPERATIONS(n + 8, t, <<, >>, ==, !=) \
-    EXECUTE_BITWISE_OPERATIONS(n + 12, t, <, <=, >, >=)
-
-// Mask for X11 input events
-#define EVENT_MASK(x) x##PressMask | x##ReleaseMask |
-
-// Perform bitwise write operation
-#define BITWISE_WRITE(c) \
-    m[d] = (m[d] | n c) ^ (~b & n) c;
+#define H h[c & 7]
+#define C(a, b) case a: b; break;
+#define X(n, t, o) C(n, b = (t)c o (t)b)
+#define R \
+    b = m[++d]; \
+    n = a & 127; \
+    if (n) { \
+        if (n - 1) b = m[b & k] + (n > 2 ? n - 65 : 0); \
+        if (n - 2) { \
+            n = b % 4 * 8; \
+            b = b / 4 & k; \
+            b = m[b] >> n | m[b + 1] * 2 << ~n % 32; \
+        } \
+    } \
+    a >>= 7;
+#define Y(n, t, a, b, c, d) \
+    X(n, t, a) X(n + 1, t, b) X(n + 2, t, c) X(n + 3, t, d)
+#define B(i, a, j) if (c == i) { m[1] = E.a.x | E.a.y << 14 | E.a.j << 28; b
+#define O(n, t) \
+    Y(n, t, +, -, |, ^) \
+    Y(n + 4, t, &, *, /, %) \
+    Y(n + 8, t, <<, >>, ==, !=) \
+    Y(n + 12, t, <, <=, >, >=)
+#define M(x) x##PressMask | x##ReleaseMask |
+#define W(c) m[d] = (m[d] | n c) ^ (~b & n) c;
 
 int main(int argc, char **argv) {
-    void *file_ptr = argc > 1 ? fopen(argv[1], "rb") : 0;
-    void *handles[ARRAY_SIZE] = { stdin, stdout, stderr };
-    unsigned int y = 0, z = 0, a, b = 0, d, n = 0, k = (1 << MASK_BITS) - 1;
-    unsigned int *memory = calloc(k + 4, sizeof(unsigned int));
+    void *file = argc-- > 1 ? fopen(argv[1], "rb") : 0;
+    void *h[8] = { stdin, stdout, stderr };
+    unsigned y = 0, z = 0, a, b = 0, d, n = 0, k = (1 << 24) - 1, *m = calloc(k + 4, 4);
     struct timeval t;
-    char buffer[BUFFER_SIZE] = { 0 };
-    Window window = 0;
-    GC graphics_context = 0;
-    Display *display = 0;
-    XEvent event;
-    XImage *image = 0;
-    Atom atom = 0;
+    char s[33] = { 0 };
+    Window W = 0;
+    GC G = 0;
+    Display *D = 0;
+    XEvent E;
+    XImage *I = 0;
+    Atom A = 0;
 
-    if (memory && file_ptr) {
-        // Load the file into memory
-        for (; b <= k && ((a = fgetc(file_ptr)) < 256 || (a = argv[argc][n++] & 255) || (n = 0, --argc)); b++) {
-            memory[b / 4] |= a << (b % 4 * 8);
+    if (m && file) {
+        for (; b <= k && ((a = fgetc(file)) < 256 || (a = argv[argc][n++] & 255) || (n = 0, --argc)); b++) {
+            m[b / 4] |= a << b % 4 * 8;
         }
-        fclose(file_ptr);
+        fclose(file);
 
-        for (memory[1] = b;;) {
-            a = memory[d = *memory & k];
-            *memory += 4;
-
-            // Read the next command
-            b = memory[++d];
-            n = a & OPERATION_MASK;
-            if (n) {
-                if (n - 1) {
-                    b = memory[b & k] + (n > 2 ? n - 65 : 0);
-                }
-                if (n - 2) {
-                    n = b % 4 * 8;
-                    b = b / 4 & k;
-                    b = memory[b] >> n | memory[b + 1] * 2 << ~n % 32;
-                }
-            }
-            a >>= 7;
-
+        for (m[1] = b;;) {
+            a = m[d = *m & k];
+            *m += 4;
+            R c = b;
+            R d = m[d + 1];
             switch (a >> 9) {
                 default:
-                    if (image) {
-                        image->data = 0;
-                    }
+                    I ? I->data = 0 : 0;
                     return a ? 1 : c;
-
-                case 1:
-                    b = handles[c & 7] ? c < 0 ? fgetc(handles[c & 7]) : fputc(b, handles[c & 7]) : -1;
-                    break;
-
-                case 2:
-                    gettimeofday(&t, 0);
-                    b = t.tv_sec * 1000 + t.tv_usec / 1000;
-                    break;
-
-                case 3:
-                    t.tv_sec = 0;
-                    t.tv_usec = b * 1000;
-                    select(0, 0, 0, 0, &t);
-                    break;
-
-                case 4:
-                    buffer[c & 31] = b && b - 48 > 9 && (b | 32) - 97 > 25 && b - 46 ? 95 : b;
-                    break;
-
-                case 5:
-                    b = !(handles[c & 7] = handles[c & 7] ? fclose(handles[c & 7]), file_ptr = 0 : fopen(buffer, b ? "wb" : "rb"));
-                    break;
-
-                case 6:
-                    b = handles[c & 7] ? c < 0 ? ftell(handles[c & 7]) : fseek(handles[c & 7], (int)b, c / 8) : -1;
-                    break;
-
-                case 7:
-                    if (!(image || ~(-c & -b) >> 12)) {
-                        XSizeHints hints;
-                        hints.flags = PMinSize | PMaxSize;
-                        hints.min_width = hints.max_width = c;
-                        hints.min_height = hints.max_height = b;
-                        graphics_context = XDefaultGC(display = XOpenDisplay(0), 0);
-                        window = XCreateSimpleWindow(display, RootWindow(display, 0), 0, 0, c, b, 1, 0, 0);
-                        XSetStandardProperties(display, window, buffer, 0, 0, 0, 0, &hints);
-                        XSelectInput(display, window, EVENT_MASK(Key) EVENT_MASK(Button) PointerMotionMask);
-                        atom = XInternAtom(display, "WM_DELETE_WINDOW", 0);
-                        XSetWMProtocols(display, window, &atom, 1);
-                        XMapWindow(display, window);
-                        image = XCreateImage(display, DefaultVisual(display, 0), 24, ZPixmap, 0, 0, y = c, z = b, 32, 0);
+                C(1, b = H ? c < 0 ? fgetc(H) : fputc(b, H) : -1)
+                C(2, gettimeofday(&t, 0); b = t.tv_sec * 1000 + t.tv_usec / 1000)
+                C(3, t.tv_sec = 0; t.tv_usec = b * 1000; select(0, 0, 0, 0, &t))
+                C(4, s[c & 31] = b && b - 48 > 9 && (b | 32) - 97 > 25 && b - 46 ? 95 : b)
+                C(5, b = !(H = H ? fclose(H), file = 0 : fopen(s, b ? "wb" : "rb")))
+                C(6, b = H ? c < 0 ? ftell(H) : fseek(H, (int)b, c / 8) : -1)
+                C(7,
+                    if (!(I || ~(-c & -b) >> 12)) {
+                        XSizeHints h;
+                        h.flags = PMinSize | PMaxSize;
+                        h.min_width = h.max_width = c;
+                        h.min_height = h.max_height = b;
+                        G = XDefaultGC(D = XOpenDisplay(0), 0);
+                        W = XCreateSimpleWindow(D, RootWindow(D, 0), 0, 0, c, b, 1, 0, 0);
+                        XSetStandardProperties(D, W, s, 0, 0, 0, 0, &h);
+                        XSelectInput(D, W, M(Key)M(Button)PointerMotionMask);
+                        A = XInternAtom(D, "WM_DELETE_WINDOW", 0);
+                        XSetWMProtocols(D, W, &A, 1);
+                        XMapWindow(D, W);
+                        I = XCreateImage(D, DefaultVisual(D, 0), 24, ZPixmap, 0, 0, y = c, z = b, 32, 0);
                     }
-                    b = image ? 6 : 0;
-                    break;
-
-                case 8:
-                    while (b = 2, image && XPending(display)) {
-                        XNextEvent(display, &event);
-                        c = event.type;
-                        if (c - ClientMessage || *event.xclient.data.l - atom) {
+                    b = I ? 6 : 0
+                )
+                C(8,
+                    while (b = 2, I && XPending(D)) {
+                        XNextEvent(D, &E);
+                        c = E.type;
+                        if (c - ClientMessage || *E.xclient.data.l - A) {
                             b = c == KeyRelease;
                             if (b || c == KeyPress) {
-                                memory[1] = XLookupKeysym(&event.xkey, 0);
+                                m[1] = XLookupKeysym(&E.xkey, 0);
                                 break;
                             }
                             b = c == ButtonRelease;
-                            if (c == ButtonPress || b) {
-                                memory[1] = event.xbutton.button + 4;
-                                break;
-                            }
-                            if (c == MotionNotify) {
-                                memory[1] = event.xmotion.x + 6;
-                                break;
-                            }
+                            B(ButtonPress || b, xbutton, button) += 4;
+                            break;
                         }
+                        B(MotionNotify, xmotion, x) = 6;
+                        break;
                     }
+                )
+                else {
+                    b = 3;
                     break;
-
-                case 9:
+                }
+                C(9,
                     b &= k;
-                    if (image && b + y * z < k) {
-                        image->data = file_ptr = memory + b;
-                        XPutImage(display, window, graphics_context, image, 0, 0, 0, 0, y, z);
-                        XSync(display, 0);
+                    if (I && b + y * z < k) {
+                        I->data = file = m + b;
+                        XPutImage(D, W, G, I, 0, 0, 0, 0, y, z);
+                        XSync(D, 0);
                     }
-                    break;
-
-                case 10:
-                    break;
-
-                INTEGER_OPERATIONS(32, unsigned)
-                INTEGER_OPERATIONS(48, int)
-                INTEGER_OPERATIONS(64, unsigned short)
-                INTEGER_OPERATIONS(80, short)
-                INTEGER_OPERATIONS(96, unsigned char)
-                INTEGER_OPERATIONS(112, signed char)
+                )
+                C(10, ; )
+                O(32, unsigned)
+                O(48, int)
+                O(64, unsigned short)
+                O(80, short)
+                O(96, unsigned char)
+                O(112, signed char)
             }
-            n = a & OPERATION_MASK;
+
+            n = a & 127;
             if (n) {
                 c = 0;
-                d = n > 2 ? memory[d & k] + n - 65 : d;
+                d = n > 2 ? m[d & k] + n - 65 : d;
                 d = (n - 2 ? c = d % 4 * 8, d / 4 : d) & k;
                 n = -1;
                 n >>= a >> 4 & 24;
-                BITWISE_WRITE(<< c)
+                W(<< c)
                 d++;
-                if (c) {
-                    BITWISE_WRITE(>>(32 - c))
-                }
+                if (c) W(>>(32 - c))
             } else {
-                *memory += b ? d : 0;
+                *m += b ? d : 0;
             }
         }
     }
     return 1;
 }
-```

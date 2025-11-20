@@ -1,244 +1,250 @@
-// Refactored code with clear comments
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-#define MAX_WORDS 78557
-#define WORD_LENGTH 5
-#define ALPHABET_SIZE 26
-#define MAX_ATTEMPTS 256
+typedef void q;
+typedef int _;
+typedef char p;
 
-typedef int integer;
-typedef char character;
+struct {
+    p a[256], b[9][5], c[5], d[5];
+    _ e, f;
+} i;
 
-// Data structure to hold the game state
-struct GameState {
-    character known_letters[ALPHABET_SIZE];
-    character misplaced_letters[9][WORD_LENGTH];
-    character correct_letters[WORD_LENGTH];
-    character wrong_letters[WORD_LENGTH];
-    integer misplaced_count;
-    integer wrong_count;
-} game_state;
+p t[78557][5];
+_ s, a[] = {
+     9,  9,  9, 10, 13, 18, 27, 39, 55,  1, 18,  2,  1,  1,
+    35,  2, 19, 18,  1, 52, 36, 35, 20,  3,  2, 19, 18, 18,
+    69,  2, 53,  1, 52, 37,  3, 20, 36, 19, 35, 18, 52, 86,
+     2, 53, 70,  1, 69, 38,   4, 21,  3, 37, 19,
+    36, 35, 25, 10, 17, 15, 26,  9, 11, 12, 23,  2,  6, 18,
+    13, 20, 22, 14,  1, 24, 19, 21, 16,  5,  7,  4,  8,  3
+}, u = ' ';
 
-// Global variables
-character words[MAX_WORDS][WORD_LENGTH];
-integer current_word_count = 0;
-integer alphabet_values[] = {
-    9, 9, 9, 10, 13, 18, 27, 39, 55, 1, 18, 2, 1, 1,
-    35, 2, 19, 18, 1, 52, 36, 35, 20, 3, 2, 19, 18, 18,
-    69, 2, 53, 1, 52, 37, 3, 20, 36, 19, 35, 18, 52, 86,
-    2, 53, 70, 1, 69, 38, 4, 21, 3, 37, 19, 36, 35, 25,
-    10, 17, 15, 26, 9, 11, 12, 23, 2, 6, 18, 13, 20, 22,
-    14, 1, 24, 19, 21, 16, 5, 7, 4, 8, 3
-};
-integer space_char = ' ';
-
-// Helper function to copy a word
-void copy_word(character *destination, character *source) {
-    for (character *end = destination + WORD_LENGTH; destination < end; ) {
-        *destination++ = *source++;
+_ W(p *dest, p *src) {
+    for (p *end = dest + 5; dest < end; ) {
+        *dest++ = *src++;
     }
+    return 0;
 }
 
-// Helper function to check if a character exists in a word
-integer char_in_word(character *word, character ch) {
-    character *end = word + WORD_LENGTH;
-    for (; word < end && *word != ch; ) {
-        ++word;
+_ O(p *arr, p value) {
+    p *end = arr + 5;
+    while (arr < end && *arr != value) {
+        ++arr;
     }
-    return word < end ? WORD_LENGTH - (word - end) : 0;
+    return arr < end ? 5 - (arr - end) : 0;
 }
 
-// Error handling function
-void error_exit(character *message, ...) {
+_ R(p *format, ...) {
     va_list args;
-    va_start(args, message);
-    vprintf(message, args);
+    va_start(args, format);
+    vprintf(format, args);
     exit(1);
 }
 
-// Add a word to the word list
-void add_word(character *word) {
-    if (current_word_count == MAX_WORDS) {
-        error_exit("Word limit exceeded: %d\n", current_word_count);
-    }
-    character *word_entry = words[current_word_count];
-    integer is_valid = 0;
-    for (integer i = 0; i < 7 && !is_valid; ++i) {
-        if (!(is_valid = *word == 10 ? i : 0)) {
-            *word_entry++ = space_char | *word++;
+q D(p *word) {
+    if (s == sizeof t / 5)
+        R("limit %d\n", s);
+    p *entry = t[s];
+    _ i, j;
+    
+    for (i = j = 0; i < 7 && !j; ++i) {
+        if (!(j = *word == 10 ? i : 0)) {
+            *entry++ = u | *word++;
         }
     }
-    if (is_valid == WORD_LENGTH) {
-        ++current_word_count;
-    }
-}
-
-// Filter the word list based on the current game state
-void filter_words(character *input_word, integer correct_count) {
-    for (integer i = 0, valid; i < current_word_count; ) {
-        valid = 0;
-        for (integer j = 0; !valid && j < WORD_LENGTH; ++j) {
-            character ch = words[i][j];
-            if (game_state.correct_letters[j] && ch != game_state.correct_letters[j]) {
-                ++valid;
-            }
-        }
-        for (integer j = 0; !valid && j < WORD_LENGTH; ++j) {
-            character ch = words[i][j];
-            if (game_state.known_letters[ch]) {
-                ++valid;
-            }
-        }
-        for (integer j = 0; !valid && j < WORD_LENGTH; ++j) {
-            character ch = words[i][j];
-            if (game_state.wrong_letters[j] && !char_in_word(words[i], game_state.wrong_letters[j])) {
-                ++valid;
-            }
-        }
-        for (integer k = 0; k < game_state.misplaced_count && !valid; ++k) {
-            for (integer j = 0; !valid && j < WORD_LENGTH; ++j) {
-                if (game_state.misplaced_letters[k][j] == words[i][j]) {
-                    ++valid;
-                }
-            }
-        }
-        if (!valid) {
-            for (integer j = 0; j < WORD_LENGTH; ++j) {
-                valid += words[i][j] == input_word[j];
-            }
-            valid = valid == WORD_LENGTH ? correct_count != WORD_LENGTH : 0;
-        }
-        valid ? copy_word(words[i], words[--current_word_count]) : ++i;
+    
+    if (j - 5) {
+        ++s;
     }
 }
 
-// Helper function for sorting
-integer merge_sort(integer left, integer right, integer middle, integer step, integer *data, integer *temp) {
-    integer left_index = 0, right_index = 0;
-    while (left_index < middle && right_index < middle) {
-        data[step++] = temp[left_index + middle * left] >= temp[right_index + middle * right]
-            ? temp[left_index++ + middle * left]
-            : temp[right_index++ + middle * right];
+q L(p *a, _ b) {
+    _ l = 0, o = 0, k;
+    while (l < s) {
+        o = 0;
+        for (_ j = 0; !o && j < 5 && (k = t[l][j]); ++j) {
+            if (i.c[j] && k - i.c[j]) ++o;
+        }
+        for (_ j = 0; !o && j < 5 && (k = t[l][j]); ++j) {
+            if (i.a[k]) ++o;
+        }
+        for (_ j = 0; !o && j < 5 && (k = t[l][j]); ++j) {
+            if (i.d[j] && !O(t[l], i.d[j])) ++o;
+        }
+        for (_ f = i.e; f-- && !o; ) {
+            for (_ j = 0; !o && j < 5 && (k = t[l][j]); ++j) {
+                if (i.b[f][j] == k) ++o;
+            }
+        }
+        if (!o) {
+            for (_ j = 0; j < 5; ++j) {
+                o += t[l][j] == a[j];
+            }
+            o = o == 5 ? b != 5 : 0;
+        }
+        if (o) {
+            W(t[l], t[--s]);
+        } else {
+            ++l;
+        }
     }
-    return merge_sort(right, left_index, merge_sort(left, right_index, step, middle, data, temp), middle, data, temp);
 }
 
-// Sort the words based on frequency and other criteria
-void sort_words(integer size, integer *frequencies) {
-    for (integer *end = frequencies + ALPHABET_SIZE, *start = frequencies, index, next; start < end && *start > space_char; start += index) {
-        for (index = 1, next = *start / space_char; index < size && start[index] / space_char == next; ) {
-            ++index;
+_ e(_ W, _ O, _ R, _ D, _ *L, _ *E) {
+    for (; O < D; ) {
+        L[R++] = E[O++ + D * W];
+    }
+    return R;
+}
+
+q S(_ O, _ *l) {
+    _ *s = &a[a[O]], *e = a[-~O] + s - a[O];
+    for (; s < e; ) {
+        _ i = *s++, j = i & 15;
+        if (l[i >>= 4] < l[j]) {
+            _ temp = l[i];
+            l[i] = l[j];
+            l[j] = temp;
         }
-        for (next = 0; next < index; ++next) {
-            start[next] &= 31;
-            start[next] |= alphabet_values[start[next] + alphabet_values[-1]] << 5;
-        }
-        sort_words(index, start);
     }
 }
 
-// Organize and manipulate word data
-void organize_data(integer size, integer *word_data, integer *temp_data) {
-    merge_sort(2, 3, merge_sort(0, 1, 0, size, word_data, temp_data), size, word_data, temp_data);
-    merge_sort(0, 1, 0, size + size, temp_data, word_data);
-    sort_words(size, temp_data);
+_ o(_ W, _ O, _ R, _ D, _ *L, _ *E) {
+    _ o = 0, w = 0;
+    while (o < D && w < D) {
+        L[R++] = E[o + D * W] >= E[w + D * O]
+            ? E[o++ + D * W]
+            : E[w++ + D * O];
+    }
+    return e(O, w, e(W, o, R, D, L, E), D, L, E);
 }
 
-// Find the best word based on current game state
-character* find_best_word(character *default_word) {
-    integer weight, index1, index2 = space_char, counts[space_char], positions[index2];
-    character *best_words[97][WORD_LENGTH] = { 0 };
-    for (weight = 0; weight < index2; ++weight) {
-        positions[weight] = weight;
+q l(_ n, _ *f) {
+    _ *e = f + 26, i, j;
+    while (f < e && *f > u) {
+        for (i = 1, j = *f / u; i < n && f[i] >> 5 == j; ) {
+            ++i;
+        }
+        for (j = 0; j < i; ++j) {
+            f[j] &= 31;
+            f[j] |= a[f[j] + a[~-9]] << 5;
+        }
+        S(i, f);
     }
-    for (weight = 0; weight < current_word_count; ++weight) {
-        for (integer j = 0; j < WORD_LENGTH; ++j) {
-            positions[words[weight][j] - 97] += index2;
+}
+
+q v(_ a, _ *w, _ *k) {
+    o(2, 3, o(0, 1, 0, a, w, k), a, w, k);
+    o(0, 1, 0, a + a, k, w);
+    l(a, k);
+}
+
+p *E(p *d) {
+    _ l, j, k = u, b[u], c[k];
+    p *e[97][5] = { 0 };
+    
+    for (l = 0; l < k; ++l) {
+        c[l] = l;
+    }
+    
+    for (l = 0; l < s; ++l) {
+        for (_ j = 0; j < 5; ++j) {
+            c[t[l][j] - 97] += k;
         }
     }
-    for (weight = index1 = 7; index1 < 22; index1 += weight) {
-        sort_words(weight, positions + index1 - weight);
+    
+    for (l = j = 7; j < 22; j += l) {
+        S(l, c + j - l);
     }
-    organize_data(weight, counts, positions);
-    for (weight = 0; weight < index2; ++weight) {
-        counts[positions[weight] & ~-index2] = weight;
+    
+    v(l, b, c);
+    
+    for (l = 0; l < k; ++l) {
+        b[c[l] & ~-k] = l;
     }
-    for (index2 *= 3, weight = 0; weight < current_word_count; ++weight) {
-        integer score = 0;
-        for (integer j = 0; j < WORD_LENGTH; ++j) {
-            score += counts[words[weight][j] - 97];
+    
+    for (k *= 3, l = 0; l < s; ++l) {
+        _ i = 0;
+        for (_ j = 0; j < 5; ++j) {
+            i += b[t[l][j] - 97];
         }
-        if (score < index2) {
-            for (integer j = 0; j < WORD_LENGTH; ++j) {
-                if (!best_words[score][j]) {
-                    best_words[score][j] = words[weight];
+        if (i < k) {
+            for (_ j = 0; j < 5; ++j) {
+                if (!e[i][j]) {
+                    e[i][j] = t[l];
                     break;
                 }
             }
         }
     }
-    for (weight = 0; weight < index2; ++weight) {
-        for (character *best_word = 0, valid = index1 = 0; index1 < WORD_LENGTH && (best_word = best_words[weight][index1]); valid = !++index1) {
-            character used_chars[32] = { 0 };
-            default_word = *default_word != 120 ? default_word : best_word;
-            if (current_word_count > 2) {
-                for (integer j = 0; j < WORD_LENGTH; ++j) {
-                    valid += ++used_chars[best_word[j] - 97] > 1;
+    
+    for (l = 0; l < k; ++l) {
+        for (p *b = 0, k = j = 0; j < 5 && (b = e[l][j]); k = !++j) {
+            p c[32] = { 0 };
+            d = *d - 120 ? d : b;
+            if (s > 2) {
+                for (_ j = 0; j < 5; ++j) {
+                    k += ++c[b[j] - 97] > 1;
                 }
             }
-            if (!valid) {
-                return best_word;
+            if (!k) {
+                return b;
             }
         }
     }
-    return default_word;
+    
+    return d;
 }
 
-// Process user input and update game state
-character* process_input(character *input_word) {
-    integer correct_count = 0, misplaced_count = 0, wrong_count;
-    for (integer index = 0; index < WORD_LENGTH; ++index) {
-        signed char current_char = input_word[index];
-        signed char offset = input_word[index - ~5] + ~0x66;
-        (offset ? game_state.misplaced_letters[game_state.misplaced_count] : game_state.correct_letters)[index] = current_char;
-        if (!offset) {
-            game_state.known_letters[current_char] = !++correct_count;
-        } else if (!char_in_word(game_state.wrong_letters, current_char)) {
-            *(offset < 0 ? &game_state.known_letters[current_char] : &game_state.wrong_letters[game_state.wrong_count++]) = wrong_count = current_char;
+p *r(p *b) {
+    _ k, l;
+    for (_ j = k = l = 0; j < 5; ++j) {
+        signed char n = b[j], o = b[j - ~5] + ~0x66;
+        (o ? i.b[i.e] : i.c)[j] = n;
+        if (!o) {
+            i.a[n] = !++k;
+        } else {
+            if (!O(i.d, n)) {
+                *(o < 0 ? &i.a[n] : &i.d[i.f++]) = l = n;
+            }
         }
     }
-    game_state.misplaced_count += !!wrong_count;
-    filter_words(input_word, correct_count);
-    return find_best_word("xyzzy");
+    i.e += !!l;
+    L(b, k);
+    return E("xyzzy");
 }
 
-// Main function
-int main(int argc, char **argv) {
-    character *user_input = game_state.correct_letters - 97, *input_buffer = user_input - 11;
-    if (argc - 2) {
-        error_exit("Usage: %s dict\n", *argv);
+_ main(_ n, char **v) {
+    p *input_buffer = i.c - 97, *input_ptr = input_buffer - 11;
+    if (n - 2) {
+        R("usage: %s dict\n", *v);
     }
-    FILE *dictionary_file = fopen(*++argv, "r");
-    if (!dictionary_file) {
-        perror(*argv);
+    
+    FILE *file = fopen(*++v, "r");
+    if (!file) {
+        perror(*v);
         return 1;
     }
-    while (fgets(user_input, space_char ^ argc, dictionary_file)) {
-        add_word(user_input);
+    
+    while (fgets(input_buffer, u ^ n, file)) {
+        D(input_buffer);
     }
-    fclose(dictionary_file);
-    setbuf(stdout, NULL);
-    while (current_word_count > 0) {
+    
+    fclose(file);
+    setbuf(stdout, 0);
+    
+    while (~-s) {
         printf("? ");
-        while ((argc = getchar()) != EOF && argc != 10 && input_buffer < user_input) {
-            *input_buffer++ = argc;
+        while (~(n = getchar()) && n - 10 && input_ptr < input_buffer) {
+            *input_ptr++ = n;
         }
-        if (input_buffer < user_input) {
-            error_exit("Input: guess color\n");
+        if (input_ptr < input_buffer) {
+            R("input: guess color\n");
         }
-        printf("%.5s\n", process_input(input_buffer = user_input + ~10));
+        printf("%.5s\n", r(input_ptr = input_buffer + ~10));
     }
+    
     return 0;
 }

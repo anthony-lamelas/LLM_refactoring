@@ -1,5 +1,5 @@
 ```c
-// Refactored code with clear comments
+#define JPEG_INTERNALS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,115 +7,143 @@
 
 #ifdef _WIN32
 #include <fcntl.h>
-#define main M();int main() { int i; for (i = 0; i < 2; i++) _setmode(i, _O_BINARY); return M(); } int M
+#define main M();int main\
+(){int i;F(i,2)_setmode(i,\
+_O_BINARY);return M();}int M
 #endif
 
-// Helper macro for jpeg function calls
-#define JPEG_FUNC(name) jpeg_##name;
+#define J(x) jpeg_##x;
+#define O S.comp_info[j]
+#define F(a, b) for(a = 0; a < b; a++)
+#define C(j, v) g = z = (v > 0) * 7; A(j, 8, I[v + m + s], *2)
+#define A(j, n, v, w) F(j, n) { \
+    q = P[a = z * 8 + g] - v * z + g; \
+    p = T[i][a] w; \
+    t = r * 2 + (q < 0 ? q : -q); \
+    p *= t *= t < 0 ? 0 : t; \
+    u -= q * t * p; \
+    l += p * p; \
+}
+#define W(x) J(x##_compress(&d)) J(x##_decompress(&S))
+void J(idct_islow(void*, void*, void*, void*, JDIMENSION))
+#define D(x, o) O.dct_table = N; J(idct_islow(&S, &O, c, G + x, o))
+#define B(o, n) if(i o 7) F(z, 15 - n) A(g, n, P[b = (n & 9) + 8, -T[i][b])
 
-// Function Prototypes
-void perform_idct(j_decompress_ptr cinfo, jpeg_component_info *compptr, JBLOCKROW coef_block, DCTELEM *workspace, int component_index);
-void initialize_quantization_tables(j_decompress_ptr cinfo, j_compress_ptr dinfo);
-void process_image(j_decompress_ptr cinfo, j_compress_ptr dinfo, jvirt_barray_ptr *coef_arrays, JSAMPLE *sample_range_limit);
-
-// Main function
 int main() {
-    struct jpeg_decompress_struct cinfo;
-    struct jpeg_compress_struct dinfo;
-    struct jpeg_error_mgr jerr;
-    jvirt_barray_ptr *coef_arrays;
-    JSAMPLE *sample_range_limit;
-    int i;
-
-    cinfo.err = jpeg_std_error(&jerr);
-    dinfo.err = jpeg_std_error(&jerr);
-
-    jpeg_create_decompress(&cinfo);
-    jpeg_create_compress(&dinfo);
-
-    jpeg_stdio_src(&cinfo, stdin);
-    jpeg_stdio_dest(&dinfo, stdout);
-
-    jpeg_read_header(&cinfo, TRUE);
-    coef_arrays = jpeg_read_coefficients(&cinfo);
-
-    sample_range_limit = (JSAMPLE *)malloc((MAXJSAMPLE * 6 + 6) * sizeof(JSAMPLE));
-    if (sample_range_limit == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return 1;
+    void *v, **R;
+    JQUANT_TBL *Q;
+    int width, height, y, x, a, b, g, z, r, i, k, j = 0, s, m = MAXJSAMPLE + 1, K, f, E;
+    struct J(compress_struct d) JSAMPLE *I, P[64], *G[16];
+    UINT16 *V;
+    UINT16 U[MAXJSAMPLE * 6 + 6] = {0};
+    struct J(error_mgr e);
+    float T[64][64];
+    JCOEF *c;
+    
+    float q = 0, p = 0, t = 0, u = 0, l = 0, X = 0, Y = 0;
+    struct J(decompress_struct S) MULTIPLIER N[64];
+    
+    d.err = S.err = J(std_error(&e));
+    W(create);
+    J(stdio_src(&S, stdin));
+    J(stdio_dest(&d, stdout));
+    J(read_header(&S, 1));
+    R = v = J(read_coefficients(&S));
+    S.sample_range_limit = U + m;
+    
+    F(i, 8) G[i] = P + i * 8;
+    F(i, 64) N[i] = 1;
+    F(i, m) U[m + i] = U[5 * m + i] = i;
+    F(i, 3 * m / 2) U[i + m * 2] = m - 1;
+    F(i, 64) {
+        JCOEF c[64] = {0};
+        c[i] = q;
+        D(0, 0);
+        F(k, 64) T[i][k] = (P[k] - m / 2) / q;
     }
-
-    process_image(&cinfo, &dinfo, coef_arrays, sample_range_limit);
-
-    free(sample_range_limit);
-
-    jpeg_copy_critical_parameters(&cinfo, &dinfo);
-    jpeg_write_coefficients(&dinfo, coef_arrays);
-
-    jpeg_finish_decompress(&cinfo);
-    jpeg_finish_compress(&dinfo);
-
-    jpeg_destroy_decompress(&cinfo);
-    jpeg_destroy_compress(&dinfo);
-
-    return 0;
-}
-
-// Perform Inverse Discrete Cosine Transform (IDCT)
-void perform_idct(j_decompress_ptr cinfo, jpeg_component_info *compptr, JBLOCKROW coef_block, DCTELEM *workspace, int component_index) {
-    // Implementation of the IDCT operation
-    JPEG_FUNC(idct_islow(cinfo, compptr, coef_block, workspace, component_index));
-}
-
-// Initialize quantization tables
-void initialize_quantization_tables(j_decompress_ptr cinfo, j_compress_ptr dinfo) {
-    int tbl_index, i;
-    for (tbl_index = 0; tbl_index < NUM_QUANT_TBLS; tbl_index++) {
-        JQUANT_TBL *quant_tbl = cinfo->quant_tbl_ptrs[tbl_index];
-        if (quant_tbl != NULL) {
-            for (i = 0; i < DCTSIZE2; i++) {
-                quant_tbl->quantval[i] = 1;
-            }
-        }
-    }
-}
-
-// Process the image: perform IDCT, process coefficients, and update sample range
-void process_image(j_decompress_ptr cinfo, j_compress_ptr dinfo, jvirt_barray_ptr *coef_arrays, JSAMPLE *sample_range_limit) {
-    int comp_index, block_x, block_y, i, j;
-    JDIMENSION width_in_blocks, height_in_blocks;
-    JQUANT_TBL *quant_tbl;
-    jvirt_barray_ptr *coef_barray;
-    JBLOCKARRAY coef_buffer;
-    JBLOCKROW coef_block;
-    JSAMPARRAY sample_array;
-    JSAMPLE *sample_ptr;
-
-    for (comp_index = 0; comp_index < cinfo->num_components; comp_index++) {
-        jpeg_component_info *compptr = &cinfo->comp_info[comp_index];
-        width_in_blocks = compptr->width_in_blocks;
-        height_in_blocks = compptr->height_in_blocks;
-        quant_tbl = compptr->quant_table;
-        if (quant_tbl != NULL) {
-            // Initialize sample range limit
-            for (i = 0; i < MAXJSAMPLE * 3 / 2; i++) {
-                sample_range_limit[i + MAXJSAMPLE + 1] = i;
-            }
-            for (i = 0; i < MAXJSAMPLE; i++) {
-                sample_range_limit[MAXJSAMPLE + 1 + i] = i;
-                sample_range_limit[MAXJSAMPLE * 3 + 3 + i] = MAXJSAMPLE;
-            }
-
-            // Process each block
-            for (block_y = 0; block_y < height_in_blocks; block_y++) {
-                coef_barray = coef_arrays[comp_index];
-                coef_buffer = (*cinfo->mem->access_virt_barray)((j_common_ptr)cinfo, coef_barray, block_y, 1, FALSE);
-                for (block_x = 0; block_x < width_in_blocks; block_x++) {
-                    coef_block = coef_buffer[block_x];
-                    perform_idct(cinfo, compptr, coef_block, NULL, comp_index);
+    
+    F(j, S.num_components) {
+        if ((Q = O.quant_table)) {
+            O.quant_table = 0;
+            width = O.width_in_blocks * 8;
+            height = O.height_in_blocks * 8;
+            s = width * 8 + 2;
+            
+            if ((I = malloc(sizeof(*I) * (height + 2) * s))) {
+                F(i, 8) G[i + 8] = I + s * i;
+                F(K, 3) {
+                    F(y, height / 8) {
+                        JBLOCK *n = *(*S.mem->access_virt_barray)(v = &S, R[j], y, 1, 1);
+                        F(x, width / 8) {
+                            c = n[x];
+                            V = Q->quantval;
+                            m = (y * s + x) * 8 + s + 1;
+                            
+                            F(i, 64 && !K) c[i] *= V[i];
+                            D(8, m);
+                        }
+                    }
+                    
+                    F(i, s) *I = I[s], I[height * s + s] = I[height * s], I++;
+                    F(y, height) *I = I[1], I[width + 1] = I[width], I += s;
+                    I -= s * y + s;
+                    
+                    F(y, height / 8) {
+                        JBLOCK *n = *(*S.mem->access_virt_barray)(v = &S, R[j], y, 1, 1);
+                        
+                        F(x, width / 8) {
+                            c = n[x];
+                            X = Y = 0;
+                            
+                            F(E, 2) {
+                                for (f = k = 71; (i = k < 8 ? k * 8 - 8 : k % 8 - 7 ? k - 7 : k / 8 + 55); Y += g * g) {
+                                    r = V[i];
+                                    
+                                    if (E) {
+                                        u = (b = c[i]) * q;
+                                    } else {
+                                        u = l = 0;
+                                        if (f && k - i - 7) {
+                                            D(0, f = 0);
+                                        }
+                                        B(&, 7);
+                                        B(>, 8);
+                                        C(g, -s);
+                                        C(g, s);
+                                        C(z, -1);
+                                        C(z, 1);
+                                        u /= l;
+                                        u += b = c[i];
+                                    }
+                                    
+                                    z = u + (u > 0) - 0.5f;
+                                    g = (b + (b < 0 ? -r : r) / 2) / r * r;
+                                    a = ((g < 1) - r) / 2 + g;
+                                    r -= g ? 1 - a : r + a;
+                                    f |= b ^= c[k = i] = a = z > r ? r : z < a ? a : z;
+                                    X += a * g;
+                                }
+                                Y > X ? q = Y / X : E++;
+                            }
+                        }
+                    }
                 }
+                free(I);
             }
         }
     }
+    
+    F(k, NUM_QUANT_TBLS) {
+        if ((Q = S.quant_tbl_ptrs[k])) {
+            F(i, 64) Q->quantval[i] = 1;
+        }
+    }
+    
+    J(copy_critical_parameters(&S, &d));
+    J(write_coefficients(&d, v = R));
+    W(finish);
+    W(destroy);
+    
+    return 0;
 }
 ```

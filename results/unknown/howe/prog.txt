@@ -1,219 +1,233 @@
 ```c
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <locale.h>
+#include <string.h>
+#include <unistd.h>
+#include <curses.h>
 #include <wchar.h>
 #include <regex.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <ncurses.h>
 
 #define BUF 8192
 #define MODE 0644
 
-int cursor_y, cursor_x, z_flag, window_width;
-char *filename, *search_query;
-char buffer[BUF], *buffer_start = buffer, *buffer_end, *current_position, *temp_start, *temp_end;
-long cursor_pos, temp_cursor_pos, upper_bound, lower_bound, line_length, search_offset = -1;
-regex_t regex;
+// Global variables
+int y, x, z, w;
+char *f, *q;
+char b[BUF], *g = b, *h, *c, *ó, *ò;
+long o, ö, u, v, l, Q, d = -1;
+regex_t e;
 
 // Function prototypes
-void execute_command(int max_command_index);
-long calculate_relative_position(char *pointer);
-char *get_position(long offset);
-int get_multibyte_character_length(int ascii_value);
-long get_next_position(long offset);
-long get_previous_position(long offset);
-void swap_buffers();
-void set_position(long new_position);
-int calculate_display_width(char *string, int start_position);
-long get_line_start(long offset);
-long calculate_next_position(long offset, int start, int max_length);
-long get_display_position(long start, long end);
-long find_display_start(long offset);
-long find_display_end(long offset);
-void clear_line();
-void update_screen();
-void clear_screen();
-void move_cursor_left();
-void move_cursor_right();
-void move_to_line_start();
-void move_to_line_end();
-void move_to_buffer_start();
-void move_to_previous_word();
-void jump_to_upper_bound();
-void jump_to_lower_bound();
-void jump_to_display_position();
-void jump_to_previous_screen();
-void jump_to_next_word();
-void handle_input();
-void copy_to_clipboard();
-void cut_to_clipboard();
-void paste_from_clipboard();
-void save_to_file();
-void reset_filename();
-void search();
-void toggle_mark();
-char command_keys[] = "hjklbwHJKL|G/nixydPu\\WQ\003";
-void (*command_functions[])(void) = {
-    move_cursor_left, move_to_line_end, move_to_line_start, move_cursor_right, move_to_previous_word, jump_to_next_word,
-    jump_to_upper_bound, jump_to_display_position, jump_to_previous_screen, jump_to_lower_bound,
-    move_to_buffer_start, move_to_next_word,
-    search, search,
-    handle_input, cut_to_clipboard,
-    copy_to_clipboard, paste_from_clipboard, paste_from_clipboard, swap_buffers,
-    toggle_mark, save_to_file, reset_filename, reset_filename,
-    clear_screen
+void T(int);
+long P(char *s);
+char *Z(long m);
+int S(int a);
+long E(long m);
+long D(long m);
+void Û();
+void V(long m);
+int G(char *s, int a);
+long O(long m);
+long A(long m, int a, int n);
+long _(long m, long n);
+long M(long m);
+long N(long m);
+void C();
+void Y();
+void 🔥();
+void H();
+void L();
+void K();
+void J();
+void a();
+void B();
+void Ê();
+void Ë();
+void É();
+void È();
+void W();
+void ө();
+void I();
+void Ô();
+void X();
+void Ó();
+void Í();
+void κ();
+void Ф();
+void F();
+void Ñ();
+void Â();
+
+char Ќ[] = "hjklbwHJKL|G/nixydPu\\WQ\003";
+void (*Κ[])(void) = {
+    H, J, K, L, B, W,
+    Ê, É, È, Ë,
+    a, ө,
+    Ñ, F,
+    I, Ó,
+    Ô, X, Í, Û,
+    Â, κ, Ф, Ф,
+    🔥
 };
 
-// Function definitions
-
-long calculate_relative_position(char *pointer) {
-    return pointer - buffer - (pointer < buffer_end ? 0 : buffer_end - buffer_start);
+// Calculate position offset in buffer
+long P(char *s) {
+    return s - b - (s < h ? 0 : h - g);
 }
 
-char *get_position(long offset) {
-    return buffer + offset + (buffer + offset < buffer_start ? 0 : buffer_end - buffer_start);
+// Retrieve pointer to position in buffer
+char *Z(long m) {
+    return b + m + (b + m < g ? 0 : h - g);
 }
 
-int get_multibyte_character_length(int ascii_value) {
-    return 1 + (ascii_value > 193) + (ascii_value > 223) + (ascii_value > 239);
+// Calculate character width for UTF-8
+int S(int a) {
+    return 1 + (a > 193) + (a > 223) + (a > 239);
 }
 
-long get_next_position(long offset) {
-    return offset + (offset < calculate_relative_position(current_position) ? get_multibyte_character_length(*get_position(offset)) : 0);
+// Advance to next character
+long E(long m) {
+    return m + (m < P(c) ? S(*Z(m)) : 0);
 }
 
-long get_previous_position(long offset) {
-    while (0 < offset && (192 & *get_position(--offset)) == 128);
-    return offset;
+// Move back to start of character
+long D(long m) {
+    while (0 < m && (192 & *Z(--m)) == 128)
+        ;
+    return m;
 }
 
-void swap_buffers() {
-    char *temp = temp_start;
-    temp_start = buffer_start;
-    buffer_start = temp;
-    temp = temp_end;
-    temp_end = buffer_end;
-    buffer_end = temp;
-    long temp_pos = temp_cursor_pos;
-    temp_cursor_pos = cursor_pos;
-    cursor_pos = temp_pos;
-    temp_cursor_pos = cursor_pos + 1;
+// Swap buffer pointers and update positions
+void Û() {
+    char *p = ó;
+    ó = g;
+    g = p;
+    p = ò;
+    ò = h;
+    h = p;
+    v = ö;
+    ö = o;
+    o = v;
+    v = o + 1;
 }
 
-void set_position(long new_position) {
-    char *position = get_position(new_position);
-    while (position < buffer_start) {
-        *--buffer_end = *--buffer_start;
+// Move buffer content
+void V(long m) {
+    char *p = Z(m);
+    while (p < g)
+        *--h = *--g;
+    while (h < p)
+        *g++ = *h++;
+    ó = g;
+    ò = h;
+    ö = o;
+}
+
+// Get column width of character
+int G(char *s, int a) {
+    wint_t t;
+    mbtowc(&t, s, 4);
+    return t == '\t' ? (8 - ((a & 7))) : (a = wcwidth(t)) < 1 ? 1 : a;
+}
+
+// Find start of line
+long O(long m) {
+    while (0 < m && *Z(--m) != '\n')
+        ;
+    return (m + 1) * (0 < m);
+}
+
+// Advance to next column
+long A(long m, int a, int n) {
+    char *p;
+    while (a < n && (p = Z(m)) < c && *p != '\n') {
+        a += G(p, a);
+        m = E(m);
     }
-    while (buffer_end < position) {
-        *buffer_start++ = *buffer_end++;
-    }
-    temp_start = buffer_start;
-    temp_end = buffer_end;
-    temp_cursor_pos = cursor_pos;
+    return m;
 }
 
-int calculate_display_width(char *string, int start_position) {
-    wint_t wide_character;
-    mbtowc(&wide_character, string, 4);
-    return wide_character == '\t' ? (8 - ((start_position & 7))) : (start_position = wcwidth(wide_character)) < 1 ? 1 : start_position;
-}
-
-long get_line_start(long offset) {
-    while (0 < offset && *get_position(--offset) != '\n');
-    return (offset + 1) * (0 < offset);
-}
-
-long calculate_next_position(long offset, int start, int max_length) {
-    char *pointer;
-    while (start < max_length && (pointer = get_position(offset)) < current_position && *pointer != '\n') {
-        start += calculate_display_width(pointer, start);
-        offset = get_next_position(offset);
-    }
-    return offset;
-}
-
-long get_display_position(long start, long end) {
-    char *pointer;
-    int start_position = 0;
-    long prev_position = start;
-    while (start < end && (pointer = get_position(start = get_next_position(start))) < current_position) {
-        start_position += calculate_display_width(pointer, start_position);
-        if (COLS <= start_position) {
-            prev_position = start;
-            start_position = 0;
+// Calculate next position
+long _(long m, long n) {
+    char *p;
+    int a = 0;
+    long i = m;
+    while (m < n && (p = Z(m = E(m))) < c) {
+        a += G(p, a);
+        if (COLS <= a) {
+            i = m;
+            a = 0;
         }
     }
-    return prev_position;
+    return i;
 }
 
-long find_display_start(long offset) {
-    long start = get_line_start(offset);
-    long end = get_display_position(start, offset);
-    if (start < end) {
-        return get_display_position(start, end - 1);
-    }
-    return get_display_position(get_line_start(start - 1), start - 1);
+// Move to next line boundary
+long M(long m) {
+    long s = O(m);
+    long t = _(s, m);
+    if (s < t)
+        return _(s, t - 1);
+    return _(O(s - 1), s - 1);
 }
 
-long find_display_end(long offset) {
-    return get_next_position(calculate_next_position(offset, cursor_x, COLS - 1));
+// Advance to next column position
+long N(long m) {
+    return E(A(m, x, COLS - 1));
 }
 
-void clear_line() {
+// Clear current line
+void C() {
     printw("%*s", COLS - getcurx(stdscr), "");
 }
 
-void update_screen() {
-    char *pointer;
+// Refresh screen display
+void Y() {
+    char *p;
     int i, j;
-    long start, end, pos = calculate_relative_position(current_position);
-    if (cursor_pos < upper_bound) {
-        upper_bound = get_display_position(get_line_start(cursor_pos), cursor_pos);
-    } else if (temp_cursor_pos <= cursor_pos && cursor_pos < find_display_end(temp_cursor_pos)) {
-        upper_bound = find_display_end(upper_bound);
-    } else if (temp_cursor_pos <= cursor_pos) {
-        temp_cursor_pos = upper_bound;
-        for (upper_bound = cursor_pos, i = LINES - 1 - (cursor_pos == pos); 0 < --i && temp_cursor_pos < upper_bound; ) {
-            upper_bound = find_display_start(upper_bound);
+    long s, t, n = P(c);
+    if (o < u)
+        u = _(O(o), o);
+    else if (v <= o && o < N(v))
+        u = N(u);
+    else if (v <= o) {
+        v = u;
+        for (u = o, i = LINES - 1 - (o == n); 0 < --i && v < u; ) {
+            u = M(u);
         }
-        if (upper_bound < temp_cursor_pos) {
-            upper_bound = temp_cursor_pos;
-        }
+        if (u < v)
+            u = v;
     }
     erase();
     standout();
-    printw("%s %ldB", filename, cursor_pos);
-    clear_line();
-    if (search_offset < 0) {
-        start = end = search_offset;
-    } else if (cursor_pos < search_offset) {
-        start = cursor_pos;
-        end = search_offset;
+    printw("%s %ldB", f, o);
+    C();
+    if (d < 0)
+        s = t = d;
+    else if (o < d) {
+        s = o;
+        t = d;
     } else {
-        start = search_offset;
-        end = cursor_pos;
+        s = d;
+        t = o;
     }
-    for (i = 1, j = 0, temp_cursor_pos = upper_bound; standend(), i < LINES; ) {
-        if (cursor_pos == temp_cursor_pos) {
-            cursor_y = i;
-            cursor_x = j;
+    for (i = 1, j = 0, v = u; standend(), i < LINES; ) {
+        if (o == v) {
+            y = i;
+            x = j;
         }
-        if (current_position <= (pointer = get_position(temp_cursor_pos))) {
+        if (c <= (p = Z(v)))
             break;
-        }
-        if (start <= temp_cursor_pos && temp_cursor_pos < end) {
+        if (s <= v && v < t)
             standout();
-        }
-        int char_length = get_multibyte_character_length(*pointer);
-        mvaddnstr(i, j, pointer, char_length);
-        temp_cursor_pos += char_length;
-        j += calculate_display_width(pointer, j);
-        if (*pointer == '\n' || COLS <= j) {
+        int t = S(*p);
+        mvaddnstr(i, j, p, t);
+        v += t;
+        j += G(p, j);
+        if (*p == '\n' || COLS <= j) {
             j = 0;
             i++;
         }
@@ -222,203 +236,246 @@ void update_screen() {
         standout();
         mvaddstr(i, 0, "^D");
     }
-    move(cursor_y, cursor_x);
+    move(y, x);
     refresh();
 }
 
-void clear_screen() {
+// Clear screen and reset position
+void 🔥() {
     clear();
-    z_flag = 0;
+    z = 0;
 }
 
-void move_cursor_left() {
-    cursor_pos = get_previous_position(cursor_pos);
+// Move back to character start
+void H() {
+    o = D(o);
 }
 
-void move_cursor_right() {
-    cursor_pos = get_next_position(cursor_pos);
+// Move to next character
+void L() {
+    o = E(o);
 }
 
-void move_to_line_start() {
-    cursor_pos = calculate_next_position(find_display_start(cursor_pos), 0, cursor_x);
+// Move to column start
+void K() {
+    o = A(M(o), 0, x);
 }
 
-void move_to_line_end() {
-    cursor_pos = calculate_next_position(find_display_end(cursor_pos), 0, cursor_x);
+// Move to column end
+void J() {
+    o = A(N(o), 0, x);
 }
 
-void move_to_buffer_start() {
-    cursor_pos = calculate_next_position(get_line_start(cursor_pos), 0, z_flag - 1);
-    z_flag = 0;
+// Move to line start
+void a() {
+    o = A(O(o), 0, z - 1);
+    z = 0;
 }
 
-void move_to_previous_word() {
-    while (0 < cursor_pos && isspace(*get_position(cursor_pos - 1))) {
-        --cursor_pos;
-    }
-    while (0 < cursor_pos && !isspace(*get_position(cursor_pos - 1))) {
-        --cursor_pos;
-    }
+// Move back a word
+void B() {
+    while (0 < o && isspace(*Z(o - 1)))
+        --o;
+    while (0 < o && !isspace(*Z(o - 1)))
+        --o;
 }
 
-void jump_to_upper_bound() {
-    cursor_pos = upper_bound;
+// Move to top of screen
+void Ê() {
+    o = u;
 }
 
-void jump_to_lower_bound() {
-    cursor_pos = get_display_position(get_line_start(temp_cursor_pos - 1), temp_cursor_pos - 1);
+// Move to bottom of screen
+void Ë() {
+    o = _(O(v - 1), v - 1);
 }
 
-void jump_to_display_position() {
+// Move to specific line
+void É() {
     int i;
-    for (cursor_pos = temp_cursor_pos, i = 1; i < cursor_y; i++) {
-        cursor_pos = find_display_end(cursor_pos);
-    }
-    cursor_pos = calculate_next_position(cursor_pos, 0, cursor_x);
-    upper_bound = cursor_pos < calculate_relative_position(current_position) ? temp_cursor_pos : upper_bound;
-    for (temp_cursor_pos = cursor_pos; i < LINES; i++) {
-        temp_cursor_pos = find_display_end(temp_cursor_pos);
-    }
+    for (o = v, i = 1; i < y; i++)
+        o = N(o);
+    o = A(o, 0, x);
+    u = o < P(c) ? v : u;
+    for (v = o; i < LINES; i++)
+        v = N(v);
 }
 
-void jump_to_previous_screen() {
-    for (int i = LINES - 1; 0 < i--; ) {
-        cursor_pos = find_display_start(cursor_pos);
-    }
-    for (upper_bound = cursor_pos; 1 < cursor_y--; ) {
-        upper_bound = find_display_start(upper_bound);
-    }
-    cursor_pos = calculate_next_position(cursor_pos, 0, cursor_x);
+// Scroll up a page
+void È() {
+    for (int i = LINES - 1; 0 < i--; )
+        o = M(o);
+    for (u = o; 1 < y--; )
+        u = M(u);
+    o = A(o, 0, x);
 }
 
-void jump_to_next_word() {
-    long pos = calculate_relative_position(current_position);
-    while (cursor_pos < pos && !isspace(*get_position(cursor_pos))) {
-        ++cursor_pos;
-    }
-    while (cursor_pos < pos && isspace(*get_position(cursor_pos))) {
-        ++cursor_pos;
-    }
+// Move forward a word
+void W() {
+    long n = P(c);
+    while (o < n && !isspace(*Z(o)))
+        ++o;
+    while (o < n && isspace(*Z(o)))
+        ++o;
 }
 
-void handle_input() {
-    int ascii_value, char_length;
-    long pos = calculate_relative_position(current_position);
-    set_position(cursor_pos);
-    while ((ascii_value = getch()) != 3 && ascii_value != 27) {
-        char_length = get_multibyte_character_length(ascii_value);
-        if (ascii_value == 8) {
-            while (pos < calculate_relative_position(current_position) && (192 & *--buffer_start) == 128);
-        } else if (buffer_start + char_length < buffer_end) {
+// Repeat last command
+void ө() {
+    long n = P(c);
+    for (o = n * (!z); o < n && 1 < z; z--) {
+        o = A(o, 0, 999);
+        o += o < n;
+    }
+    u = n;
+}
+
+// Insert character
+void I() {
+    int a, t;
+    long n = P(c);
+    V(o);
+    while ((a = getch()) != 3 && a != 27) {
+        t = S(a);
+        if (a == 8) {
+            while (n < P(c) && (192 & *--g) == 128)
+                ;
+        } else if (g + t < h) {
             do {
-                *buffer_start++ = ascii_value;
-                temp_cursor_pos++;
-            } while (0 < --char_length && (ascii_value = getch()));
+                *g++ = a;
+                v++;
+            } while (0 < --t && (a = getch()));
         }
-        cursor_pos = calculate_relative_position(buffer_end);
-        update_screen();
+        o = P(h);
+        Y();
     }
-    z_flag = 0;
+    z = 0;
 }
 
-void copy_to_clipboard() {
-    long offset = search_offset;
-    if (search_offset < 0) {
-        offset = cursor_pos;
-        execute_command(14);
+// Copy text to buffer
+void Ô() {
+    long i = d;
+    if (d < 0) {
+        i = o;
+        T(14);
     }
-    if (offset < cursor_pos) {
-        offset ^= cursor_pos;
-        cursor_pos ^= offset;
-        offset ^= cursor_pos;
+    if (i < o) {
+        i ^= o;
+        o ^= i;
+        i ^= o;
     }
-    free(search_query);
-    set_position(cursor_pos);
-    search_query = strndup(buffer_end, line_length = offset - cursor_pos);
-    search_offset = -1;
+    free(q);
+    V(o);
+    q = strndup(h, Q = i - o);
+    d = -1;
 }
 
-void cut_to_clipboard() {
-    copy_to_clipboard();
-    buffer_end += line_length;
-    cursor_pos = calculate_relative_position(buffer_end);
+// Paste text from buffer
+void X() {
+    Ô();
+    h += Q;
+    o = P(h);
 }
 
-void paste_from_clipboard() {
-    if (search_query) {
-        set_position(cursor_pos);
-        memcpy(buffer_start, search_query, line_length);
-        buffer_start += line_length;
-        cursor_pos = calculate_relative_position(buffer_end);
-        temp_cursor_pos = cursor_pos + 1;
+// Move to end of line and paste
+void Ó() {
+    ungetch('l');
+    X();
+}
+
+// Paste text from buffer
+void Í() {
+    if (q) {
+        V(o);
+        memcpy(g, q, Q);
+        g += Q;
+        o = P(h);
+        v = o + 1;
     }
 }
 
-void save_to_file() {
-    int file_descriptor;
-    set_position(0);
-    write(file_descriptor = creat(filename, MODE), buffer_end, current_position - buffer_end);
-    close(file_descriptor);
+// Save file
+void κ() {
+    int i;
+    V(0);
+    write(i = creat(f, MODE), h, c - h);
+    close(i);
 }
 
-void reset_filename() {
-    filename = 0;
+// Exit program
+void Ф() {
+    f = 0;
 }
 
-void search() {
-    regmatch_t match[1];
-    set_position(calculate_relative_position(current_position));
-    *buffer_start = 0;
-    if (cursor_pos + line_length < calculate_relative_position(current_position) && !regexec(&regex, get_position(cursor_pos + line_length), 1, match, REG_NOTBOL)) {
-        cursor_pos += line_length + match->rm_so;
-    } else if (!regexec(&regex, buffer, 1, match, 0)) {
-        cursor_pos = match->rm_so;
-    } else {
-        line_length = 0;
+// Search text using regex
+void F() {
+    regmatch_t p[1];
+    V(P(c));
+    *g = 0;
+    if (o + l < P(c) && !regexec(&e, Z(o + l), 1, p, REG_NOTBOL))
+        o += l + p->rm_so;
+    else if (!regexec(&e, b, 1, p, 0))
+        o = p->rm_so;
+    else {
+        l = 0;
         return;
     }
-    line_length = match->rm_eo - match->rm_so + window_width;
+    l = p->rm_eo - p->rm_so + w;
 }
 
-void toggle_mark() {
-    search_offset = search_offset < 0 ? cursor_pos : -1;
-}
-
-void execute_command(int max_command_index) {
-    int previous_z_flag = z_flag, ascii_value;
-    for (z_flag = 0; isdigit(ascii_value = getch()); ) {
-        z_flag = z_flag * 10 + ascii_value - '0';
+// Search text prompt
+void Ñ() {
+    echo();
+    standout();
+    mvaddch(0, 0, '/');
+    C();
+    mvgetnstr(0, 1, g, h - g);
+    regfree(&e);
+    if (regcomp(&e, g, REG_EXTENDED | REG_NEWLINE))
+        beep();
+    else {
+        w = g[0] == '$' && !g[1];
+        F();
     }
-    z_flag = previous_z_flag && z_flag ? previous_z_flag * z_flag : z_flag ? z_flag : previous_z_flag;
-    int command_index;
-    for (command_index = 0; command_keys[command_index] && ascii_value != command_keys[command_index]; command_index++);
-    if (command_index < max_command_index) {
-        do {
-            (*command_functions[command_index])();
-        } while (1 < z_flag--);
-    }
-    z_flag = 0;
+    z = 0;
 }
 
-int main(int argc, char **argv) {
+// Toggle mark
+void Â() {
+    d = d < 0 ? o : -1;
+}
+
+// Handle command input
+void T(int m) {
+    int j = z, a;
+    for (z = 0; isdigit(a = getch()); )
+        z = z * 10 + a - '0';
+    z = j && z ? j * z : z ? z : j;
+    for (j = 0; Ќ[j] && a != Ќ[j]; j++)
+        ;
+    if (j < m) {
+        do (*Κ[j])(); while (1 < z--);
+    }
+    z = 0;
+}
+
+// Main function
+int main(int i, char **j) {
     setlocale(LC_ALL, "");
-    if (!initscr()) {
+    if (!initscr())
         return 1;
-    }
     raw();
-    buffer_end = current_position = buffer + BUF;
-    if (0 < (argc = open(filename = *++argv, 0))) {
-        buffer_start += read(argc, buffer, current_position - buffer);
-        close(argc);
-        if (buffer_start < buffer || current_position <= buffer_start) {
+    h = c = b + BUF;
+    if (0 < (i = open(f = *++j, 0))) {
+        g += read(i, b, c - b);
+        close(i);
+        if (g < b || c <= g)
             return 2;
-        }
     }
-    temp_cursor_pos = 1;
-    while (filename) {
+    v = 1;
+    while (f) {
         noecho();
-        update_screen();
-        execute_command(99);
+        Y();
+        T(99);
     }
     endwin();
     return 0;

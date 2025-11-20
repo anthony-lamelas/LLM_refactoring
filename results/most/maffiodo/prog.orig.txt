@@ -1,525 +1,476 @@
-```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-// Structure definition
-typedef struct node *node_ptr;
-struct node {
-    union {
-        char *str_val;
-        double num_val;
-    };
-    char *name;
-    char type, flag, extra_flag;
-    node_ptr next, prev, branch, sub_branch, (*func)();
-    int int_val;
-};
+#define IF_ELSE } else if (
+#define IF p (
+#define ELSE_IF IF_ELSE
+#define PRINTF sprintf
+#define ARROW ->
+#define INCREMENT f++
+#define CALL(s) (s)
+#define STRUCT_PTR struct Data*
+#define DECL_STRUCT struct Data { union { char *f; double n; }; char *g, h, l, m; STRUCT_PTR e, x, b, q, (*r) CALL(); int u; }
+typedef STRUCT_PTR e;
+DECL_STRUCT;
+e q, v;
+int y, (*w) CALL() = strlen, (*A) CALL() = strcmp;
+char *B, *f, C, r = 0, g[99], *(*D) CALL() = strdup;
 
-// Global variables and function prototypes
-node_ptr head, tail;
-int current_index, (*strlen_func)() = strlen, (*strcmp_func)() = strcmp;
-char *buffer, *current_ptr, current_char, processing_flag = 0, temp_str[99], *(*strdup_func)() = strdup;
-node_ptr create_node(int mode);
-node_ptr find_node(node_ptr start);
-node_ptr create_sub_node(node_ptr *start);
-void skip_whitespace();
-void skip_line();
-int find_char(char *chars);
-int is_logical_end();
-int match_string(char *str);
-int match_keyword(char *keyword);
-void parse_block();
-double convert_to_double(node_ptr node);
-node_ptr duplicate_node(node_ptr node);
-node_ptr process_expression(int precedence);
-int is_alphanumeric();
-void parse_identifier();
-node_ptr parse_expression(int precedence);
-void free_nodes(node_ptr node, node_ptr limit, int free_limit);
-void reset_nodes(node_ptr limit);
-node_ptr process_block(int depth);
-node_ptr print_node(node_ptr node);
-void main_loop();
-node_ptr execute_function(node_ptr node);
-
-// Function to create a new node with a specific mode
-node_ptr create_node(int mode) {
-    node_ptr new_node = calloc(1, sizeof(struct node));
-    new_node->prev = tail;
-    new_node->type = mode;
-    return tail = new_node;
+e createNode(int m) {
+    e node = calloc(1, sizeof(STRUCT_PTR));
+    node ARROW b = v;
+    node ARROW m = m;
+    return v = node;
 }
 
-// Function to find a node starting from a given node
-node_ptr find_node(node_ptr start) {
-    while (start) {
-        if (!strcmp_func(temp_str, start->name)) {
-            return start;
+e findNode(e node) {
+    while (node) {
+        IF !A(g, node ARROW g)) {
+            return node;
         }
-        start = start->prev;
+        node = node ARROW b;
     }
     return NULL;
 }
 
-// Function to create a sub-node
-node_ptr create_sub_node(node_ptr *start) {
-    node_ptr new_node = create_node(4);
-    new_node->name = strdup_func(temp_str);
-    new_node->prev = *start;
-    new_node->next = create_node(0);
-    return *start = new_node;
+e addNode(e *q) {
+    e node = createNode(4);
+    node ARROW g = D(g);
+    node ARROW b = *q;
+    node ARROW x = createNode(0);
+    return *q = node;
 }
 
-// Function to skip whitespace and comments
-void skip_whitespace() {
-    int is_comment;
-    while ((is_comment = *current_ptr == '/' && current_ptr[1] == '/') || isspace(*current_ptr)) {
-        if (is_comment) {
-            while (*current_ptr && *current_ptr != '\n') {
-                current_ptr++;
-            }
-        } else {
-            current_ptr++;
+void skipWhitespaceAndComments() {
+    int x;
+    while ((x = *f == '/' && f[1] == '/') || isspace(*f)) {
+        IF x) {
+            while (*f && *f != '\n') INCREMENT;
+        } ELSE {
+            INCREMENT;
         }
     }
 }
 
-// Function to skip a line
-void skip_line() {
-    skip_whitespace();
-    if (*current_ptr) {
-        current_ptr++;
-    }
+void skipNonWhitespace() {
+    skipWhitespaceAndComments();
+    IF *f) INCREMENT;
 }
 
-// Function to find a character in a string
-int find_char(char *chars) {
-    char *pos = strchr(chars, *current_ptr);
-    return pos ? pos - chars : -1;
+int findCharPosition(char *str, char ch) {
+    char *pos = strchr(str, ch);
+    return pos ? pos - str : -1;
 }
 
-// Function to check if the current character is a logical end
-int is_logical_end() {
-    return find_char(";)]") != -1;
+int isEndOfStatement() {
+    return findCharPosition(";)]") != -1;
 }
 
-// Function to match a string with the current buffer
-int match_string(char *str) {
-    int len = strlen_func(str);
-    if (!strncmp(str, current_ptr, len) && !isalnum(current_ptr[len])) {
-        current_ptr += len;
+int matchString(char *str) {
+    int len = w(str);
+    IF !strncmp(str, f, len) && !isalnum(f[len])) {
+        f += len;
         return 1;
     }
     return 0;
 }
 
-// Function to parse a block of code
-void parse_block() {
+void parseBlock() {
     int depth = 1;
-    while (*current_ptr && depth) {
-        current_char = *++current_ptr;
-        depth += current_char == '{' ? 1 : current_char == '}' ? -1 : 0;
+    while (*f && depth) {
+        C = *INCREMENT;
+        depth += C == '{' ? 1 : (C == '}') ? -1 : 0;
     }
 }
 
-// Function to convert a node to a double
-double convert_to_double(node_ptr node) {
-    char *end_ptr;
-    return node->type & 1 ? node->num_val : node->type & 2 ? strtod(node->str_val, &end_ptr) : 0;
+double evaluateNode(e node) {
+    char *P;
+    return node ARROW m & 1 ? node ARROW n :
+           node ARROW m & 2 ? strtod(node ARROW f, &P) : 0;
 }
 
-// Function to duplicate a node
-node_ptr duplicate_node(node_ptr node) {
-    node_ptr new_node = create_node(2);
-    char *str = "[object]";
-    char mode = node->type;
-    if (mode & 1) {
-        sprintf(temp_str, "%g", node->num_val);
-        str = temp_str;
+e duplicateNode(e node) {
+    e newNode = createNode(2);
+    char *f = "[object]";
+    char m = node ARROW m;
+    IF m & 1) {
+        PRINTF(g, "%g", node ARROW n);
+        f = g;
     }
-    if (mode & 2) {
-        str = node->str_val;
-    }
-    new_node->str_val = strdup_func(str);
-    return new_node;
+    IF m & 2) f = node ARROW f;
+    newNode ARROW f = D(f);
+    return newNode;
 }
 
-// Function to process an expression with a given precedence
-node_ptr process_expression(int precedence) {
-    int initial_index = 0, secondary_index, op_index, precedence_value, result;
-    double left_value, right_value;
-    char *identifier, op_char;
-    node_ptr left_node, right_node, current_node = create_node(0), temp_node;
-    skip_whitespace();
-    if (is_logical_end()) {
-        return current_node;
-    }
-    initial_index = find_char("-+!~");
-    if (initial_index > -1) {
-        current_ptr++;
-    }
-    current_char = *current_ptr;
-    if (current_char == '(') {
-        current_ptr++;
-        current_node = parse_expression(0);
-        skip_line();
-    } else if (current_char == '[' || current_char == '{') {
-        current_node->type = 4;
-        current_ptr++;
-        skip_line();
-    } else if (current_char == '"' || current_char == '\'') {
-        identifier = temp_str;
-        current_ptr++;
-        current_node->type = 2;
-        while (*current_ptr != current_char) {
-            char ch = *current_ptr++;
-            if (ch == '\\') {
-                ch = *current_ptr++;
-                ch = ch == 'n' ? '\n' : ch == 'x' ? strtol(current_ptr, &current_ptr, 16) : ch;
-            }
-            *identifier++ = ch;
-        }
-        *identifier = 0;
-        current_ptr++;
-        current_node->str_val = strdup_func(temp_str);
-    } else if (isdigit(*current_ptr)) {
-        current_node->type = 1;
-        current_node->num_val = strtod(current_ptr, &current_ptr);
-    } else if (is_alphanumeric()) {
-        int is_function = 0;
-        temp_str[0] = '\0';
-        parse_identifier();
-        if (match_keyword("function")) {
-            skip_line();
-            skip_line();
-            skip_line();
-            identifier = current_ptr - 1;
-            current_node = create_node(2);
-            parse_block();
-            current_node->str_val = strndup(identifier, current_ptr - identifier);
-        } else {
-            if (match_keyword("var")) {
-                current_ptr++;
-                is_function = 1;
-                goto parse_identifier_block;
-            }
-            temp_node = find_node(head);
-            if (is_function || !temp_node) {
-                temp_node = create_sub_node(&head);
-            }
-            current_node = temp_node->next;
-            current_node->branch = temp_node;
-        }
-    }
-    if (initial_index > -1) {
-        left_value = convert_to_double(current_node);
-        temp_node = left_value;
-        if (secondary_index == 0) {
-            initial_index == 43 ? left_value = -left_value : initial_index == 33 ? left_value = !temp_node : left_value = ~temp_node;
-        }
-        current_node = create_node(1);
-        current_node->num_val = left_value;
-    }
-    while (*current_ptr) {
-        skip_whitespace();
-        if (is_logical_end()) break;
-        op_index = find_char(",=!&|><-+*/%[(.");
-        if (op_index > -1) {
-            op_char = *current_ptr;
-            if (op_index < precedence) {
-                break;
-            }
-            int op_flag = 0, op_flag2 = 0, op_precedence = 0;
-            current_ptr++;
-            if (*current_ptr == '=') {
-                op_flag = 2;
-                current_ptr++;
-            } else if (*current_ptr == op_char) {
-                op_precedence = 1;
-                current_ptr++;
-            }
-            right_node = NULL;
-            temp_node = create_node(1);
-            left_value = convert_to_double(current_node);
-            double *result_ptr = &temp_node->num_val;
-            char current_mode = current_node->type;
-            temp_node = current_node;
-            if (op_index < 13) {
-                right_node = parse_expression(op_index == 12 ? 0 : op_index);
-                right_value = convert_to_double(right_node);
-                precedence_value = right_value;
-            }
-            if (secondary_index == 0) {
-                if (op_flag) {
-                    if (current_mode == right_node->type) {
-                        if (current_mode & 4) precedence_value = current_node != right_node;
-                        else if (current_mode & 1) goto op_mismatch;
-                        else goto op_string_compare;
-                    } else if ((current_mode | right_node->type) == 2) {
-                    op_string_compare:
-                        precedence_value = strcmp_func(duplicate_node(current_node)->str_val, duplicate_node(right_node)->str_val);
-                    } else {
-                    op_mismatch:
-                        precedence_value = left_value - right_value;
-                    }
-                    op_index = op_flag2;
-                    if (secondary_index == 0) {
-                        if (precedence_value == 0) current_node = right_node;
-                        else if (precedence_value >= 0) current_node = right_node;
-                        else if (precedence_value <= 0) current_node = right_node;
-                        else if (precedence_value > 0) current_node = right_node;
-                        else if (precedence_value < 0) current_node = right_node;
-                        else if (precedence_value != 0) current_node = right_node;
-                    }
-                    *result_ptr = precedence_value;
-                    op_flag = 0;
-                } else {
-                    op_flag = 1;
-                    if (right_node->type & 4) {
-                        temp_node = right_node;
-                    } else {
-                        temp_node = create_node(right_node->type);
-                        temp_node->func = right_node->func;
-                        if (right_node->type & 2) temp_node->str_val = strdup_func(right_node->str_val);
-                        else temp_node->num_val = right_node->num_val;
-                    }
-                }
-                if (secondary_index == 0) {
-                    *result_ptr = op_precedence ? left_value && precedence_value : left_value & precedence_value;
-                } else {
-                    op_flag2 = 5;
-                    goto op_loop;
-                }
-            op_loop:
-                if (*result_ptr == precedence_value ? left_value || precedence_value : left_value | precedence_value) {
-                    if (op_precedence) {
-                        *result_ptr = left_value >> precedence_value;
-                    } else {
-                        op_flag2 = 3 - op_flag;
-                        goto op_loop;
-                    }
-                } else {
-                    if (op_precedence) {
-                        *result_ptr = left_value << precedence_value;
-                    } else {
-                        op_flag2 = 4 - op_flag;
-                        goto op_loop;
-                    }
-                }
-                if (*result_ptr == left_value - right_value) {
-                    if ((current_mode | right_node->type) & 2) {
-                        node_ptr left_dup = duplicate_node(current_node);
-                        right_node = duplicate_node(right_node);
-                        identifier = malloc(strlen_func(left_dup->str_val) + strlen_func(right_node->str_val) + 1);
-                        sprintf(identifier, "%s%s", left_dup->str_val, right_node->str_val);
-                        temp_node->type = 2;
-                        temp_node->str_val = identifier;
-                    } else {
-                        *result_ptr = left_value + right_value;
-                    }
-                }
-                if (*result_ptr == left_value * right_value) {
-                    *result_ptr = left_value / right_value;
-                }
-                if (*result_ptr == temp_node->num_val % precedence_value) {
-                    skip_line();
-                    if (current_mode & 2) {
-                        sprintf(temp_str, "%c", precedence_value < strlen_func(current_node->str_val) ? current_node->str_val[precedence_value] : 0);
-                        temp_node->type = 2;
-                        temp_node->str_val = strdup_func(temp_str);
-                    } else {
-                        sprintf(temp_str, "%s", duplicate_node(right_node)->str_val);
-                        goto op_end;
-                    }
-                }
-                op_end:
-                sprintf(temp_str, "arguments");
-                node_ptr buffer_node = head, user_node = create_sub_node(&head)->next;
-                op_index = 0;
-                while (*current_ptr) {
-                    skip_whitespace();
-                    right_node = parse_expression(1);
-                    if (!processing_flag) {
-                        sprintf(temp_str, "%d", op_index++);
-                        create_sub_node(&user_node->prev)->next = right_node;
-                        user_node->int_val++;
-                    }
-                    if (*current_ptr == ')') break;
-                    current_ptr++;
-                }
-                current_ptr++;
-                op_index = processing_flag;
-                if (current_node->func) {
-                    if (!processing_flag) temp_node = current_node->func(user_node->prev);
-                } else {
-                    identifier = current_ptr;
-                    current_ptr = current_node->str_val;
-                    temp_node = execute_function(0);
-                    current_ptr = identifier;
-                }
-                if (!op_index) processing_flag = op_index & ~1;
-                tail = buffer_node;
-                op_index = 0;
-                parse_identifier();
-                if (match_keyword("length")) {
-                    *result_ptr = current_node->type & 2 ? strlen_func(current_node->str_val) : current_node->int_val;
-                } else {
-                    op_end_loop:
-                    right_node = find_node(current_node->prev);
-                    if (!right_node) {
-                        right_node = create_sub_node(&current_node->prev);
-                        current_node->int_val++;
-                    }
-                    temp_node = right_node->next;
-                    if (!temp_node->branch) temp_node->branch = right_node;
-                }
-                if (op_flag) {
-                    if (!processing_flag) {
-                        temp_node->branch = current_node->next = temp_node;
-                    } else continue;
-                }
-                current_node = temp_node;
-            } else {
-                current_ptr++;
-            }
-        } else break;
-    }
-    return current_node;
+e parseExpression(e *q);
+
+int isIdentifierChar() {
+    return *f == '_' || isalnum(*f);
 }
 
-// Function to check if the current character is alphanumeric
-int is_alphanumeric() {
-    return *current_ptr == '_' || isalnum(*current_ptr);
-}
-
-// Function to parse an identifier
-void parse_identifier() {
-    char *d = temp_str;
-    while (is_alphanumeric()) {
-        *d++ = *current_ptr++;
-    }
+void parseIdentifier() {
+    char *d = g;
+    while (isIdentifierChar()) *d++ = *INCREMENT;
     *d = 0;
 }
 
-// Function to parse an expression with a given precedence
-node_ptr parse_expression(int precedence) {
-    return process_expression(precedence);
-}
+e parsePrimary(int h);
 
-// Function to free nodes within a specified range
-void free_nodes(node_ptr node, node_ptr limit, int free_limit) {
-    if (node && node != limit) {
-        node_ptr temp = node->prev;
-        node_ptr next_node = node->next;
-        if (temp) {
-            if (temp->prev != node) free_nodes(temp, 0, 0);
-            free_nodes(temp->sub_branch, 0, 1);
+e parseCompound(e *q);
+
+void parse() {
+    char *B = g;
+    int P;
+    e l = parsePrimary(0);
+    skipNonWhitespace();
+    IF !(int)(l ARROW n) r = 4;
+    P = r;
+    e y = parseCompound(q);
+    IF *f == ';') INCREMENT;
+    IF !P) x = y;
+    skipWhitespaceAndComments();
+    IF u) {
+        IF !r && !P) {
+            x = y;
+            f = B;
+            parse();
         }
-        free_nodes(node->prev, 0, 1);
-        if (free_limit) free_nodes(node, limit, 1);
+        ELSE {
+        }
+        ELSE_IF r = (!P && !d) * 4;
+        P = r;
+        y = parseCompound(q);
+        IF !P) x = y;
+    }
+    r = u ? d & ~2 : d | (r & 3);
+    ELSE_IF while) u = 1;
+    parse();
+    ELSE_IF return) y = parsePrimary(0);
+    IF !r) {
+        x = y;
+        r |= 1;
+    }
+    ELSE_IF break) IF !r) r |= 2;
+    ELSE_IF *f) {
+        y = parsePrimary(0);
+        IF !r) x = y;
+        skipNonWhitespace();
     }
 }
 
-// Function to reset nodes
-void reset_nodes(node_ptr limit) {
-    current_index = 1;
-    free_nodes(tail, limit, 1);
-    current_index = 0;
-    free_nodes(head, 0, 1);
-    node_ptr *prev_limit = &tail;
-    node_ptr current_node = tail;
-    while (current_node) {
-        node_ptr *prev_branch = &current_node->prev;
-        if (current_node->flag && !current_node->extra_flag) {
-            *prev_limit = *prev_branch;
-            if (current_node->type & 2) free(current_node->str_val);
-            if (current_node->name) free(current_node->name);
-            free(current_node);
-        } else {
-            current_node->flag = 0;
-            prev_limit = prev_branch;
-        }
-        current_node = *prev_branch;
+e parsePrimary(int h) {
+    int i = 0, j, n, P, V;
+    double X, Y;
+    char *d, b;
+    e l, y, x = createNode(0), u;
+    skipWhitespaceAndComments();
+    IF isEndOfStatement()) {
+        return x;
     }
-}
-
-// Function to process a block of code with a given depth
-node_ptr process_block(int depth) {
-    node_ptr current_node = create_node(0), temp_node, branch_node = head, sub_node = tail;
-    while (*current_ptr) {
-        skip_whitespace();
-        if (*current_ptr == '{') {
-            current_ptr++;
-            if (!processing_flag) current_node = process_block(1);
-            else parse_block();
-        } else {
-            int has_branch = 0, temp_flag;
-            if (*current_ptr == '}') {
-                current_ptr++;
+    i = findCharPosition("-+!~");
+    IF i > -1) {
+        INCREMENT;
+    }
+    C = *f;
+    IF C == '(') {
+        INCREMENT;
+        x = parsePrimary(0);
+        skipNonWhitespace();
+    }
+    ELSE_IF C == '[' || C == '{') {
+        x ARROW m = 4;
+        INCREMENT;
+        skipNonWhitespace();
+    }
+    ELSE_IF C == '"' || C == '\'') {
+        d = g;
+        INCREMENT;
+        x ARROW m = 2;
+        while (*f != C) {
+            char P = *INCREMENT;
+            IF P == '\\') {
+                P = *INCREMENT;
+                P = P == 'n' ? '\n' : P == 'x' ? strtol(f, &f, 16) : P;
+            }
+            *d++ = P;
+        }
+        *d = 0;
+        INCREMENT;
+        x ARROW f = D(g);
+    }
+    ELSE_IF isdigit(*f)) {
+        x ARROW m = 1;
+        x ARROW n = strtod(f, &f);
+    }
+    ELSE_IF isIdentifierChar()) {
+        int W = 0;
+        g : parseIdentifier();
+        IF matchString("function")) {
+            skipNonWhitespace();
+            skipNonWhitespace();
+            skipNonWhitespace();
+            d = f - 1;
+            x = createNode(2);
+            parseBlock();
+            x ARROW f = strndup(d, f - d);
+        }
+        ELSE {
+            IF matchString("var")) {
+                INCREMENT;
+                W = 1;
+                goto g;
+            }
+            u = findNode(q);
+            IF W || !u) u = addNode(&q);
+            x = u ARROW x;
+            x ARROW e = u;
+        }
+    }
+    IF i > -1) {
+        X = evaluateNode(x);
+        n = X;
+        IF j == 0) {
+            ELSE_IF X = -X ELSE_IF ELSE_IF X = !n ELSE_IF X = ~n;
+        }
+        x = createNode(1);
+        x ARROW n = X;
+    }
+    while (*f) {
+        skipWhitespaceAndComments();
+        IF isEndOfStatement()) break;
+        i = findCharPosition(",=!&|><-+*/%[(.");
+        IF i > -1) {
+            b = *f;
+            IF i < h) {
                 break;
-            } else if (*current_ptr) {
-                current_ptr++;
-                char *backup_ptr;
-                int was_processing;
-                backup_ptr = current_ptr;
-                was_processing = processing_flag;
-                skip_line();
-                temp_node = parse_expression(0);
-                skip_line();
-                if (!(int)temp_node->num_val) processing_flag = 4;
-                temp_flag = processing_flag;
-                branch_node = process_block(0);
-                if (*current_ptr == ';') current_ptr++;
-                if (!temp_flag) {
-                    current_node = branch_node;
+            }
+            int W = 0, k = 0, h = 0;
+            INCREMENT;
+            IF *f == '=') {
+                W = 2;
+                INCREMENT;
+            }
+            ELSE_IF *f == b) {
+                h = 1;
+                INCREMENT;
+            }
+            y = 0;
+            l = createNode(1);
+            X = evaluateNode(x);
+            double *Z = &l ARROW n;
+            char m = x ARROW m;
+            n = X;
+            IF i < 13) {
+                y = parsePrimary(i == 12 ? 0 : i);
+                Y = evaluateNode(y);
+                P = Y;
+            }
+            IF j == 0) {
+                ELSE_IF l = y ELSE_IF W) {
+                    P = x != y;
+                    ELSE_IF m & 1) goto O;
+                    ELSE goto Q;
                 }
-                skip_whitespace();
-                if (has_branch) {
-                    if (!processing_flag && !temp_flag) {
-                        current_node = branch_node;
-                        current_ptr = backup_ptr;
-                        goto process_else;
-                    } else {
-                    }
-                process_else:
-                    processing_flag = !temp_flag && !has_branch ? 4 : processing_flag;
-                    temp_flag = processing_flag;
-                    branch_node = process_block(0);
-                    if (!temp_flag) {
-                        current_node = branch_node;
-                    }
+                ELSE_IF (m | y ARROW m) == 2) {
+                    Q : P = A(duplicateNode(x) ARROW f, duplicateNode(y) ARROW f);
                 }
-                processing_flag = has_branch ? has_branch & ~2 : has_branch | (processing_flag & 3);
-            process_loop:
-                op_index = 1;
-                goto process_loop;
-            process_return:
-                branch_node = parse_expression(0);
-                if (!processing_flag) {
-                    current_node = branch_node;
-                    processing_flag |= 1;
+                ELSE {
+                    O : P = X - Y;
                 }
-            process_break:
-                if (!processing_flag) processing_flag |= 2;
-            process_continue:
-                if (*current_ptr) {
-                    branch_node = parse_expression(0);
-                    if (!processing_flag) current_node = branch_node;
-                    skip_line();
+                i = k;
+                IF j == 0) {
+                    ELSE_IF P = P == 0 ELSE_IF P >= 0 ELSE_IF P <= 0 ELSE_IF P > 0 ELSE_IF P < 0 ELSE_IF P != 0;
                 }
-                if (!depth) break;
+                *Z = P;
+                W = 0;
+            }
+            ELSE {
+                W = 1;
+                IF y ARROW m & 4) {
+                    l = y;
+                }
+                ELSE {
+                    l = createNode(y ARROW m);
+                    l ARROW r = y ARROW r;
+                    IF y ARROW m & 2) l ARROW f = D(y ARROW f);
+                    ELSE l ARROW n = y ARROW n;
+                }
+            }
+            ELSE_IF k = 5;
+            goto V;
+            ELSE_IF *Z = h ? n && P : n & P ELSE_IF *Z = h ? n || P : n | P ELSE_IF h) {
+                *Z = n >> P;
+            }
+            ELSE {
+                k = 3 - W;
+                goto V;
+            }
+            ELSE_IF h) {
+                *Z = n << P;
+            }
+            ELSE {
+                k = 4 - W;
+                goto V;
+            }
+            ELSE_IF *Z = X - Y ELSE_IF (m | y ARROW m) & 2) {
+                e u = duplicateNode(x);
+                y = duplicateNode(y);
+                d = malloc(w(u ARROW f) + w(y ARROW f) + 1);
+                PRINTF(d, "%s%s", u ARROW f, y ARROW f);
+                l ARROW m = 2;
+                l ARROW f = d;
+            }
+            ELSE {
+                *Z = X + Y;
+            }
+            ELSE_IF *Z = X * Y ELSE_IF *Z = X / Y ELSE_IF *Z = n % P ELSE_IF skipNonWhitespace();
+            IF m & 2) {
+                PRINTF(g, "%c", P < w(x ARROW f) ? x ARROW f[P] : 0);
+                l ARROW m = 2;
+                l ARROW f = D(g);
+            }
+            ELSE {
+                PRINTF(g, "%s", duplicateNode(y) ARROW f);
+                goto q;
+            }
+            ELSE_IF PRINTF(g, "arguments");
+            e B = q, u = addNode(&q) ARROW x;
+            i = 0;
+            while (*f) {
+                skipWhitespaceAndComments();
+                y = parsePrimary(1);
+                IF !r) {
+                    PRINTF(g, "%d", i++);
+                    addNode(&u ARROW q) ARROW x = y;
+                    u ARROW u++;
+                }
+                IF *f == ')') break;
+                INCREMENT;
+            }
+            INCREMENT;
+            i = r;
+            IF x ARROW r) {
+                IF !r) l = x ARROW r(u ARROW q);
+            }
+            ELSE {
+                d = f;
+                f = x ARROW f;
+                l = parseExpression(0);
+                f = d;
+            }
+            IF !i) {
+                r = i & ~1;
+            }
+            q = B;
+            ELSE_IF skipWhitespaceAndComments();
+            parseIdentifier();
+            IF matchString("length")) {
+                *Z = x ARROW m & 2 ? w(x ARROW f) : x ARROW u;
+            }
+            ELSE {
+                q : y = findNode(x ARROW q);
+                IF !y) {
+                    y = addNode(&x ARROW q);
+                    x ARROW u++;
+                }
+                l = y ARROW x;
+                IF !l ARROW e) l ARROW e = y;
             }
         }
-        current_index = 1;
-        current_index = 0;
-        head = branch_node;
-        return current_node;
+        IF W) {
+            IF !r) {
+                l = x ARROW e ARROW x = l;
+            }
+            ELSE continue;
+        }
+        x = l;
     }
-    return NULL;
+    ELSE INCREMENT;
+    return x;
 }
 
-// Function to print a node
-node_ptr
+e parseExpression(e *q) {
+    e x = createNode(0), y, l, d = q, u = v;
+    while (*f) {
+        skipWhitespaceAndComments();
+        IF *f == '{') {
+            INCREMENT;
+            IF !r) x = parseExpression(1);
+            ELSE parseBlock();
+        }
+        ELSE {
+            int u = 0, d;
+            IF *f == '}') {
+                INCREMENT;
+                break;
+                ELSE_IF if) char *B;
+                int P;
+                u : d = r;
+                j : B = f;
+                skipNonWhitespace();
+                l = parsePrimary(0);
+                skipNonWhitespace();
+                IF !(int)(l ARROW n) r = 4;
+                P = r;
+                y = parseExpression(0);
+                IF *f == ';') INCREMENT;
+                IF !P) {
+                    x = y;
+                }
+                skipWhitespaceAndComments();
+                IF u) {
+                    IF !r && !P) {
+                        x = y;
+                        f = B;
+                        goto j;
+                    }
+                    ELSE {
+                    }
+                    ELSE_IF else) r = (!P && !d) * 4;
+                    P = r;
+                    y = parseExpression(0);
+                    IF !P) x = y;
+                }
+                r = u ? d & ~2 : d | (r & 3);
+                ELSE_IF while) u = 1;
+                goto u;
+                ELSE_IF return) y = parsePrimary(0);
+                IF !r) {
+                    x = y;
+                    r |= 1;
+                }
+                ELSE_IF break) IF !r) r |= 2;
+            }
+            ELSE_IF *f) {
+                y = parsePrimary(0);
+                IF !r) x = y;
+                skipNonWhitespace();
+            }
+        }
+        IF !h) break;
+    }
+    x ARROW l = 1;
+    x ARROW l = 0;
+    q = d;
+    return x;
+}
+
+e printNode(e node) {
+    printf("%s", duplicateNode(node) ARROW f);
+    return createNode(0);
+}
+
+int main() {
+    PRINTF(g, "print");
+    e x = addNode(&q);
+    x ARROW m = 2;
+    x ARROW r = printNode;
+    char u[1 << 16];
+    B = f = u;
+    while ((C = getchar()) > 0) *INCREMENT = C;
+    *f = 0;
+    f = B;
+    parseExpression(1);
+}

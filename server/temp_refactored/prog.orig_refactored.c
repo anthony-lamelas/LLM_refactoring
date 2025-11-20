@@ -1,239 +1,220 @@
-// Refactored code with clear comments
+#define _(x) for (loopIndex = 0; x > loopIndex; ++loopIndex)
+
 #include <stdio.h>
-#include <math.h>
+#include <stdlib.h>
 
-#define ITERATE(x) for (index = 0; index < x; ++index)
+// Global variables
+float x, T = 240, B, j = 0.53, f, y, O[4426112], Z, w, R, n, m, E, i, U, g = 0;
+char P[60737];
+int d = 80, X = 79, Y = 64, l = 40, L = 551368, t, I, a, loopIndex, G, e, M = 6400, c = 15168, J = 949, K = 12, k = 0x1fbb4000;
 
-// Declare global variables with meaningful names
-float temperature = 240, buoyancy = 0.53, velocity, offset[4426112];
-float red, green, blue, density, time_step, gravity = 0;
-char display_buffer[60737];
-int width = 80, height = 79, depth = 64, levels = 40, base_index = 551368;
-int max_particles = 6400, particle_index = 15168, buffer_size = 949, max_velocity = 12;
-int constant_factor = 0x1fbb4000;
-float *get_offset(int time, int x, int y, int level);
-float calculate_brightness(float x, float y, float z);
-void normalize_vector(float x, float y, float z, float *nx, float *ny, float *nz);
-void smooth(int x, int source);
-float *get_density(int offset);
-float absolute_value(float value);
-void swap_offsets(int x, int y);
-void adjust_value(float *value);
-void update_particles(int dimension, int source, int velocity_x, int velocity_y, int velocity_z);
-void apply_velocity(int offset, int source, int velocity_x, int velocity_y, int velocity_z);
-void compute_flux(int x, int y, int z, int source);
-void update_velocity(int dimension, int source, int velocity_x, int velocity_y, int velocity_z);
-void apply_changes(int x, int source, int step_x, int step_y, int step_z);
-void visualize();
+// Function prototypes
+float* W(int t, int I, int a, int T);
+float b(float x, float y, float n);
+void H(float x, float y, float n, float* k, float* h, float* c);
+void s(int x, int S);
+float* D(int o);
+float z(float k);
+void o(int x, int y);
+void A(float* z);
+void u(int E, int y, int u, int v, int w);
+void v(int x, int E, int k, int b, int c);
+void q(int u, int T, int w, int E);
+int puts(const char* str);
+
+float* W(int t, int I, int a, int T) {
+    return &O[(t + 82 * I + 6724 * a) + (c + T * L)];
+}
+
+float b(float x, float y, float n) {
+    x = x * x + y * y + n * n;
+    int s = k + (*(int*)&x >> 1);
+    return *(float*)&s;
+}
+
+void H(float x, float y, float n, float* k, float* h, float* c) {
+    U = b(x, y, n);
+    *k = x / U;
+    *h = y / U;
+    *c = n / U;
+}
+
+void s(int x, int S) {
+    _(L) O[c + x * L + loopIndex] += .4 * O[c + S * L + loopIndex];
+}
+
+float* D(int o) {
+    return &O[(t * X + I) * 3 + o];
+}
+
+float z(float k) {
+    return 0 > k ? -k : k;
+}
+
+void o(int x, int y) {
+    _(e) {
+        G = loopIndex % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = loopIndex / M + 1;
+        *W(t, I, a, x) = *W(t, I, a, y);
+    }
+}
+
+void A(float* z) {
+    *z = *z < .5 ? .5 : *z > 85 ? 85 : *z;
+}
+
+void u(int E, int y, int u, int v, int w) {
+    _(e) {
+        G = loopIndex % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = loopIndex / M + 1;
+        float U = t - d * .4 * *W(t, I, a, u);
+        float J = I - d * .4 * *W(t, I, a, v);
+        float e = a - d * .4 * *W(t, I, a, w);
+        A(&U);
+        A(&J);
+        A(&e);
+        float F = U - (int)U;
+        float j = J - (int)J;
+        float l = 1 - j;
+        float i = e - (int)e;
+        float c = 1 - i;
+        *W(t, I, a, E) = (1 - F) * (l * c * *W(U, J, e, y) + j * c * *W(U, 1 + J, e, y) + l * i * *W(U, J, e + 1, y) + j * i * *W(U, 1 + J, 1 + e, y))
+                         + F * (l * c * *W(U + 1, J, e, y) + j * c * *W(1 + U, 1 + J, e, y) + l * i * *W(1 + U, J, 1 + e, y) + j * i * *W(1 + U, J + 1, e + 1, y));
+    }
+}
+
+void v(int x, int E, int k, int b, int c) {
+    *W(t, I, a, x) -= 40 * (*W(t + k, I + b, a + c, E) - *W(t - k, I - b, a - c, E));
+}
+
+void q(int u, int T, int w, int E) {
+    _(e) {
+        G = loopIndex % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = loopIndex / M + 1;
+        *W(t, I, a, E) = -1. / 3 * ((*W(1 + t, I, a, u) - *W(t - 1, I, a, u)) / d + (*W(t, I + 1, a, T) - *W(t, I - 1, a, T)) / d + (*W(t, I, 1 + a, w) - *W(t, I, a - 1, w)) / d);
+    }
+    _(e) {
+        G = loopIndex % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = loopIndex / M + 1;
+        v(u, E, 1, 0, 0);
+        v(T, E, 0, 1, 0);
+        v(w, E, 0, 0, 1);
+    }
+}
+
+char h[] = "(\\tjxucXUCQOmqdkaoM&%$\033[38;5;141m+";
 
 int main() {
-    int total_elements = max_particles * width;
-    int buffer_length = particle_index + levels * 8;
-    int index, current_time, x, y, z, particle_count, buffer_offset, element_index;
-    float x_pos, y_pos, z_pos, normalized_x, normalized_y, normalized_z;
-    
-    // Initialize display buffer
-    display_buffer[buffer_size * height] = '\0';
+    e = M * d;
+    I = c + L * 8;
+    P[J * Y] = '\0';
+    _(I) O[loopIndex] = 0;
 
-    // Initialize offset array
-    ITERATE(buffer_length) {
-        offset[index] = 0;
-    }
-
-    // Initialize the grid
-    for (current_time = 0; current_time < height; ++current_time) {
-        display_buffer[current_time * buffer_size + width * max_velocity] = '\n';
-        for (x = 0; x < width;) {
-            normalize_vector(x++ - 40, current_time - 32, -145, &blue, &green, &red);
-            *get_density(0) = blue;
-            *get_density(1) = green;
-            *get_density(2) = red;
+    for (t = 0; t < Y; ++t) {
+        P[t * J + X * K] = '\n';
+        for (I = 0; I < X;) {
+            H(I++ - 40, t - 32, -145, &w, &Z, &R);
+            *D(0) = w;
+            *D(1) = Z;
+            *D(2) = R;
         }
     }
 
-    // Simulation loop
     for (;;) {
-        // Reset specific elements in the offset array
-        ITERATE(levels) {
-            offset[particle_index + 3 * levels + index] = 0;
-            offset[particle_index + 4 * levels + index] = 0;
-            offset[particle_index + 5 * levels + index] = 0;
-            offset[particle_index + 7 * levels + index] = 0;
-        }
-
-        // Update particles and velocity
-        ITERATE(total_elements) {
-            element_index = index % max_particles;
-            current_time = element_index % width + 1;
-            x = element_index / width + 1;
-            y = index / max_particles + 1;
-            x_pos = current_time - depth;
-            y_pos = y - depth;
-            density = x_pos * x_pos + y_pos * y_pos;
-            int density_index = constant_factor + (*(int *)&density >> 1);
-            float density_value = *(float *)&density_index;
-            if (x < 13 && x > 10) {
-                if (density_value < 2) {
-                    *get_offset(current_time, x, y, 4) = 1.5;
-                    gravity = gravity + (x / width);
-                    float gravity_sq = gravity * gravity;
-                    velocity = gravity - (gravity_sq * gravity) / 6 + (gravity_sq * gravity_sq * gravity) / 120;
-                    density = 1 - velocity / 2 + (velocity * velocity) / 24;
-                    *get_offset(current_time, x, y, 3) = velocity / 2 + 0.0275;
-                    *get_offset(current_time, x, y, 5) = density * 0.7 - 0.35;
+        _(L) O[c + 3 * L + loopIndex] = O[c + 4 * L + loopIndex] = O[c + 5 * L + loopIndex] = O[c + 7 * L + loopIndex] = 0;
+        _(e) {
+            G = loopIndex % M;
+            t = G % d + 1;
+            I = G / d + 1;
+            a = loopIndex / M + 1;
+            x = t - l;
+            y = a - l;
+            U = x * x + y * y;
+            G = k + (*(int*)&U >> 1);
+            i = *(float*)&G;
+            if (I < 13 && I > 10) {
+                if (i < 2) {
+                    *W(t, I, a, 4) = 1.5;
+                    m = g + (I / d);
+                    U = m * m;
+                    w = m * m;
+                    m = m - (U * m) / 6 + (U * U * m) / 120;
+                    E = 1 - w / 2 + (w * w) / 24;
+                    *W(t, I, a, 3) = m / 2 + .0275;
+                    *W(t, I, a, 5) = E * .7 - .35;
                 }
             }
-            if (x < 2 && density_value < 3) {
-                *get_offset(current_time, x, y, 7) = 0.1;
+            if (I < 2 && i < 3) *W(t, I, a, 7) = .1;
+        }
+        s(0, 3);
+        s(1, 4);
+        s(2, 5);
+        o(5, 2);
+        o(4, 1);
+        o(3, 0);
+        q(3, 4, 5, 1);
+        u(1, 4, 3, 4, 5);
+        u(0, 3, 3, 4, 5);
+        u(2, 5, 3, 4, 5);
+        q(0, 1, 2, 4);
+        s(6, 7);
+        o(7, 6);
+        u(6, 7, 0, 1, 2);
+        x = T * .9998 + B * .02;
+        B = .9998 * B - T * .02;
+        T = x;
+        H(-T, 0, -B, &R, &w, &Z);
+        g += .1;
+        g = g > 3.14 ? -g : g;
+        H(Z, 0, -R, &m, &E, &i);
+        _(5056) {
+            G = loopIndex % 5056;
+            t = G % Y;
+            I = G / Y;
+            U = *D(0);
+            float v = *D(1), g = *D(2);
+            float V = U * m + v * (E * Z - w * i) + g * -R;
+            float s = U * E + v * (i * R - Z * m) + g * -w;
+            U = U * i + v * (m * w - R * E) + g * -Z;
+            f = 0;
+            int q = t * J + I * K + 8;
+            for (a = 0; a < K; ++a) P[q + a - 8] = h[35 + a];
+            while (f < d * 5) {
+                x = z(T + V * f) - l;
+                y = z(s * f) - l;
+                n = z(B + U * f) - l;
+                float k = y > n ? y : n, c = x > k ? x : k, F = (c < 0 ? c : 0) + b(x < 0 ? 0 : x, y < 0 ? 0 : y, n > 0 ? n : 0);
+                if (F < .01) {
+                    x = T + f * V + l;
+                    y = f * s + l;
+                    n = B + f * U + l;
+                    f = 1;
+                    a = 0;
+                    for (; (a++ < 1) | (d > x && y < d && n < d && x > 0 && 0 < y && n > 0);) {
+                        f *= 1 - *W(n + 1, 1 + y, x + 1, 6) * j;
+                        x = x + V * j;
+                        y = y + s * j;
+                        n = n + U * j;
+                    }
+                    a = (1 - f) * 35;
+                    a = 0 > a ? 0 : a > 34 ? 34 : a;
+                    int c = 240 + .44 * a;
+                    P[q] = (c - 200) / 10 + 48;
+                    P[q + 1] = c % 10 + 48;
+                    P[q + 3] = h[a];
+                    break;
+                }
+                f += F;
             }
         }
-
-        // Perform smoothing and swapping
-        smooth(0, 3);
-        smooth(1, 4);
-        smooth(2, 5);
-        swap_offsets(5, 2);
-        swap_offsets(4, 1);
-        swap_offsets(3, 0);
-
-        // Compute flux and update particles
-        compute_flux(3, 4, 5, 1);
-        update_particles(1, 4, 3, 4, 5);
-        update_particles(0, 3, 3, 4, 5);
-        update_particles(2, 5, 3, 4, 5);
-        compute_flux(0, 1, 2, 4);
-
-        // Visualize the result
-        visualize();
+        puts(P);
     }
-    
-    return 0;
-}
-
-// Function to get the offset pointer
-float *get_offset(int time, int x, int y, int level) {
-    return &offset[(time + 82 * x + 6724 * y) + (particle_index + level * levels)];
-}
-
-// Function to calculate brightness
-float calculate_brightness(float x, float y, float z) {
-    x = x * x + y * y + z * z;
-    int brightness_index = constant_factor + (*(int *)&x >> 1);
-    return *(float *)&brightness_index;
-}
-
-// Function to normalize a vector
-void normalize_vector(float x, float y, float z, float *nx, float *ny, float *nz) {
-    float magnitude = calculate_brightness(x, y, z);
-    *nx = x / magnitude;
-    *ny = y / magnitude;
-    *nz = z / magnitude;
-}
-
-// Function to smooth the values
-void smooth(int x, int source) {
-    ITERATE(levels) {
-        offset[particle_index + x * levels + index] += 0.4 * offset[particle_index + source * levels + index];
-    }
-}
-
-// Function to get density pointer
-float *get_density(int offset) {
-    return &offset[(time_step * width + x) * 3 + offset];
-}
-
-// Function to get absolute value
-float absolute_value(float value) {
-    return value < 0 ? -value : value;
-}
-
-// Function to swap offsets
-void swap_offsets(int x, int y) {
-    ITERATE(total_elements) {
-        int element_index = index % max_particles;
-        time_step = element_index % width + 1;
-        x = element_index / width + 1;
-        y = index / max_particles + 1;
-        *get_offset(time_step, x, y, x) = *get_offset(time_step, x, y, y);
-    }
-}
-
-// Function to adjust value within a range
-void adjust_value(float *value) {
-    *value = *value < 0.5 ? 0.5 : *value > 85 ? 85 : *value;
-}
-
-// Function to update particles
-void update_particles(int dimension, int source, int velocity_x, int velocity_y, int velocity_z) {
-    ITERATE(total_elements) {
-        int element_index = index % max_particles;
-        time_step = element_index % width + 1;
-        x = element_index / width + 1;
-        y = index / max_particles + 1;
-        float u = time_step - width * 0.4 * *get_offset(time_step, x, y, velocity_x);
-        float j = x - width * 0.4 * *get_offset(time_step, x, y, velocity_y);
-        float e = y - width * 0.4 * *get_offset(time_step, x, y, velocity_z);
-        adjust_value(&u);
-        adjust_value(&j);
-        adjust_value(&e);
-        float u_fraction = u - (int)u;
-        float j_fraction = j - (int)j;
-        float j_complement = 1 - j_fraction;
-        float e_fraction = e - (int)e;
-        float e_complement = 1 - e_fraction;
-        *get_offset(time_step, x, y, dimension) =
-            (1 - u_fraction) * (j_complement * e_complement * *get_offset(u, j, e, source) +
-                                j_fraction * e_complement * *get_offset(u, 1 + j, e, source) +
-                                j_complement * e_fraction * *get_offset(u, j, e + 1, source) +
-                                j_fraction * e_fraction * *get_offset(u, 1 + j, 1 + e, source)) +
-            u_fraction * (j_complement * e_complement * *get_offset(u + 1, j, e, source) +
-                          j_fraction * e_complement * *get_offset(1 + u, 1 + j, e, source) +
-                          j_complement * e_fraction * *get_offset(1 + u, j, e + 1, source) +
-                          j_fraction * e_fraction * *get_offset(1 + u, j + 1, e + 1, source));
-    }
-}
-
-// Function to compute flux
-void compute_flux(int x, int y, int z, int source) {
-    ITERATE(total_elements) {
-        int element_index = index % max_particles;
-        time_step = element_index % width + 1;
-        x = element_index / width + 1;
-        y = index / max_particles + 1;
-        *get_offset(time_step, x, y, source) = -1.0 / 3 * (
-            (*get_offset(1 + time_step, x, y, x) - *get_offset(time_step - 1, x, y, x)) / width +
-            (*get_offset(time_step, x + 1, y, y) - *get_offset(time_step, x - 1, y, y)) / width +
-            (*get_offset(time_step, x, 1 + y, z) - *get_offset(time_step, x, y - 1, z)) / width
-        );
-    }
-}
-
-// Function to update velocity
-void update_velocity(int dimension, int source, int velocity_x, int velocity_y, int velocity_z) {
-    ITERATE(total_elements) {
-        int element_index = index % max_particles;
-        time_step = element_index % width + 1;
-        x = element_index / width + 1;
-        y = index / max_particles + 1;
-        apply_velocity(dimension, source, velocity_x, velocity_y, velocity_z);
-    }
-}
-
-// Function to apply changes to velocity
-void apply_changes(int x, int source, int step_x, int step_y, int step_z) {
-    *get_offset(time_step, x, y, source) -= 40 * (*get_offset(time_step + step_x, x + step_y, y + step_z, x) -
-                                                  *get_offset(time_step - step_x, x - step_y, y - step_z, x));
-}
-
-// Function to visualize the result
-void visualize() {
-    for (int t = 0; t < max_particles; ++t) {
-        for (int i = 0; i < 5; ++i) {
-            int buffer_offset = (t * buffer_size + i * max_velocity) + 8;
-            for (int a = 0; a < max_velocity; ++a) {
-                display_buffer[buffer_offset + a - 8] = ' ';
-            }
-        }
-    }
-    puts(display_buffer);
 }

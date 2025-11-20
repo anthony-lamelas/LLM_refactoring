@@ -1,40 +1,39 @@
-// Refactored code with clear comments
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <errno.h>
 
-// Function to calculate block location
-static size_t calculate_block_location(size_t index) {
-    return index * 1663;
-}
+char *p = NULL, *y;
 
-// Function to print block data
-static void print_block_data(size_t index, const char *data) {
-    printf("<%zu>\n", index);
-    puts(&data[calculate_block_location(index)]);
-}
+/*
+ * Z calculates the block location.
+ */
+#define Z(x) ((x) * 1663)
+#define V(x) { printf("<%zu>\n", (size_t)(x)); puts(&y[Z(x)]); }
 
 int main(void) {
-    FILE *file_pointer = fopen("data", "r");
-    size_t buffer_length = 0;
-    char *buffer = NULL;
+    FILE *filePointer = fopen("data", "r");
+    size_t length = 0;
 
-    // Check if file opened successfully
-    if (file_pointer == NULL) {
+    errno = 0;
+    if (filePointer == NULL) {
         fprintf(stderr, "Couldn't open data file: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    // Read the entire file into a buffer
-    if (getdelim(&buffer, &buffer_length, EOF, file_pointer) != -1) {
-        // Include the generated V.c file to process the data
+    if (getdelim(&y, &length, EOF, filePointer) != -1) {
+        /*
+         * Now we have to test every single string to make sure it's valid.
+         * The makedata.sh script generates V.c.
+         */
         #include "V.c"
     }
 
-    // Free the allocated buffer and close the file
-    free(buffer);
-    fclose(file_pointer);
+    free(y);
+    y = NULL;
+    fclose(filePointer);
+    filePointer = NULL;
 
     return 0;
 }

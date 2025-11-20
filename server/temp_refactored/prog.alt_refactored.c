@@ -1,255 +1,227 @@
-// Refactored code with clear comments
 #include <stdio.h>
-#include <math.h>
+#include <stdlib.h>
 
-// Constants for array sizes and other configurations
-#define L 551368
-#define M 6400
-#define C 15168
-#define J 949
-#define K 12
-#define D 80
-#define X 79
-#define Y 64
+#define LOOP(x) for (current = 0; x > current; ++current)
 
-// Function prototypes
-float* get_w(int t, int i, int a, int T);
-float calculate_b(float x, float y, float n);
-void normalize_vector(float x, float y, float n, float *k, float *h, float *c);
-void smooth(int x, int S);
-float* get_d(int o);
-float absolute_value(float k);
-void copy_w(int x, int y);
-void bound_value(float *z);
-void update_w(int E, int y, int u, int v, int w);
-void calculate_v(int x, int E, int k, int b, int c);
-void process_w(int u, int T, int w, int E);
+float x, T = 240, B, j = 0.53, f, y, O[4426112], Z, w, R, n, m, E, i, U, g = 0;
+char P[60737];
+int d = 80, X = 79, Y = 64, l = 40, L = 551368, t, I, a, current, G, e, M = 6400, c = 15168, J = 949, K = 12, k = 0x1fbb4000;
 
-// Global variables
-float x, T = 240, B, j = 0.53, f, y, buffer[4426112], Z, w, R, n, m, E, i, U, g = 0;
-char output[60737];
-
-float* get_w(int t, int i, int a, int T) {
-    return &buffer[(t + 82 * i + 6724 * a) + (C + T * L)];
+float *W(int t, int I, int a, int T) {
+    return &O[(t + 82 * I + 6724 * a) + (c + T * L)];
 }
 
-float calculate_b(float x, float y, float n) {
+float b(float x, float y, float n) {
     x = x * x + y * y + n * n;
-    int s = 0x1fbb4000 + (*(int*)&x >> 1);
+    int s = k + (*(int*)&x >> 1);
     return *(float*)&s;
 }
 
-void normalize_vector(float x, float y, float n, float *k, float *h, float *c) {
-    U = calculate_b(x, y, n);
+void H(float x, float y, float n, float *k, float *h, float *c) {
+    U = b(x, y, n);
     *k = x / U;
     *h = y / U;
     *c = n / U;
 }
 
-void smooth(int x, int S) {
-    for (int F = 0; F < L; ++F) {
-        buffer[C + x * L + F] += 0.4 * buffer[C + S * L + F];
+void s(int x, int S) {
+    LOOP(L) {
+        O[c + x * L + current] += 0.4 * O[c + S * L + current];
     }
 }
 
-float* get_d(int o) {
-    return &buffer[(t * X + I) * 3 + o];
+float *D(int o) {
+    return &O[(t * X + I) * 3 + o];
 }
 
-float absolute_value(float k) {
+float z(float k) {
     return k < 0 ? -k : k;
 }
 
-void copy_w(int x, int y) {
-    for (int F = 0; F < M * D; ++F) {
-        int G = F % M;
-        t = G % D + 1;
-        I = G / D + 1;
-        a = F / M + 1;
-        *get_w(t, I, a, x) = *get_w(t, I, a, y);
+void o(int x, int y) {
+    LOOP(e) {
+        G = current % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = current / M + 1;
+        *W(t, I, a, x) = *W(t, I, a, y);
     }
 }
 
-void bound_value(float *z) {
-    *z = *z < 0.5 ? 0.5 : *z > 85 ? 85 : *z;
+void A(float *z) {
+    *z = (*z < 0.5) ? 0.5 : (*z > 85 ? 85 : *z);
 }
 
-void update_w(int E, int y, int u, int v, int w) {
-    for (int F = 0; F < M * D; ++F) {
-        int G = F % M;
-        t = G % D + 1;
-        I = G / D + 1;
-        a = F / M + 1;
-        float U = t - D * 0.4 * *get_w(t, I, a, u);
-        float J = I - D * 0.4 * *get_w(t, I, a, v);
-        float e = a - D * 0.4 * *get_w(t, I, a, w);
-        bound_value(&U);
-        bound_value(&J);
-        bound_value(&e);
+void u(int E, int y, int u, int v, int w) {
+    LOOP(e) {
+        G = current % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = current / M + 1;
+        float U = t - d * 0.4 * *W(t, I, a, u);
+        float J = I - d * 0.4 * *W(t, I, a, v);
+        float e = a - d * 0.4 * *W(t, I, a, w);
+        A(&U);
+        A(&J);
+        A(&e);
+
         float F = U - (int)U, j = J - (int)J, l = 1 - j, i = e - (int)e, c = 1 - i;
-        *get_w(t, I, a, E) = (1 - F) * (l * c * *get_w(U, J, e, y) + j * c * *get_w(U, 1 + J, e, y) +
-                       l * i * *get_w(U, J, e + 1, y) + j * i * *get_w(U, 1 + J, 1 + e, y)) +
-                     F * (l * c * *get_w(U + 1, J, e, y) + j * c * *get_w(1 + U, 1 + J, e, y) +
-                          l * i * *get_w(1 + U, J, 1 + e, y) + j * i * *get_w(1 + U, J + 1, e + 1, y));
+        *W(t, I, a, E) = (1 - F) * (l * c * *W(U, J, e, y) + j * c * *W(U, 1 + J, e, y) + l * i * *W(U, J, e + 1, y) + j * i * *W(U, 1 + J, 1 + e, y))
+                         + F * (l * c * *W(U + 1, J, e, y) + j * c * *W(1 + U, 1 + J, e, y) + l * i * *W(1 + U, J, 1 + e, y) + j * i * *W(1 + U, J + 1, e + 1, y));
     }
 }
 
-void calculate_v(int x, int E, int k, int b, int c) {
-    *get_w(t, I, a, x) -= 40 * (*get_w(t + k, I + b, a + c, E) - *get_w(t - k, I - b, a - c, E));
+int puts(const char*);
+
+void v(int x, int E, int k, int b, int c) {
+    *W(t, I, a, x) -= 40 * (*W(t + k, I + b, a + c, E) - *W(t - k, I - b, a - c, E));
 }
 
-void process_w(int u, int T, int w, int E) {
-    for (int F = 0; F < M * D; ++F) {
-        int G = F % M;
-        t = G % D + 1;
-        I = G / D + 1;
-        a = F / M + 1;
-        *get_w(t, I, a, E) = -1.0 / 3 * ((get_w(1 + t, I, a, u) - get_w(t - 1, I, a, u)) / D +
-            (get_w(t, I + 1, a, T) - get_w(t, I - 1, a, T)) / D + 
-            (get_w(t, I, 1 + a, w) - get_w(t, I, a - 1, w)) / D);
+void q(int u, int T, int w, int E) {
+    LOOP(e) {
+        G = current % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = current / M + 1;
+        *W(t, I, a, E) = -1.0 / 3 * ((*W(1 + t, I, a, u) - *W(t - 1, I, a, u)) / d + (*W(t, I + 1, a, T) - *W(t, I - 1, a, T)) / d + (*W(t, I, 1 + a, w) - *W(t, I, a - 1, w)) / d);
     }
-    for (int F = 0; F < M * D; ++F) {
-        int G = F % M;
-        t = G % D + 1;
-        I = G / D + 1;
-        a = F / M + 1;
-        calculate_v(u, E, 1, 0, 0);
-        calculate_v(T, E, 0, 1, 0);
-        calculate_v(w, E, 0, 0, 1);
+    LOOP(e) {
+        G = current % M;
+        t = G % d + 1;
+        I = G / d + 1;
+        a = current / M + 1;
+        v(u, E, 1, 0, 0);
+        v(T, E, 0, 1, 0);
+        v(w, E, 0, 0, 1);
     }
 }
+
+char h[] = "(\\tjxucXUCQOmqdkaoM&%$\033[38;5;141m+";
 
 int main() {
-    int e = M * D;
-    int I = C + L * 8;
-    output[J * Y] = '\0';
-
-    // Initialize buffer
-    for (int F = 0; F < I; ++F) {
-        buffer[F] = 0;
+    e = M * d;
+    I = c + L * 8;
+    P[J * Y] = '\0';
+    LOOP(I) {
+        O[current] = 0;
     }
-
-    // Prepare initial output
+    
     for (t = 0; t < Y; ++t) {
-        output[t * J + X * K] = '\n';
+        P[t * J + X * K] = '\n';
         for (I = 0; I < X;) {
-            normalize_vector(I++ - 40, t - 32, -145, &w, &Z, &R);
-            *get_d(0) = w;
-            *get_d(1) = Z;
-            *get_d(2) = R;
+            H(I++ - 40, t - 32, -145, &w, &Z, &R);
+            *D(0) = w;
+            *D(1) = Z;
+            *D(2) = R;
         }
     }
 
-    // Main loop
-    while (1) {
-        for (int F = 0; F < L; ++F) {
-            buffer[C + 3 * L + F] = buffer[C + 4 * L + F] = buffer[C + 5 * L + F] = buffer[C + 7 * L + F] = 0;
+    for (;;) {
+        LOOP(L) {
+            O[c + 3 * L + current] = O[c + 4 * L + current] = O[c + 5 * L + current] = O[c + 7 * L + current] = 0;
         }
-
-        for (int F = 0; F < M * D; ++F) {
-            int G = F % M;
-            t = G % D + 1;
-            I = G / D + 1;
-            a = F / M + 1;
-
-            x = t - L;
-            y = a - L;
+        
+        LOOP(e) {
+            G = current % M;
+            t = G % d + 1;
+            I = G / d + 1;
+            a = current / M + 1;
+            x = t - l;
+            y = a - l;
             U = x * x + y * y;
-            G = 0x1fbb4000 + (*(int*)&U >> 1);
+            G = k + (*(int*)&U >> 1);
             i = *(float*)&G;
 
             if (I < 13 && I > 10) {
                 if (i < 2) {
-                    *get_w(t, I, a, 4) = 1.5;
-                    m = g + (I / D);
+                    *W(t, I, a, 4) = 1.5;
+                    m = g + (I / d);
                     U = m * m;
                     w = m * m;
                     m = m - (U * m) / 6 + (U * U * m) / 120;
                     E = 1 - w / 2 + (w * w) / 24;
-                    *get_w(t, I, a, 3) = m / 2 + 0.0275;
-                    *get_w(t, I, a, 5) = E * 0.7 - 0.35;
+                    *W(t, I, a, 3) = m / 2 + 0.0275;
+                    *W(t, I, a, 5) = E * 0.7 - 0.35;
                 }
             }
 
             if (I < 2 && i < 3) {
-                *get_w(t, I, a, 7) = 0.1;
+                *W(t, I, a, 7) = 0.1;
             }
         }
 
-        smooth(0, 3);
-        smooth(1, 4);
-        smooth(2, 5);
-        copy_w(5, 2);
-        copy_w(4, 1);
-        copy_w(3, 0);
-        process_w(3, 4, 5, 1);
-        update_w(1, 4, 3, 4, 5);
-        update_w(0, 3, 3, 4, 5);
-        update_w(2, 5, 3, 4, 5);
-        process_w(0, 1, 2, 4);
-        smooth(6, 7);
-        copy_w(7, 6);
-        update_w(6, 7, 0, 1, 2);
+        s(0, 3);
+        s(1, 4);
+        s(2, 5);
+        o(5, 2);
+        o(4, 1);
+        o(3, 0);
+        q(3, 4, 5, 1);
+        u(1, 4, 3, 4, 5);
+        u(0, 3, 3, 4, 5);
+        u(2, 5, 3, 4, 5);
+        q(0, 1, 2, 4);
+        s(6, 7);
+        o(7, 6);
+        u(6, 7, 0, 1, 2);
 
         x = T * 0.9998 + B * 0.02;
         B = 0.9998 * B - T * 0.02;
         T = x;
-
-        normalize_vector(-T, 0, -B, &R, &w, &Z);
+        H(-T, 0, -B, &R, &w, &Z);
         g += 0.1;
         g = g > 3.14 ? -g : g;
-        normalize_vector(Z, 0, -R, &m, &E, &i);
+        H(Z, 0, -R, &m, &E, &i);
 
-        for (int F = 0; F < 5056; ++F) {
-            int G = F % 5056;
+        LOOP(5056) {
+            G = current % 5056;
             t = G % Y;
             I = G / Y;
-            U = *get_d(0);
-            float v = *get_d(1), g = *get_d(2);
-
-            float V = U * m + v * (E * Z - w * i) + g * -R;
-            float s = U * E + v * (i * R - Z * m) + g * -w;
+            U = *D(0);
+            float v = *D(1), g = *D(2), V = U * m + v * (E * Z - w * i) + g * -R, s = U * E + v * (i * R - Z * m) + g * -w;
             U = U * i + v * (m * w - R * E) + g * -Z;
-
             f = 0;
             int q = t * J + I * K + 8;
+            
             for (a = 0; a < K; ++a) {
-                output[q + a - 8] = "+";
+                P[q + a - 8] = h[35 + a];
             }
-
-            while (f < D * 5) {
-                x = absolute_value(T + V * f) - L;
-                y = absolute_value(s * f) - L;
-                n = absolute_value(B + U * f) - L;
-
+            
+            while (f < d * 5) {
+                x = z(T + V * f) - l;
+                y = z(s * f) - l;
+                n = z(B + U * f) - l;
+                
                 float k = y > n ? y : n;
                 float c = x > k ? x : k;
-                float F = (c < 0 ? c : 0) + calculate_b(x < 0 ? 0 : x, y < 0 ? 0 : y, n > 0 ? n : 0);
+                float F = (c < 0 ? c : 0) + b(x < 0 ? 0 : x, y < 0 ? 0 : y, n > 0 ? n : 0);
+                
                 if (F < 0.01) {
-                    x = T + f * V + L;
-                    y = f * s + L;
-                    n = B + f * U + L;
-
+                    x = T + f * V + l;
+                    y = f * s + l;
+                    n = B + f * U + l;
                     f = 1;
                     a = 0;
-                    while ((a++ < 1) || (D > x && y < D && n < D && x > 0 && 0 < y && n > 0)) {
-                        f *= 1 - *get_w(n + 1, 1 + y, x + 1, 6) * j;
-                        x += V * j;
-                        y += s * j;
-                        n += U * j;
+                    
+                    while ((a++ < 1) || (d > x && y < d && n < d && x > 0 && 0 < y && n > 0)) {
+                        f *= 1 - *W(n + 1, 1 + y, x + 1, 6) * j;
+                        x = x + V * j;
+                        y = y + s * j;
+                        n = n + U * j;
                     }
-
+                    
                     a = (1 - f) * 35;
                     a = a < 0 ? 0 : a > 34 ? 34 : a;
                     int c = 240 + 0.44 * a;
-                    output[q] = (c - 200) / 10 + 48;
-                    output[q + 1] = c % 10 + 48;
-                    output[q + 3] = "+";
+                    P[q] = (c - 200) / 10 + 48;
+                    P[q + 1] = c % 10 + 48;
+                    P[q + 3] = h[a];
                     break;
                 }
+                
                 f += F;
             }
         }
-        puts(output);
+        puts(P);
     }
 }

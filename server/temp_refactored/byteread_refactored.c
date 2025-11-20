@@ -1,48 +1,46 @@
-// Refactored code with clear comments
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-// Function to process the file and print out its content
-void process_file(FILE *file) {
+int main(void) {
+    FILE *filePointer = fopen("data.src", "r");
     char *buffer = NULL;
-    size_t buffer_length = 0;
-    char *current_position = NULL;
-    size_t read_index = 0;
-    size_t string_length = 0;
+    size_t bufferLength = 0;
+    char *currentPosition = NULL;
+    size_t index = 0, stringLength = 0, charIndex = 0;
 
-    // Read the entire file into buffer using getdelim()
-    if (getdelim(&buffer, &buffer_length, EOF, file) != -1) {
-        current_position = buffer;
+    // Check if the file opened successfully
+    if (filePointer == NULL) {
+        fprintf(stderr, "Couldn't open data file\n");
+        exit(1);
+    }
 
-        // Iterate over each string in the buffer
-        while (read_index < buffer_length) {
-            string_length = strlen(current_position);
+    // Read the file content into buffer until the end of the file
+    if (getdelim(&buffer, &bufferLength, EOF, filePointer) != -1) {
+        currentPosition = buffer;
 
-            // Print each character in the current string
-            for (size_t char_index = 0; char_index < string_length; ++char_index) {
-                putchar(*(current_position + char_index));
+        // Iterate over the buffer content
+        while (index < bufferLength) {
+            stringLength = strlen(currentPosition);
+            charIndex = 0;
+
+            // Print each character of the current string
+            while (charIndex < stringLength) {
+                putchar(*(currentPosition + charIndex));
+                ++charIndex;
             }
 
-            // Move to the next string position in the buffer
-            read_index += string_length + 1;
-            current_position += string_length + 1;
+            // Move to the next string in the buffer
+            index += stringLength + 1;
+            currentPosition += stringLength + 1;
         }
     }
 
+    // Free the allocated buffer and close the file
     free(buffer);
-}
+    buffer = NULL;
+    fclose(filePointer);
+    filePointer = NULL;
 
-int main(void) {
-    FILE *file_pointer = fopen("data.src", "r");
-
-    if (file_pointer == NULL) {
-        fprintf(stderr, "Couldn't open data file\n");
-        exit(EXIT_FAILURE);
-    }
-
-    process_file(file_pointer);
-
-    fclose(file_pointer);
-    return EXIT_SUCCESS;
+    return 0;
 }

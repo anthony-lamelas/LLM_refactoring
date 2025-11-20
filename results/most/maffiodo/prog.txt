@@ -1,554 +1,518 @@
 ```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-// Define structure for handling various data types
-typedef struct node {
+// Macro definitions for code simplification
+#define CHECK_FUNCTION_END(x) } else if (parseFunction(#x)) {
+#define CHECK_OPERATOR_END ; } else if (i == j++) {
+#define FORMAT_STRING sprintf
+#define ACCESS_MEMBER ->
+#define IF_CONDITION if (
+#define INCREMENT_COUNTER f++
+#define EMPTY_PARAMETER ( )
+#define ACCESS_FIELD x ACCESS_MEMBER
+
+// Typedefs and struct definitions
+typedef struct Node* NodePointer;
+struct Node {
     union {
-        char *str_val;
-        double num_val;
+        char *f;
+        double n;
     };
-    char *name;
-    char op_type, op_prec, op_assoc;
-    struct node *next, *child, *parent, *(*func)(void);
-    int ref_count;
-} *Node;
+    char *g, h, l, m;
+    NodePointer e, x, b, q, (*r) EMPTY_PARAMETER;
+    int u;
+};
 
 // Global variables
-Node head, tail;
-int flag, (*string_length)(const char *) = strlen, (*string_compare)(const char *, const char *) = strcmp;
-char *buffer, *input_pointer, current_char, is_running = 0, g_buffer[99], *(*string_duplicate)(const char *) = strdup;
+NodePointer q, v;
+int y, (*getStrLen) EMPTY_PARAMETER = strlen, (*compareStr) EMPTY_PARAMETER = strcmp;
+char *B, *f, C, r = 0, g[99], *(*duplicateStr) EMPTY_PARAMETER = strdup;
 
-// Function prototypes
-Node create_node(int op_type);
-Node find_node(Node *node_list);
-Node add_node(Node *node_list);
-void skip_whitespace(void);
-void skip_comments(void);
-int find_char_position(const char *chars);
-int check_end_of_expression(void);
-int match_function_name(const char *name);
-int match_variable_name(const char *name);
-void process_block(void);
-double evaluate_node(Node node);
-Node evaluate_expression(Node node);
-int is_valid_identifier(void);
-void parse_identifier(void);
-Node parse_expression(int precedence);
-Node parse_statement(int block_mode);
-void release_node(Node node, Node limit, int release_children);
-void clean_up(Node limit);
-Node execute_block(int block_mode);
-Node print_node(Node node);
+// Function declarations
+NodePointer createNode(int m);
+NodePointer findNode(NodePointer q);
+NodePointer allocateNode(NodePointer *q);
+void skipWhitespace(EMPTY_PARAMETER);
+void skipCommentOrWhitespace(EMPTY_PARAMETER);
+int findCharIndex(char *str);
+int checkDelimiter(EMPTY_PARAMETER);
+int matchFunction(char *x);
+int parseFunction(char *x);
+int isValidIdentifierChar(EMPTY_PARAMETER);
+void parseIdentifier(EMPTY_PARAMETER);
+NodePointer parseExpression(int h);
+double evaluateNode(NodePointer x);
+NodePointer copyNode(NodePointer x);
+void skipStatement(EMPTY_PARAMETER);
+NodePointer processNode(int h);
+void traverseAndFree(NodePointer x, NodePointer l, int b);
+void freeNodes(NodePointer l);
+NodePointer execute(int h);
+NodePointer printNode(NodePointer x);
+int main(EMPTY_PARAMETER);
 
-// Create a new node and initialize it
-Node create_node(int op_type) {
-    Node new_node = calloc(1, sizeof(struct node));
-    new_node->next = tail;
-    new_node->op_type = op_type;
-    return tail = new_node;
+// Function implementations
+NodePointer createNode(int m) {
+    NodePointer newNode = calloc(1, sizeof(struct Node));
+    newNode->b = v;
+    newNode->m = m;
+    return v = newNode;
 }
 
-// Find a node in the node list by name
-Node find_node(Node *node_list) {
-    Node current = *node_list;
-    while (current) {
-        if (!string_compare(g_buffer, current->name)) {
-            return current;
+NodePointer findNode(NodePointer q) {
+    while (q) {
+        if (!compareStr(g, q ACCESS_MEMBER g)) {
+            return q;
         }
-        current = current->next;
+        q = q ACCESS_MEMBER b;
     }
-    return NULL;
+    return 0;
 }
 
-// Add a new node to the node list
-Node add_node(Node *node_list) {
-    Node new_node = create_node(4);
-    new_node->name = string_duplicate(g_buffer);
-    new_node->next = *node_list;
-    new_node->next = create_node(0);
-    return *node_list = new_node;
+NodePointer allocateNode(NodePointer *q) {
+    NodePointer newNode = createNode(4);
+    newNode->g = duplicateStr(g);
+    newNode->b = *q;
+    newNode->x = createNode(0);
+    return *q = newNode;
 }
 
-// Skip whitespace characters and comments
-void skip_whitespace(void) {
-    int is_comment;
-    while ((is_comment = (*input_pointer == '/' && input_pointer[1] == '/')) || isspace(*input_pointer)) {
-        if (is_comment) {
-            while (*input_pointer && *input_pointer != '\n') input_pointer++;
+void skipWhitespace(EMPTY_PARAMETER) {
+    int x;
+    while ((x = *f == '/' && f[1] == '/') || isspace(*f)) {
+        if (x) {
+            while (*f && *f != 10) INCREMENT_COUNTER;
         } else {
-            input_pointer++;
+            INCREMENT_COUNTER;
         }
     }
 }
 
-// Skip comments
-void skip_comments(void) {
-    skip_whitespace();
-    if (*input_pointer) input_pointer++;
+void skipCommentOrWhitespace(EMPTY_PARAMETER) {
+    skipWhitespace EMPTY_PARAMETER;
+    if (*f) INCREMENT_COUNTER;
 }
 
-// Find the position of a character in the given string
-int find_char_position(const char *chars) {
-    char *pos = strchr(chars, *input_pointer);
-    return pos ? pos - chars : -1;
+int findCharIndex(char *str) {
+    char *d = strchr(str, *f);
+    return d ? d - str : -1;
 }
 
-// Check if the current token is the end of an expression
-int check_end_of_expression(void) {
-    return find_char_position(";)]") != -1;
+int checkDelimiter(EMPTY_PARAMETER) {
+    return findCharIndex(";)]") != -1;
 }
 
-// Match a function name
-int match_function_name(const char *name) {
-    int len = string_length(name);
-    if (!strncmp(name, input_pointer, len) && !isalnum(input_pointer[len])) {
-        input_pointer += len;
+int matchFunction(char *x) {
+    return !compareStr(x, g);
+}
+
+int parseFunction(char *x) {
+    int u = getStrLen(x);
+    if (!strncmp(x, f, u) && !isalnum(f[u])) {
+        f += u;
         return 1;
     }
     return 0;
 }
 
-// Match a variable name
-int match_variable_name(const char *name) {
-    int len = string_length(name);
-    if (!strncmp(name, input_pointer, len) && !isalnum(input_pointer[len])) {
-        input_pointer += len;
-        return 1;
-    }
-    return 0;
+int isValidIdentifierChar(EMPTY_PARAMETER) {
+    return *f == '_' || isalnum(*f);
 }
 
-// Process a code block
-void process_block(void) {
-    int depth = 1;
-    while (*input_pointer && depth) {
-        current_char = *input_pointer++;
-        depth += (current_char == '{') - (current_char == '}');
-    }
+void parseIdentifier(EMPTY_PARAMETER) {
+    char *d = g;
+    while (isValidIdentifierChar EMPTY_PARAMETER) *d++ = *f++;
+    *d = 0;
 }
 
-// Evaluate a node and return its value
-double evaluate_node(Node node) {
-    char *end_ptr;
-    return (node->op_type & 1) ? node->num_val : (node->op_type & 2) ? strtod(node->str_val, &end_ptr) : 0;
-}
-
-// Evaluate an expression and return the resulting node
-Node evaluate_expression(Node node) {
-    Node result_node = create_node(2);
-    char *res_str = "[object]", node_op_type = node->op_type;
-    if (node_op_type & 1) {
-        sprintf(g_buffer, "%g", node->num_val);
-        res_str = g_buffer;
-    } else if (node_op_type & 2) {
-        res_str = node->str_val;
+NodePointer parseExpression(int h) {
+    int i = 0, j, n, P, V;
+    double X, Y;
+    char *d, b;
+    NodePointer l, y, x = createNode(0), u;
+    
+    skipWhitespace EMPTY_PARAMETER;
+    
+    if (checkDelimiter EMPTY_PARAMETER) {
+        return x;
     }
-    result_node->name = string_duplicate(res_str);
-    return result_node;
-}
-
-// Check if the current character is a valid identifier start
-int is_valid_identifier(void) {
-    return *input_pointer == '_' || isalnum(*input_pointer);
-}
-
-// Parse an identifier
-void parse_identifier(void) {
-    char *dest = g_buffer;
-    while (is_valid_identifier()) {
-        *dest++ = *input_pointer++;
+    
+    i = findCharIndex("-+!~");
+    if (i > -1) {
+        INCREMENT_COUNTER;
     }
-    *dest = '\0';
-}
-
-// Parse an expression with given precedence level
-Node parse_expression(int precedence) {
-    int idx = 0, op_prec, next_prec, is_prefix, is_right_assoc, is_unary, has_operand, unary_op;
-    double left_val, right_val;
-    char *dest, op_char;
-    Node left_node, right_node, temp_node;
-    skip_whitespace();
-
-    if (check_end_of_expression()) {
-        return create_node(0);
-    }
-
-    op_prec = find_char_position("-+!~");
-    if (op_prec > -1) {
-        input_pointer++;
-    }
-
-    current_char = *input_pointer;
-    if (current_char == '(') {
-        input_pointer++;
-        left_node = parse_expression(0);
-        skip_comments();
-    } else if (current_char == '[' || current_char == '{') {
-        left_node = create_node(4);
-        input_pointer++;
-        skip_comments();
-    } else if (current_char == '"' || current_char == '\'') {
-        dest = g_buffer;
-        input_pointer++;
-        left_node = create_node(2);
-        while (*input_pointer != current_char) {
-            char ch = *input_pointer++;
-            if (ch == '\\') {
-                ch = *input_pointer++;
-                ch = ch == 'n' ? '\n' : ch == 'x' ? strtol(input_pointer, &input_pointer, 16) : ch;
+    
+    C = *f;
+    
+    if (C == '(') {
+        INCREMENT_COUNTER;
+        x = parseExpression(0);
+        skipCommentOrWhitespace EMPTY_PARAMETER;
+    } else if (C == '[' || C == '{') {
+        ACCESS_FIELD m = 4;
+        INCREMENT_COUNTER;
+        skipCommentOrWhitespace EMPTY_PARAMETER;
+    } else if (C == '"' || C == '\'') {
+        d = g;
+        INCREMENT_COUNTER;
+        ACCESS_FIELD m = 2;
+        while (*f != C) {
+            char P = *f++;
+            if (P == '\\') {
+                P = *f++;
+                P = P == 'n' ? 10 : P == 'x' ? strtol(f, &f, 16) : P;
             }
-            *dest++ = ch;
+            *d++ = P;
         }
-        *dest = '\0';
-        input_pointer++;
-        left_node->str_val = string_duplicate(g_buffer);
-    } else if (isdigit(*input_pointer)) {
-        left_node = create_node(1);
-        left_node->num_val = strtod(input_pointer, &input_pointer);
-    } else if (is_valid_identifier()) {
-        int is_function = 0;
-        g_buffer[0] = '\0';
-        parse_identifier();
-        if (match_function_name("function")) {
-            skip_comments();
-            skip_comments();
-            skip_comments();
-            dest = input_pointer - 1;
-            left_node = create_node(2);
-            process_block();
-            left_node->str_val = strndup(dest, input_pointer - dest);
+        *d = 0;
+        INCREMENT_COUNTER;
+        ACCESS_FIELD f = duplicateStr(g);
+    } else if (isdigit(*f)) {
+        ACCESS_FIELD m = 1;
+        ACCESS_FIELD n = strtod(f, &f);
+    } else if (isValidIdentifierChar EMPTY_PARAMETER) {
+        int W = 0;
+        g: parseIdentifier EMPTY_PARAMETER;
+        
+        if (matchFunction("function")) {
+            skipCommentOrWhitespace EMPTY_PARAMETER;
+            skipCommentOrWhitespace EMPTY_PARAMETER;
+            skipCommentOrWhitespace EMPTY_PARAMETER;
+            d = f - 1;
+            x = createNode(2);
+            skipStatement EMPTY_PARAMETER;
+            ACCESS_FIELD f = strndup(d, f - d);
         } else {
-            if (match_function_name("var")) {
-                input_pointer++;
-                is_function = 1;
-                goto parse_var;
+            if (matchFunction("var")) {
+                INCREMENT_COUNTER;
+                W = 1;
+                goto g;
             }
-            left_node = find_node(&head);
-            if (!is_function || !left_node) {
-                left_node = add_node(&head);
-            }
-            left_node->next = left_node;
-            left_node->parent = left_node;
+            u = findNode(q);
+            if (W || !u) u = allocateNode(&q);
+            x = u ACCESS_MEMBER x;
+            ACCESS_FIELD e = u;
         }
-    } else {
-        return create_node(0);
     }
-
-parse_var:
-    if (op_prec > -1) {
-        left_val = evaluate_node(left_node);
-        temp_node = left_val;
-        if (!idx) {
-            left_val = -left_val;
-        } else if (!idx) {
-            left_val = !temp_node;
-        } else {
-            left_val = ~temp_node;
+    
+    if (i > -1) {
+        X = evaluateNode(x);
+        n = X;
+        if (j == 0) {
+            CHECK_OPERATOR_END
+                X = -X
+            CHECK_OPERATOR_END
+                X = !n
+            CHECK_OPERATOR_END
+                X = ~n;
         }
-        left_node = create_node(1);
-        left_node->num_val = left_val;
+        x = createNode(1);
+        ACCESS_FIELD n = X;
     }
-
-    while (*input_pointer) {
-        skip_whitespace();
-        if (check_end_of_expression()) {
-            break;
-        }
-        op_prec = find_char_position(",=!&|><-+*/%[(.");
-        if (op_prec > -1) {
-            op_char = *input_pointer;
-            if (op_prec < precedence) {
-                break;
+    
+    while (*f) {
+        skipWhitespace EMPTY_PARAMETER;
+        if (checkDelimiter EMPTY_PARAMETER) break;
+        
+        i = findCharIndex(",=!&|><-+*/%[(.");
+        if (i > -1) {
+            b = *f;
+            if (i < h) break;
+            
+            int W = 0, k = 0, h = 0;
+            INCREMENT_COUNTER;
+            
+            if (*f == '=') {
+                W = 2;
+                INCREMENT_COUNTER;
+            } else if (*f == b) {
+                h = 1;
+                INCREMENT_COUNTER;
             }
-            int is_logical = 0, has_operator = 0, next_prec = 0;
-            input_pointer++;
-            if (*input_pointer == '=') {
-                is_logical = 2;
-                input_pointer++;
-            } else if (*input_pointer == op_char) {
-                has_operator = 1;
-                input_pointer++;
+            
+            y = 0;
+            l = createNode(1);
+            X = evaluateNode(x);
+            double *Z = &l ACCESS_MEMBER n;
+            char m = ACCESS_FIELD m;
+            n = X;
+            
+            if (i < 13) {
+                y = parseExpression(i == 12 ? 0 : i);
+                Y = evaluateNode(y);
+                P = Y;
             }
-            right_node = 0;
-            temp_node = create_node(1);
-            left_val = evaluate_node(left_node);
-            double *result_ptr = &temp_node->num_val;
-            char node_type = left_node->op_type;
-            temp_node->num_val = left_val;
-            if (op_prec < 13) {
-                right_node = parse_expression(op_prec == 12 ? 0 : op_prec);
-                right_val = evaluate_node(right_node);
-                is_prefix = right_val;
-            }
-            if (!idx) {
-                if (!right_node) {
-                    if (node_type & 4) is_running = left_val != right_val;
-                    else if (node_type & 1) goto O;
-                    else goto Q;
-
-                    if ((node_type | right_node->op_type) == 2) {
-                        Q: is_running = string_compare(evaluate_expression(left_node)->str_val, evaluate_expression(right_node)->str_val);
+            
+            if (j == 0) {
+                CHECK_OPERATOR_END
+                    l = y
+                CHECK_OPERATOR_END
+                if (W) {
+                    V: if (m == y ACCESS_MEMBER m) {
+                        if (m & 4) V = x != y;
+                        else if (m & 1) goto O;
+                        else goto Q;
+                    } else if ((m | y ACCESS_MEMBER m) == 2) {
+                        Q: V = compareStr(copyNode(x) ACCESS_MEMBER f, copyNode(y) ACCESS_MEMBER f);
                     } else {
-                        O: is_running = left_val - right_val;
+                        O: V = X - Y;
                     }
-                    op_prec = has_operator;
-                    if (!idx) {
-                        if (!is_running) is_running = is_running == 0;
-                        if (!is_running) is_running = is_running >= 0;
-                        if (!is_running) is_running = is_running <= 0;
-                        if (!is_running) is_running = is_running > 0;
-                        if (!is_running) is_running = is_running < 0;
-                        if (!is_running) is_running = is_running != 0;
+                    i = k;
+                    if (j == 0) {
+                        CHECK_OPERATOR_END
+                            V = V == 0
+                        CHECK_OPERATOR_END
+                            V = V >= 0
+                        CHECK_OPERATOR_END
+                            V = V <= 0
+                        CHECK_OPERATOR_END
+                            V = V > 0
+                        CHECK_OPERATOR_END
+                            V = V < 0
+                        CHECK_OPERATOR_END
+                            V = V != 0;
                     }
-                    *result_ptr = is_running;
-                    is_logical = 0;
+                    *Z = V;
+                    W = 0;
                 } else {
-                    is_logical = 1;
-                    if (right_node->op_type & 4) {
-                        temp_node = right_node;
+                    W = 1;
+                    if (y ACCESS_MEMBER m & 4) {
+                        l = y;
                     } else {
-                        temp_node = create_node(right_node->op_type);
-                        temp_node->func = right_node->func;
-                        if (right_node->op_type & 2) {
-                            temp_node->str_val = string_duplicate(right_node->str_val);
-                        } else {
-                            temp_node->num_val = right_node->num_val;
-                        }
+                        l = createNode(y ACCESS_MEMBER m);
+                        l ACCESS_MEMBER r = y ACCESS_MEMBER r;
+                        if (y ACCESS_MEMBER m & 2) l ACCESS_MEMBER f = duplicateStr(y ACCESS_MEMBER f);
+                        else l ACCESS_MEMBER n = y ACCESS_MEMBER n;
                     }
                 }
-                if (has_operator == 5) {
+                CHECK_OPERATOR_END
+                    k = 5;
+                    goto V
+                CHECK_OPERATOR_END
+                    *Z = h ? n && P : n & P
+                CHECK_OPERATOR_END
+                    *Z = h ? n || P : n | P
+                CHECK_OPERATOR_END
+                if (h) {
+                    *Z = n >> P;
+                } else {
+                    k = 3 - W;
                     goto V;
                 }
-            } else {
-                *result_ptr = has_operator ? left_val && is_prefix : left_val & is_prefix;
-            }
-            if (has_operator) {
-                *result_ptr = left_val >> is_prefix;
-            } else {
-                has_operator = 3 - is_logical;
-                goto V;
-            }
-            if (has_operator) {
-                *result_ptr = left_val << is_prefix;
-            } else {
-                has_operator = 4 - is_logical;
-                goto V;
-            }
-            *result_ptr = left_val - right_val;
-            if ((node_type | right_node->op_type) & 2) {
-                Node u = evaluate_expression(left_node);
-                right_node = evaluate_expression(right_node);
-                dest = malloc(string_length(u->str_val) + string_length(right_node->str_val) + 1);
-                sprintf(dest, "%s%s", u->str_val, right_node->str_val);
-                temp_node->op_type = 2;
-                temp_node->str_val = dest;
-            } else {
-                *result_ptr = left_val + right_val;
-            }
-            *result_ptr = left_val * right_val;
-            *result_ptr = left_val / right_val;
-            *result_ptr = temp_node->num_val % is_prefix;
-            skip_comments();
-            if (node_type & 2) {
-                sprintf(g_buffer, "%c", is_prefix < string_length(left_node->str_val) ? left_node->str_val[is_prefix] : 0);
-                temp_node->op_type = 2;
-                temp_node->str_val = string_duplicate(g_buffer);
-            } else {
-                sprintf(g_buffer, "%s", evaluate_expression(right_node)->str_val);
-                goto q;
-            }
-            sprintf(g_buffer, "arguments");
-            Node B = head, u = add_node(&head)->next;
-            idx = 0;
-            while (*input_pointer) {
-                skip_whitespace();
-                right_node = parse_expression(1);
-                if (!is_running) {
-                    sprintf(g_buffer, "%d", idx++);
-                    add_node(&u->next)->next = right_node;
-                    u->ref_count++;
-                }
-                if (*input_pointer == ')') break;
-                input_pointer++;
-            }
-            input_pointer++;
-            idx = is_running;
-            if (left_node->func) {
-                if (!left_node->func) {
-                    temp_node = left_node->func(u->next);
-                }
-            } else {
-                dest = input_pointer;
-                input_pointer = left_node->str_val;
-                temp_node = execute_block(0);
-                input_pointer = dest;
-            }
-            if (!idx) {
-                is_running = idx & ~1;
-            }
-            head = B;
-            if (!is_running) {
-                temp_node->op_type = 1;
-                temp_node->op_type = 0;
-                head = temp_node;
-            }
-            break;
-        }
-        if (!has_operator) {
-            if (!is_running) temp_node->next = left_node->next = temp_node;
-            else continue;
-        }
-        left_node = temp_node;
-    } else {
-        input_pointer++;
-    }
-    return left_node;
-}
-
-// Parse a statement or block
-Node parse_statement(int block_mode) {
-    Node node = create_node(0), result_node, temp_node, backup_tail = tail, backup_head = head;
-    while (*input_pointer) {
-        skip_whitespace();
-        if (*input_pointer == '{') {
-            input_pointer++;
-            if (!is_running) {
-                node = parse_statement(1);
-            } else {
-                process_block();
-            }
-        } else {
-            int is_loop = 0, is_condition = 0;
-            if (*input_pointer == '}') {
-                input_pointer++;
-                break;
-            } else if (*input_pointer == '\0') {
-                break;
-            } else {
-                char *backup_input_pointer;
-                int is_break = 0, is_return = 0;
-                backup_input_pointer = input_pointer;
-                skip_comments();
-                result_node = parse_expression(0);
-                skip_comments();
-                if (!(int)result_node->num_val) {
-                    is_running = 4;
-                }
-                temp_node = parse_statement(0);
-                if (*input_pointer == ';') {
-                    input_pointer++;
-                }
-                if (!is_running) {
-                    node = temp_node;
-                }
-                skip_whitespace();
-                if (is_loop) {
-                    if (!is_running && !is_break) {
-                        node = temp_node;
-                        input_pointer = backup_input_pointer;
-                        goto B;
-                    }
+                CHECK_OPERATOR_END
+                if (h) {
+                    *Z = n << P;
                 } else {
-                    is_running = (!is_break & !is_return) * 4;
-                    is_break = is_running;
-                    temp_node = parse_statement(0);
-                    if (!is_break) {
-                        node = temp_node;
-                    }
+                    k = 4 - W;
+                    goto V;
                 }
-                is_running = is_loop ? is_condition & ~2 : is_condition | (is_running & 3);
-                B: while (1) {
-                    skip_whitespace();
-                    if (*input_pointer == 'w') {
-                        is_loop = 1;
-                        goto is_loop;
+                CHECK_OPERATOR_END
+                    *Z = X - Y
+                CHECK_OPERATOR_END
+                if ((m | y ACCESS_MEMBER m) & 2) {
+                    NodePointer u = copyNode(x);
+                    y = copyNode(y);
+                    d = malloc(getStrLen(u ACCESS_MEMBER f) + getStrLen(y ACCESS_MEMBER f) + 1);
+                    FORMAT_STRING(d, "%s%s", u ACCESS_MEMBER f, y ACCESS_MEMBER f);
+                    l ACCESS_MEMBER m = 2;
+                    l ACCESS_MEMBER f = d;
+                } else {
+                    *Z = X + Y;
+                }
+                CHECK_OPERATOR_END
+                    *Z = X * Y
+                CHECK_OPERATOR_END
+                    *Z = X / Y
+                CHECK_OPERATOR_END
+                    *Z = n % P
+                CHECK_OPERATOR_END
+                skipCommentOrWhitespace EMPTY_PARAMETER;
+                
+                if (m & 2) {
+                    FORMAT_STRING(g, "%c", P < getStrLen(ACCESS_FIELD f) ? ACCESS_FIELD f[P] : 0);
+                    l ACCESS_MEMBER m = 2;
+                    l ACCESS_MEMBER f = duplicateStr(g);
+                } else {
+                    FORMAT_STRING(g, "%s", copyNode(y) ACCESS_MEMBER f);
+                    goto q;
+                }
+                CHECK_OPERATOR_END
+                    FORMAT_STRING(g, "arguments");
+                    NodePointer B = q, u = allocateNode(&q) ACCESS_MEMBER x;
+                    i = 0;
+                    while (*f) {
+                        skipWhitespace EMPTY_PARAMETER;
+                        y = parseExpression(1);
+                        if (!r) {
+                            FORMAT_STRING(g, "%d", i++);
+                            allocateNode(&u ACCESS_MEMBER q) ACCESS_MEMBER x = y;
+                            u ACCESS_MEMBER u++;
+                        }
+                        if (*f == ')') break;
+                        INCREMENT_COUNTER;
                     }
-                    if (*input_pointer == 'r') {
-                        result_node = parse_expression(0);
-                        if (!is_running) {
-                            node = result_node;
-                            is_running |= 1;
+                    INCREMENT_COUNTER;
+                    i = r;
+                    if (ACCESS_FIELD r) {
+                        if (!r) l = ACCESS_FIELD r(u ACCESS_MEMBER q);
+                    } else {
+                        d = f;
+                        f = ACCESS_FIELD f;
+                        l = execute(0);
+                        f = d;
+                    }
+                    if (!i) {
+                        r = i & ~1;
+                    }
+                    q = B;
+                    CHECK_OPERATOR_END
+                        skipWhitespace EMPTY_PARAMETER;
+                        parseIdentifier EMPTY_PARAMETER;
+                        if (matchFunction("length")) {
+                            *Z = m & 2 ? getStrLen(ACCESS_FIELD f) : ACCESS_FIELD u;
+                        } else {
+                            q: y = findNode(ACCESS_FIELD q);
+                            if (!y) {
+                                y = allocateNode(&ACCESS_FIELD q);
+                                ACCESS_FIELD u++;
+                            }
+                            l = y ACCESS_MEMBER x;
+                            if (!l ACCESS_MEMBER e) l ACCESS_MEMBER e = y;
                         }
                     }
-                    if (*input_pointer == 'b') {
-                        if (!is_running) {
-                            is_running |= 2;
+                    if (W) {
+                        if (!r) {
+                            l = ACCESS_FIELD e ACCESS_MEMBER x = l;
+                        } else {
+                            continue;
                         }
                     }
+                    x = l;
+                } else {
+                    INCREMENT_COUNTER;
                 }
             }
-        }
-        if (!block_mode) break;
-    }
-    tail->op_type = 1;
-    tail->op_type = 0;
-    head = backup_tail;
-    return node;
-}
-
-// Release allocated nodes
-void release_node(Node node, Node limit, int release_children) {
-    if (node && node != limit) {
-        Node child = node->next;
-        node->op_type = 0;
-        if (child) {
-            if (child->op_type != node->op_type) {
-                release_node(child, NULL, 0);
-                release_node(child->parent, NULL, 1);
-            }
-            release_node(node->parent, NULL, 1);
-        }
-        if (release_children) {
-            release_node(node->next, limit, 1);
+            return x;
         }
     }
+    return 0;
 }
 
-// Clean up allocated nodes
-void clean_up(Node limit) {
-    flag = 1;
-    release_node(tail, limit, 1);
-    flag = 0;
-    release_node(head, NULL, 1);
-    Node *backup_tail = &tail, current = tail;
-    while (current) {
-        Node *backup_next = &current->next;
-        if (current->op_type & !current->op_type) {
-            *backup_tail = *backup_next;
-            if (current->op_type & 2) free(current->str_val);
-            if (current->name) free(current->name);
-            free(current);
+double evaluateNode(NodePointer x) {
+    char *P;
+    return ACCESS_FIELD m & 1 ? ACCESS_FIELD n : ACCESS_FIELD m & 2 ? strtod(ACCESS_FIELD f, &P) : 0;
+}
+
+NodePointer copyNode(NodePointer x) {
+    NodePointer newNode = createNode(2);
+    char *f = "[object]", m = ACCESS_FIELD m;
+    if (m & 1) {
+        FORMAT_STRING(g, "%g", ACCESS_FIELD n);
+        f = g;
+    }
+    if (m & 2) f = ACCESS_FIELD f;
+    newNode ACCESS_MEMBER f = duplicateStr(f);
+    return newNode;
+}
+
+void skipStatement(EMPTY_PARAMETER) {
+    skipWhitespace EMPTY_PARAMETER;
+    if (*f) INCREMENT_COUNTER;
+}
+
+NodePointer processNode(int h) {
+    NodePointer x = createNode(0), y, l, d = q, u = v;
+    
+    while (*f) {
+        skipWhitespace EMPTY_PARAMETER;
+        if (*f == '{') {
+            INCREMENT_COUNTER;
+            if (!r) x = processNode(1);
+            else skipStatement EMPTY_PARAMETER;
         } else {
-            current->op_type = 0;
-            backup_tail = backup_next;
+            int u = 0, d;
+            if (*f == '}') {
+                INCREMENT_COUNTER;
+                break;
+                CHECK_FUNCTION_END
+                    char *B;
+                    int P;
+                    u: d = r;
+                    j: B = f;
+                    skipCommentOrWhitespace EMPTY_PARAMETER;
+                    l = parseExpression(0);
+                    skipCommentOrWhitespace EMPTY_PARAMETER;
+                    if (!(int)l ACCESS_MEMBER n) r = 4;
+                    P = r;
+                    y = processNode(0);
+                    if (*f == ';') INCREMENT_COUNTER;
+                    if (!P) {
+                        x = y;
+                    }
+                    skipWhitespace EMPTY_PARAMETER;
+                    if (u) {
+                        if (!r && !P) {
+                            x = y;
+                            f = B;
+                            goto j;
+                        } else {
+                        }
+                        CHECK_FUNCTION_END
+                            r = (!P && !d) * 4;
+                            P = r;
+                            y = processNode(0);
+                            if (!P) {
+                                x = y;
+                            }
+                        }
+                        r = u ? d & ~2 : d | (r & 3);
+                        CHECK_FUNCTION_END
+                            u = 1;
+                            goto u;
+                        CHECK_FUNCTION_END
+                            y = parseExpression(0);
+                            if (!r) {
+                                x = y;
+                                r |= 1;
+                            }
+                        CHECK_FUNCTION_END
+                            if (!r) r |= 2;
+                    } else if (*f) {
+                        y = parseExpression(0);
+                        if (!r) x = y;
+                        skipCommentOrWhitespace EMPTY_PARAMETER;
+                    }
+                }
+                if (!h) break;
+            }
+            ACCESS_FIELD l = 1;
+            ACCESS_FIELD l = 0;
+            q = d;
+            return x;
         }
-        current = *backup_next;
     }
+    return 0;
 }
 
-// Execute a block of code
-Node execute_block(int block_mode) {
-    Node node = create_node(0), result_node, temp_node, backup_head = head, backup_tail = tail;
-    while (*input_pointer) {
-        skip_whitespace();
-        if (*input_pointer == '{') {
-            input_pointer++;
-            if (!is_running) {
-                node = execute_block(1);
-            } else {
-                process_block();
-            }
-        } else {
-            int is_loop = 0, is_condition = 0;
-            if (*input_pointer == '}') {
-                input_pointer++;
-                break;
-            } else if (*input_pointer == '\0') {
-                break;
-            } else {
-                char *backup_input_pointer;
-               
+NodePointer printNode(NodePointer x) {
+    printf("%s", copyNode(ACCESS_FIELD x) ACCESS_MEMBER f);
+    return createNode(0);
+}
+
+int main(EMPTY_PARAMETER) {
+    FORMAT_STRING(g, "print");
+    NodePointer x = allocateNode(&q);
+    ACCESS_FIELD m = 2;
+    ACCESS_FIELD r = printNode;
+    char u[1 << 16];
+    B = f = u;
+    while ((C = getchar EMPTY_PARAMETER) > 0) *f++ = C;
+    *f = 0;
+    f = B;
+    processNode(1);
+    return 0;
+}
+```

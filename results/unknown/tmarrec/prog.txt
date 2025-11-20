@@ -1,241 +1,224 @@
-```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-#define LOOP(variable, limit) for (variable = 0; variable < (limit); ++variable)
+#define LOOP(x) for (iteration = 0; x > iteration; ++iteration)
 
-float T = 240, B, j = 0.53, y, O[4426112], Z, w, R, n, m, E, i, U, g = 0;
+// Global variables
+float x, T = 240, B, j = 0.53, f, y, O[4426112], Z, w, R, n, m, E, i, U, g = 0;
 char P[60737];
-int d = 80, X = 79, Y = 64, l = 40, L = 551368, t, I, a, F, G, e, M = 6400, c = 15168, J = 949, K = 12, k = 0x1fbb4000;
+int d = 80, X = 79, Y = 64, l = 40, L = 551368, t, I, a, iteration, G, e, M = 6400, c = 15168, J = 949, K = 12, k = 0x1fbb4000;
 
-// Helper function to access O array
-float* access_O(int t, int I, int a, int T) {
+// Function declarations
+float *W(int t, int I, int a, int T);
+float b(float x, float y, float n);
+void H(float x, float y, float n, float *k, float *h, float *c);
+void s(int x, int S);
+float *D(int o);
+float z(float k);
+void o(int x, int y);
+void A(float *z);
+void u(int E, int y, int u, int v, int w);
+int puts(const char *);
+void v(int x, int E, int k, int b, int c);
+void q(int u, int T, int w, int E);
+
+float *W(int t, int I, int a, int T) {
     return &O[(t + 82 * I + 6724 * a) + (c + T * L)];
 }
 
-// Calculate squared magnitude
-float squared_magnitude(float x, float y, float n) {
+float b(float x, float y, float n) {
     x = x * x + y * y + n * n;
-    int s = k + (*(int*)&x >> 1);
-    return *(float*)&s;
+    int s = k + (*(int *)&x >> 1);
+    return *(float *)&s;
 }
 
-// Normalize vector
-void normalize(float x, float y, float n, float *norm_x, float *norm_y, float *norm_z) {
-    U = squared_magnitude(x, y, n);
-    *norm_x = x / U;
-    *norm_y = y / U;
-    *norm_z = n / U;
+void H(float x, float y, float n, float *k, float *h, float *c) {
+    U = b(x, y, n);
+    *k = x / U;
+    *h = y / U;
+    *c = n / U;
 }
 
-// Smoothing function
-void smooth(int x, int S) {
-    LOOP(F, L) {
-        O[c + x * L + F] += .4 * O[c + S * L + F];
-    }
+void s(int x, int S) {
+    LOOP(L) O[c + x * L + iteration] += 0.4 * O[c + S * L + iteration];
 }
 
-// Absolute value function
-float absolute_value(float k) {
+float *D(int o) {
+    return &O[(t * X + I) * 3 + o];
+}
+
+float z(float k) {
     return k < 0 ? -k : k;
 }
 
-// Transfer function
-void transfer(int x, int y) {
-    LOOP(F, e) {
-        G = F % M;
+void o(int x, int y) {
+    LOOP(e) {
+        G = iteration % M;
         t = G % d + 1;
         I = G / d + 1;
-        a = F / M + 1;
-        *access_O(t, I, a, x) = *access_O(t, I, a, y);
+        a = iteration / M + 1;
+        *W(t, I, a, x) = *W(t, I, a, y);
     }
 }
 
-// Clamp function
-void clamp(float *z) {
-    *z = *z < .5 ? .5 : *z > 85 ? 85 : *z;
+void A(float *z) {
+    *z = *z < 0.5 ? 0.5 : (*z > 85 ? 85 : *z);
 }
 
-// Interpolate function
-void interpolate(int E, int y, int u, int v, int w) {
-    LOOP(F, e) {
-        G = F % M;
+void u(int E, int y, int u, int v, int w) {
+    LOOP(e) {
+        G = iteration % M;
         t = G % d + 1;
         I = G / d + 1;
-        a = F / M + 1;
-
-        float U = t - d * .4 * *access_O(t, I, a, u);
-        float J = I - d * .4 * *access_O(t, I, a, v);
-        float e = a - d * .4 * *access_O(t, I, a, w);
-
-        clamp(&U);
-        clamp(&J);
-        clamp(&e);
-
+        a = iteration / M + 1;
+        float U = t - d * 0.4 * *W(t, I, a, u);
+        float J = I - d * 0.4 * *W(t, I, a, v);
+        float e = a - d * 0.4 * *W(t, I, a, w);
+        A(&U);
+        A(&J);
+        A(&e);
         float F = U - (int)U;
         float j = J - (int)J;
         float l = 1 - j;
         float i = e - (int)e;
         float c = 1 - i;
-
-        *access_O(t, I, a, E) = (1 - F) * (l * c * *access_O(U, J, e, y) + j * c * *access_O(U, 1 + J, e, y)
-            + l * i * *access_O(U, J, e + 1, y) + j * i * *access_O(U, 1 + J, 1 + e, y))
-            + F * (l * c * *access_O(U + 1, J, e, y) + j * c * *access_O(1 + U, 1 + J, e, y)
-            + l * i * *access_O(1 + U, J, 1 + e, y) + j * i * *access_O(1 + U, J + 1, e + 1, y));
+        *W(t, I, a, E) = (1 - F) * (l * c * *W(U, J, e, y) + j * c * *W(U, 1 + J, e, y) + l * i * *W(U, J, e + 1, y) + j * i * *W(U, 1 + J, 1 + e, y)) +
+                         F * (l * c * *W(U + 1, J, e, y) + j * c * *W(1 + U, 1 + J, e, y) + l * i * *W(1 + U, J, 1 + e, y) + j * i * *W(1 + U, J + 1, e + 1, y));
     }
 }
 
-// Velocity function
-void velocity(int x, int E, int k, int b, int c) {
-    *access_O(t, I, a, x) -= 40 * (*access_O(t + k, I + b, a + c, E) - *access_O(t - k, I - b, a - c, E));
+void v(int x, int E, int k, int b, int c) {
+    *W(t, I, a, x) -= 40 * (*W(t + k, I + b, a + c, E) - *W(t - k, I - b, a - c, E));
 }
 
-// Compute function
-void compute(int u, int T, int w, int E) {
-    LOOP(F, e) {
-        G = F % M;
+void q(int u, int T, int w, int E) {
+    LOOP(e) {
+        G = iteration % M;
         t = G % d + 1;
         I = G / d + 1;
-        a = F / M + 1;
-        *access_O(t, I, a, E) = -1. / 3 * ((*access_O(1 + t, I, a, u) - *access_O(t - 1, I, a, u)) / d
-            + (*access_O(t, I + 1, a, T) - *access_O(t, I - 1, a, T)) / d
-            + (*access_O(t, I, 1 + a, w) - *access_O(t, I, a - 1, w)) / d);
+        a = iteration / M + 1;
+        *W(t, I, a, E) = -1.0 / 3 * ((*W(1 + t, I, a, u) - *W(t - 1, I, a, u)) / d + (*W(t, I + 1, a, T) - *W(t, I - 1, a, T)) / d + (*W(t, I, 1 + a, w) - *W(t, I, a - 1, w)) / d);
     }
-
-    LOOP(F, e) {
-        G = F % M;
+    LOOP(e) {
+        G = iteration % M;
         t = G % d + 1;
         I = G / d + 1;
-        a = F / M + 1;
-        velocity(u, E, 1, 0, 0);
-        velocity(T, E, 0, 1, 0);
-        velocity(w, E, 0, 0, 1);
+        a = iteration / M + 1;
+        v(u, E, 1, 0, 0);
+        v(T, E, 0, 1, 0);
+        v(w, E, 0, 0, 1);
     }
 }
-
-// Character map for rendering
-char h[] = "             (\\tjxucXUCQOmqdkaoM&%$\033[38;5;141m+";
 
 int main() {
     e = M * d;
     I = c + L * 8;
     P[J * Y] = '\0';
-
-    LOOP(F, I) O[F] = 0;
-
+    LOOP(I) O[iteration] = 0;
+    
     for (t = 0; t < Y; ++t) {
         P[t * J + X * K] = '\n';
         for (I = 0; I < X;) {
-            normalize(I++ - 40, t - 32, -145, &w, &Z, &R);
-            *access_O(0, 0, 0, 0) = w;
-            *access_O(0, 1, 0, 0) = Z;
-            *access_O(0, 2, 0, 0) = R;
+            H(I++ - 40, t - 32, -145, &w, &Z, &R);
+            *D(0) = w;
+            *D(1) = Z;
+            *D(2) = R;
         }
     }
-
+    
     for (;;) {
-        LOOP(F, L) {
-            O[c + 3 * L + F] = O[c + 4 * L + F] = O[c + 5 * L + F] = O[c + 7 * L + F] = 0;
+        LOOP(L) {
+            O[c + 3 * L + iteration] = 0;
+            O[c + 4 * L + iteration] = 0;
+            O[c + 5 * L + iteration] = 0;
+            O[c + 7 * L + iteration] = 0;
         }
-
-        LOOP(F, e) {
-            G = F % M;
+        
+        LOOP(e) {
+            G = iteration % M;
             t = G % d + 1;
             I = G / d + 1;
-            a = F / M + 1;
+            a = iteration / M + 1;
             x = t - l;
             y = a - l;
             U = x * x + y * y;
-            G = k + (*(int*)&U >> 1);
-            i = *(float*)&G;
-
+            G = k + (*(int *)&U >> 1);
+            i = *(float *)&G;
             if (I < 13 && I > 10) {
                 if (i < 2) {
-                    *access_O(t, I, a, 4) = 1.5;
+                    *W(t, I, a, 4) = 1.5;
                     m = g + (I / d);
                     U = m * m;
                     w = m * m;
                     m = m - (U * m) / 6 + (U * U * m) / 120;
                     E = 1 - w / 2 + (w * w) / 24;
-                    *access_O(t, I, a, 3) = m / 2 + .0275;
-                    *access_O(t, I, a, 5) = E * .7 - .35;
+                    *W(t, I, a, 3) = m / 2 + 0.0275;
+                    *W(t, I, a, 5) = E * 0.7 - 0.35;
                 }
             }
-
-            if (I < 2 && i < 3) {
-                *access_O(t, I, a, 7) = .1;
-            }
+            if (I < 2 && i < 3) *W(t, I, a, 7) = 0.1;
         }
-
-        smooth(0, 3);
-        smooth(1, 4);
-        smooth(2, 5);
-        transfer(5, 2);
-        transfer(4, 1);
-        transfer(3, 0);
-        compute(3, 4, 5, 1);
-        interpolate(1, 4, 3, 4, 5);
-        interpolate(0, 3, 3, 4, 5);
-        interpolate(2, 5, 3, 4, 5);
-        compute(0, 1, 2, 4);
-        smooth(6, 7);
-        transfer(7, 6);
-        interpolate(6, 7, 0, 1, 2);
-
-        x = T * .9998 + B * .02;
-        B = .9998 * B - T * .02;
+        
+        s(0, 3);
+        s(1, 4);
+        s(2, 5);
+        o(5, 2);
+        o(4, 1);
+        o(3, 0);
+        q(3, 4, 5, 1);
+        u(1, 4, 3, 4, 5);
+        u(0, 3, 3, 4, 5);
+        u(2, 5, 3, 4, 5);
+        q(0, 1, 2, 4);
+        s(6, 7);
+        o(7, 6);
+        u(6, 7, 0, 1, 2);
+        
+        x = T * 0.9998 + B * 0.02;
+        B = 0.9998 * B - T * 0.02;
         T = x;
-
-        normalize(-T, 0, -B, &R, &w, &Z);
-
-        g += .1;
+        H(-T, 0, -B, &R, &w, &Z);
+        g += 0.1;
         g = g > 3.14 ? -g : g;
-
-        normalize(Z, 0, -R, &m, &E, &i);
-
-        LOOP(F, 5056) {
-            G = F % 5056;
+        H(Z, 0, -R, &m, &E, &i);
+        
+        LOOP(5056) {
+            G = iteration % 5056;
             t = G % Y;
             I = G / Y;
-            U = *access_O(0, 0, 0, 0);
-            float v = *access_O(1, 0, 0, 0), g = *access_O(2, 0, 0, 0);
+            U = *D(0);
+            float v = *D(1), g = *D(2);
             float V = U * m + v * (E * Z - w * i) + g * -R;
             float s = U * E + v * (i * R - Z * m) + g * -w;
             U = U * i + v * (m * w - R * E) + g * -Z;
             f = 0;
-
             int q = t * J + I * K + 8;
-            for (a = 0; a < K; ++a) {
-                P[q + a - 8] = h[35 + a];
-            }
-
+            for (a = 0; a < K; ++a) P[q + a - 8] = "(\\tjxucXUCQOmqdkaoM&%$\033[38;5;141m+"[35 + a];
             while (f < d * 5) {
-                x = absolute_value(T + V * f) - l;
-                y = absolute_value(s * f) - l;
-                n = absolute_value(B + U * f) - l;
+                x = z(T + V * f) - l;
+                y = z(s * f) - l;
+                n = z(B + U * f) - l;
                 float k = y > n ? y : n;
                 float c = x > k ? x : k;
-                float F = (c < 0 ? c : 0) + squared_magnitude(x < 0 ? 0 : x, y < 0 ? 0 : y, n > 0 ? n : 0);
-                if (F < .01) {
+                float F = (c < 0 ? c : 0) + b(x < 0 ? 0 : x, y < 0 ? 0 : y, n > 0 ? n : 0);
+                if (F < 0.01) {
                     x = T + f * V + l;
                     y = f * s + l;
                     n = B + f * U + l;
                     f = 1;
                     a = 0;
-                    while ((a++ < 1) || (d > x && y < d && n < d && x > 0 && 0 < y && n > 0)) {
-                        f *= 1 - *access_O(n + 1, 1 + y, x + 1, 6) * j;
+                    for (; (a++ < 1) || (d > x && y < d && n < d && x > 0 && 0 < y && n > 0);) {
+                        f *= 1 - *W(n + 1, 1 + y, x + 1, 6) * j;
                         x = x + V * j;
                         y = y + s * j;
                         n = n + U * j;
                     }
                     a = (1 - f) * 35;
                     a = a < 0 ? 0 : a > 34 ? 34 : a;
-                    int c = 240 + .44 * a;
+                    int c = 240 + 0.44 * a;
                     P[q] = (c - 200) / 10 + 48;
                     P[q + 1] = c % 10 + 48;
-                    P[q + 3] = h[a];
+                    P[q + 3] = "(\\tjxucXUCQOmqdkaoM&%$\033[38;5;141m+"[a];
                     break;
                 }
                 f += F;
@@ -243,7 +226,4 @@ int main() {
         }
         puts(P);
     }
-
-    return 0;
 }
-```

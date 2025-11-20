@@ -1,184 +1,147 @@
-```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <unistd.h>
-#include <math.h>
 
-// Constants for display dimensions and simulation parameters
-#define WIDTH 80
-#define HEIGHT 24
-#define DELTA_TIME 0.01
-#define ELASTICITY 0.5
-#define U 0.5
-#define RPM 1000
-#define TILT 5
+typedef float S;
+typedef struct Q {
+    S a[4];
+} Q;
 
-typedef float scalar;
-typedef struct Quaternion {
-    scalar a[4];
-} Quaternion;
+char *C, B[H * W + 9] = "\x1b[H\x1b[J";
 
-scalar *energy, mass, offset, rotation_angle = 71.0 / 8136.0 * TILT, gravity, h = 1;
-int index = 1, j, k, x, y;
-struct Particle {
-    Quaternion position, velocity;
-    scalar mass;
-} particles[1 << 20], *particle_ptr;
+S *E, M, O, z, Z = 71.0 / 8136 * tilt, g, h = 1;
+int i = 1, j, k, a, b;
 
-// Initialize constants and helper variables
-Quaternion rotation_speed = {{71.0 * RPM / 13560.0}};
-Quaternion identity = {{1.0}};
-Quaternion global_rotation, tmp_rotation, rotation_axis = {{30.0}}, rotation_matrix, gravity_vector;
-Quaternion temp_quaternion, force, torque, torque_vectors[3] = {0};
+struct P {
+    Q x, v;
+    S m;
+} L[1 << 20], *p;
 
-// Function prototypes
-void initialize_constants(scalar *p);
-Quaternion quaternion_add(Quaternion a, Quaternion b);
-Quaternion quaternion_multiply(Quaternion a, Quaternion b);
-void compute_square_root(scalar x);
-Quaternion scale_quaternion(Quaternion a, scalar b);
-scalar dot_product(Quaternion a, Quaternion b);
-Quaternion normalize_quaternion(Quaternion a);
-int main();
-
-// Initialize constants for quaternion calculations
-void initialize_constants(scalar *p) {
-    for (k = 1; k < 99; h *= rotation_angle / k++) {
+void o(S *p) {
+    for (k = 1; k < 99; h *= Z / k++) {
         p[k % 2] += h = k % 2 ? -h : h;
     }
 }
 
-// Add two quaternions
-Quaternion quaternion_add(Quaternion a, Quaternion b) {
+Q Y, w = {{71 * rpm / 13560.0}}, I[4], N = {{1}}, V, q, X = {{30}}, J, G;
+
+Q A(Q a, Q b) {
     for (k = 4; k--;) {
         a.a[k] += b.a[k];
     }
     return a;
 }
 
-// Multiply two quaternions
-Quaternion quaternion_multiply(Quaternion a, Quaternion b) {
-    Quaternion result = {0};
+Q m(Q a, Q b) {
+    Q q = G;
     for (k = 16; k--;) {
-        result.a[k % 4] += b.a[k / 4] * (1 - (5432 >> k & 2)) * a.a[19995 >> (k > 7 ? 15 - k : k) * 2 & 3];
+        q.a[k % 4] += b.a[k / 4] * (1 - (5432 >> k & 2)) * a.a[19995 >> (k > 7 ? 15 - k : k) * 2 & 3];
     }
-    return result;
+    return q;
 }
 
-// Compute square root using Newton's method
-void compute_square_root(scalar x) {
+void K(S x) {
     for (h = k = 99; k; h = (x / h + h) / 2) {
         k--;
     }
 }
 
-// Scale a quaternion by a scalar
-Quaternion scale_quaternion(Quaternion a, scalar b) {
-    temp_quaternion.a[3] = b;
-    return quaternion_multiply(a, temp_quaternion);
+Q s(Q a, S b) {
+    J.a[3] = b;
+    return m(a, J);
 }
 
-// Calculate dot product of two quaternions
-scalar dot_product(Quaternion a, Quaternion b) {
+S D(Q a, Q b) {
     for (h = k = 0; k < 4; k++) {
         h += a.a[k] * b.a[k];
     }
     return h;
 }
 
-// Normalize a quaternion
-Quaternion normalize_quaternion(Quaternion a) {
-    compute_square_root(dot_product(a, a));
+Q U(Q a) {
+    K(D(a, a));
     h = 1 / h;
-    return scale_quaternion(a, h);
+    return s(a, h);
 }
 
 int main() {
-    char *buffer = B + 6;
-    initialize_constants(global_rotation.a + 2);
-
-    for (particle_ptr = particles; fgets(buffer, WIDTH * HEIGHT - 1, stdin); y--) {
-        for (x = 0; j = buffer[x++], j && j != 47;) {
-            for (rotation_angle = 0; j > 32 && rotation_angle * 113 < 710; h = (x - 0.5 + index * 61e-7) / 2,
-                energy = (scalar *)particle_ptr, mass -= offset /= j % 2 ? 2 : 2e3, *energy = y,
-                initialize_constants(energy + 1), rotation_speed = quaternion_add(rotation_speed, scale_quaternion(particle_ptr->position, particle_ptr->mass = offset)),
-                particle_ptr++, index = 48271 * index % 65535) {
-                rotation_angle += offset = 2.0 / x;
+    C = B + 6;
+    o(q.a + 2);
+    
+    // Read input pattern
+    for (p = L; fgets(C, W * H - 1, stdin); b--) {
+        for (a = 0; j = C[a++], j && j != 47;) {
+            for (Z = 0; j > 32 && Z * 113 < 710; h = (a - 0.5 + i * 61e-7) / 2, E = (S *)p, M -= z /= j % 2 ? 2 : 2e3, *E = b, o(E + 1), Y = A(Y, s(p->x, p->m = z)), p++, i = 48271 * i % 65535) {
+                Z += z = 2.0 / a;
             }
         }
     }
 
-    for (; particle_ptr-- > particles;) {
-        particle_ptr->position = quaternion_add(particle_ptr->position, scale_quaternion(rotation_speed, 1 / mass));
+    // Adjust velocities
+    for (; p-- > L;) {
+        p->x = A(p->x, s(Y, 1 / M));
     }
 
+    // Animation loop
     for (;;) {
         usleep(1e4 / 1);
 
-        for (index = HEIGHT * WIDTH; index--; buffer[index] = index > HEIGHT * WIDTH - WIDTH ? (x & 16) + 45 : index % WIDTH ? 32 : 10) {
-            x = index + offset;
+        // Clear screen buffer
+        for (i = H * W; i--; C[i] = i > H * W - W ? (a & 16) + 45 : i % W ? 32 : 10) {
+            a = i + O;
         }
 
+        // Update positions and velocities
         for (j = 20; j--;) {
-            Quaternion total_force = {mass};
-            Quaternion total_torque = {0};
-            torque_vectors[0] = torque_vectors[1] = torque_vectors[2] = (Quaternion){0};
-
-            for (particle_ptr = particles; particle_ptr->mass; particle_ptr++) {
-                for (index = 3, rotation_speed = particle_ptr->position; index--; torque_vectors[index].a[index] += quaternion_multiply(rotation_speed, rotation_speed).a[3] * particle_ptr->mass) {
-                    torque_vectors[index] = quaternion_add(torque_vectors[index], scale_quaternion(rotation_speed, rotation_speed.a[index] * particle_ptr->mass));
+            Q F = {{M}}, T = G, v = G, t[3] = {G};
+            for (p = L; p->m; p++) {
+                for (i = 3, Y = p->x; i--; t[i].a[i] += m(Y, Y).a[3] * p->m) {
+                    t[i] = A(t[i], s(Y, Y.a[i] * p->m));
                 }
             }
 
-            for (rotation_angle = index = 0; index < 3; index++) {
-                rotation_angle -= dot_product(torque_vectors[index], rotation_matrix.a[index] = quaternion_multiply(torque_vectors[(index + 1) % 3], torque_vectors[(index + 2) % 3]));
+            for (Z = i = 0; i < 3; i++) {
+                Z -= D(t[i], I[i] = m(t[(i + 1) % 3], t[(i + 2) % 3]));
             }
 
-            for (; index--; rotation_matrix.a[index].a[3] = 0) {
-                rotation_matrix.a[index] = scale_quaternion(rotation_matrix.a[index], 3 / rotation_angle);
+            for (; i--; I[i].a[3] = 0) {
+                I[i] = s(I[i], 3 / Z);
             }
 
-            for (particle_ptr = particles; particle_ptr->mass; particle_ptr++) {
-                if (energy = particle_ptr->velocity.a, (index = +WIDTH * (y = HEIGHT - 1.5 - *energy) + (x = 0.5 + (energy[1] - offset) * 2 + WIDTH / 2)) > 0 && index < WIDTH * HEIGHT && 0 < x && x < WIDTH) {
-                    buffer[index] = energy[2] < rotation_axis.a[2] && buffer[index] - 64 ? 58 : 64;
+            for (p = L; p->m; p++) {
+                if ((E = p->v.a, (i = +W * (b = H - 1.5 - *E) + (a = .5 + (E[1] - O) * 2 + W / 2)) > 0 && i < W * H && 0 < a && a < W)) {
+                    C[i] = E[2] < X.a[2] && C[i] - 64 ? 58 : 64;
                 }
             }
 
-            rotation_angle = 0;
-            energy = total_torque.a;
-            for (particle_ptr = particles; particle_ptr->mass; particle_ptr++) {
-                Quaternion negative_force = scale_quaternion(global_rotation, -1);
-                negative_force.a[3] *= -1;
-                offset = *(particle_ptr->velocity = quaternion_add(negative_force = quaternion_multiply(quaternion_multiply(global_rotation, particle_ptr->position), negative_force), rotation_axis)).a;
-
-                if (offset < 0) {
-                    for (index = 4; index--;) {
-                        energy[index] = dot_product(rotation_matrix.a[index / 1], quaternion_multiply(negative_force, identity));
+            Z = 0;
+            E = v.a;
+            for (p = L; p->m; p++) {
+                Q r = s(q, -1);
+                r.a[3] *= -1;
+                z = *(p->v = A(r = m(m(q, p->x), r), X)).a;
+                if (z < 0) {
+                    for (i = 4; i--;) {
+                        E[i] = D(I[i], m(r, N));
                     }
-
-                    gravity = (1 + ELASTICITY) * quaternion_add(force, quaternion_multiply(rotation_speed, negative_force)).a[0] / (*quaternion_multiply(total_torque, negative_force).a - 1 / mass);
-                    total_torque = quaternion_add(force, quaternion_multiply(rotation_speed, negative_force));
-                    *energy = energy[3] = 0;
-                    total_force = quaternion_add(total_force, total_torque = quaternion_add(scale_quaternion(identity, gravity / 1 * offset - gravity), scale_quaternion(normalize_quaternion(total_torque), gravity * U)));
-                    torque = quaternion_add(torque, quaternion_multiply(negative_force, total_torque));
-                    rotation_angle = rotation_angle > offset ? offset : rotation_angle;
+                    g = (1 + e) * *A(V, m(w, r)).a / (*m(v, r).a - 1 / M);
+                    v = A(V, m(w, r));
+                    *E = E[3] = 0;
+                    F = A(F, v = A(s(N, g / 1 * z - g), s(U(v), g * u)));
+                    T = A(T, m(r, v));
+                    Z = Z > z ? z : Z;
                 }
             }
-
-            *rotation_axis.a -= rotation_angle;
-            rotation_axis = quaternion_add(rotation_axis, scale_quaternion(force = quaternion_add(force, scale_quaternion(total_force, DELTA_TIME / -mass)), DELTA_TIME));
-
-            for (index = 3; index--;) {
-                energy[index] = dot_product(rotation_matrix.a[index], torque) * DELTA_TIME;
+            *X.a -= Z;
+            X = A(X, s(V = A(V, s(F, dt / -M)), dt));
+            for (i = 3; i--;) {
+                E[i] = D(I[i], T) * dt;
             }
-
-            global_rotation = normalize_quaternion(quaternion_add(global_rotation, scale_quaternion(quaternion_multiply(rotation_speed = quaternion_add(rotation_speed, torque), global_rotation), 0.5 * DELTA_TIME)));
+            q = U(A(q, s(m(w = A(w, v), q), 0.5 * dt)));
         }
 
-        offset += (rotation_axis.a[1] - offset) / 50;
-        compute_square_root(dot_product(rotation_speed, rotation_speed) * 36476);
-        printf("%s\n%*.0f rpm", B, WIDTH - 5, h);
+        O += (X.a[1] - O) / 50;
+        K(D(w, w) * 36476);
+        printf("%s\n%*.0f rpm", B, W - 5, h);
         B[5] = 72;
     }
 }
-```

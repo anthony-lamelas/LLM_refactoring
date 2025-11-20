@@ -1,172 +1,175 @@
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
 
-static int debug_mode;
+static int DB;
 
-static void handle_error(const char *function_name) {
-    perror(function_name);
+// Function to handle errors by printing the error message and terminating the program
+static int error(char *who) {
+    perror(who);
     kill(0, SIGKILL);
     exit(1);
 }
 
-static int read_from_fd(int fd, char *buffer, int length) {
-    int remaining = length;
+// Function to read a specified number of bytes from a file descriptor
+static int xread(int fd, char *buf, int len) {
+    int remain = len;
     int total_read = 0;
 
-    if (debug_mode) {
-        printf("Reading %d bytes: ", length);
+    if (DB) {
+        printf("xread %d:", len);
         fflush(stdout);
     }
 
-    while (total_read < length) {
-        int bytes_read = read(fd, buffer + total_read, remaining);
-        if (bytes_read < 0) handle_error("read");
-        if (bytes_read == 0) return total_read;
-        remaining -= bytes_read;
-        total_read += bytes_read;
+    while (total_read != len) {
+        int n = read(fd, buf + total_read, remain);
+        if (n < 0) error("read");
+        if (n == 0) return total_read;
+        if (n <= remain) {
+            remain -= n;
+            total_read += n;
+        }
     }
-    buffer[total_read] = '\0';
+    buf[total_read] = 0;
 
-    if (debug_mode) {
-        printf(" %s", buffer);
-        if (buffer[total_read - 1] != '\n') printf("\n");
+    if (DB) {
+        printf(" %s", buf);
+        if (buf[total_read - 1] != '\n') printf("\n");
         fflush(stdout);
     }
 
     return total_read;
 }
 
-static void spawn_process(int read_pipe[2], int write_pipe[2], char **env, const char *path, const char *name, const char *dict, const char *option) {
-    if (pipe(read_pipe) == -1) handle_error("pipe read");
-    if (pipe(write_pipe) == -1) handle_error("pipe write");
+// Function to spawn a process and set up pipes for communication
+static void spawn(int r[2], int w[2], char **ev, char *path, char *name, char *dict, char *opt) {
+    if (pipe(r) != 0) error("pipe r");
+    if (pipe(w) != 0) error("pipe w");
 
     pid_t pid = fork();
-    if (pid == -1) handle_error("fork");
+    if (pid == -1) error("fork");
 
     if (pid == 0) {
-        char *args[4] = { (char *)name, (char *)dict, (char *)option, NULL };
+        char *args[4] = {name, dict, opt, NULL};
 
-        if (dup2(read_pipe[0], STDIN_FILENO) < 0) handle_error("dup2 read_pipe[0]");
-        if (dup2(write_pipe[1], STDOUT_FILENO) < 0) handle_error("dup2 write_pipe[1]");
+        if (dup2(r[0], STDIN_FILENO) < 0) error("dup2 r[0]");
+        if (dup2(w[1], STDOUT_FILENO) < 0) error("dup2 w[1]");
 
-        close(read_pipe[1]);
-        close(write_pipe[0]);
+        close(r[1]);
+        close(w[0]);
 
-        execve(path, args, env);
-        handle_error(path);
+        execve(path, args, ev);
+        error(path);
     }
 
-    close(read_pipe[0]);
-    close(write_pipe[1]);
+    close(r[0]);
+    close(w[1]);
 }
 
-int main(int argc, char **argv, char **env) {
-    int gen_read_pipe[2], gen_write_pipe[2];
-    int prog_read_pipe[2], prog_write_pipe[2];
+int main(int argc, char **argv, char **envp) {
+    int gen_read[2], gen_write[2]; // pipes for generator read/write
+    int prog_read[2], prog_write[2]; // pipes for program read/write
 
-    char guess[20], report[20];
-    char *program_path = "./prog";
-    int buffer_length = 20;
-    int number_of_guesses = 6;
-    int game_end = 0;
-    char *xyzzy = "xyzzy";
+    static char guess[20], report[20];
+    static char xyzzy[] = "xyzzy";
+    char *cp, *prog = "./prog";
+    int bytes_read, end = 0;
+    int max_guesses = 6;
 
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s dict [start [target]]\n", argv[0]);
+        fprintf(stderr, "usage: %s dict [start [target]]\n", argv[0]);
         return 1;
     }
 
-    debug_mode = getenv("DEBUG") != NULL;
+    DB = !!getenv("DEBUG");
 
-    char *env_value;
-    if ((env_value = getenv("GUESSES")) != NULL) {
-        number_of_guesses = atoi(env_value);
-    }
-    if ((env_value = getenv("PROG")) != NULL) {
-        program_path = env_value;
-    }
+    if ((cp = getenv("GUESSES")))
+        max_guesses = atoi(cp);
+    if ((cp = getenv("PROG")))
+        prog = cp;
 
-    spawn_process(gen_read_pipe, gen_write_pipe, env, "./gen", "gen", argv[1], argc == 4 ? argv[3] : NULL);
-    spawn_process(prog_read_pipe, prog_write_pipe, env, program_path, "prog", argv[1], NULL);
+    spawn(gen_read, gen_write, envp, "./gen", "gen", argv[1], argc == 4 ? argv[3] : NULL);
+    spawn(prog_read, prog_write, envp, prog, "prog", argv[1], NULL);
 
-    char buffer[buffer_length];
-    read_from_fd(gen_write_pipe[0], buffer, 2);
+    // Wait for generator to be ready; read the prompt
+    char buffer[20];
+    xread(gen_write[0], buffer, 2);
     if (buffer[0] != '?') {
-        read_from_fd(gen_write_pipe[0], buffer + 2, 12);
+        xread(gen_write[0], buffer + 2, 12);
         printf("gen: %s", buffer);
-        read_from_fd(gen_write_pipe[0], buffer, 2);
+        xread(gen_write[0], buffer, 2);
     }
 
-    read_from_fd(prog_write_pipe[0], buffer, 2);
+    // Wait for program prompt
+    xread(prog_write[0], buffer, 2);
 
-    strncpy(guess, argc > 2 ? argv[2] : "blast", 5);
-    guess[5] = '\n';
+    memcpy(guess, argc > 2 ? argv[2] : "blast", 5);
+    guess[5] = '\n';  // mimic reading from stdin
 
-    for (int i = 0; i < number_of_guesses && game_end != 1; ++i) {
+    for (int i = 0; i < max_guesses && end != 1; ++i) {
         printf("guess%d: %s", i + 1, guess);
 
-        int bytes_written = write(gen_read_pipe[1], guess, 6);
-        if (bytes_written < 0) handle_error("write gen_read_pipe[1]");
-        int bytes_read = read_from_fd(gen_write_pipe[0], report, 12);
+        bytes_read = write(gen_read[1], guess, 6);
+        if (bytes_read < 0) error("write gen_read[1]");
+        bytes_read = xread(gen_write[0], report, 12);
         if (bytes_read != 12) {
-            if (bytes_read < 0) handle_error("read gen_write_pipe[0]");
-            printf("bad read from gen_write_pipe[0]: %d\n", bytes_read);
+            if (bytes_read < 0) error("read gen_read[0]");
+            printf("bad read from gen_read[0]: %d\n", bytes_read);
             return 2;
         }
 
         printf("gen: %s", report);
 
-        read_from_fd(gen_write_pipe[0], guess, 2);
+        xread(gen_write[0], guess, 2);
         if (guess[0] != '?') {
-            read_from_fd(gen_write_pipe[0], guess + 2, 14);
-            printf("gen result end=%d: %s", game_end, guess);
-            if (game_end == 2) {
-                close(gen_read_pipe[1]);
-                close(prog_read_pipe[1]);
+            xread(gen_write[0], guess + 2, 14);
+            printf("gen result end=%d: %s", end, guess);
+            if (end == 2) {
+                close(gen_read[1]);
+                close(prog_read[1]);
                 return 0;
             }
-            close(gen_write_pipe[0]);
-            close(gen_read_pipe[1]);
-            game_end = 1;
+            close(gen_write[0]);
+            close(gen_read[1]);
+            end = 1;
         }
 
-        if (game_end == 2) {
+        if (end == 2) {
             printf("ERROR: prog reported win, gen does not\n");
-            close(gen_read_pipe[1]);
-            close(prog_read_pipe[1]);
+            close(gen_read[1]);
+            close(prog_read[1]);
             return 1;
         }
 
-        bytes_written = write(prog_read_pipe[1], report, bytes_read);
-        if (bytes_written < 0) handle_error("prog_write_pipe[1]");
-        bytes_read = read_from_fd(prog_write_pipe[0], guess, 6);
+        bytes_read = write(prog_read[1], report, bytes_read);
+        if (bytes_read < 0) error("write prog_read[1]");
+        bytes_read = xread(prog_write[0], guess, 6);
         if (bytes_read != 6) {
-            if (bytes_read < 0) handle_error("read prog_read_pipe");
-            printf("bad read from prog_read_pipe: %d {%.*s}\n", bytes_read, bytes_read, guess);
+            if (bytes_read < 0) error("read prog_read");
+            printf("bad read from prog_read: %d {%.*s}\n", bytes_read, bytes_read, guess);
             return 3;
         }
-        if (strncmp(guess, xyzzy, strlen(xyzzy)) == 0) {
+        if (strncmp(guess, xyzzy, sizeof(xyzzy) - 1) == 0) {
             printf("ERROR: desired word not in this dictionary\n");
-            close(gen_read_pipe[1]);
-            close(prog_read_pipe[1]);
+            close(gen_read[1]);
+            close(prog_read[1]);
             return 1;
         }
 
-        if (read_from_fd(prog_write_pipe[0], report, 2) == 0) {
+        if (xread(prog_write[0], report, 2) == 0) {
             printf("prog: EOF\n");
-            if (game_end == 1) {
-                close(gen_read_pipe[1]);
-                close(prog_read_pipe[1]);
+            if (end == 1) {
+                close(gen_read[1]);
+                close(prog_read[1]);
                 return 0;
             }
-            game_end = 2;
-            close(prog_read_pipe[1]);
-            close(prog_write_pipe[0]);
+            end = 2;
+            close(prog_read[1]);
+            close(prog_write[0]);
         }
     }
+
     return 0;
 }

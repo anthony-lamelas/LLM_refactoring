@@ -23,23 +23,35 @@ def extract_c_code_from_llm_output(content: str) -> str:
     
     return content.strip()
 
-def compile_c_file(source_path: Path, output_dir: Path, compiler: str = "gcc") -> CompilationResult:
+def compile_c_file(source_path: Path, output_dir: Path, compiler: str = "gcc", use_wsl: bool = False) -> CompilationResult:
     """Compile a C file using gcc or other compiler."""
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Create executable path
-    exe_name = source_path.stem + ".exe"
+    exe_name = source_path.stem + (".exe" if not use_wsl else "")
     exe_path = output_dir / exe_name
     
-    # Compile command
-    compile_cmd = [compiler, str(source_path), "-o", str(exe_path)]
+    # Convert Windows path to WSL path if needed
+    if use_wsl:
+        # Create directory in WSL
+        output_wsl_dir = str(output_dir).replace('\\', '/')
+        subprocess.run(["wsl", "mkdir", "-p", output_wsl_dir], capture_output=True)
+        
+        # Convert to forward slashes and use relative path
+        source_wsl = str(source_path).replace('\\', '/')
+        output_wsl = str(exe_path).replace('\\', '/')
+        compile_cmd = ["wsl", compiler, source_wsl, "-o", output_wsl, "-std=c99", "-lm"]
+    else:
+        compile_cmd = [compiler, str(source_path), "-o", str(exe_path)]
     
     try:
         result = subprocess.run(
             compile_cmd,
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
+            encoding='utf-8',
+            errors='replace'  # Handle encoding errors gracefully
         )
         
         if result.returncode == 0:
@@ -74,14 +86,23 @@ def compile_c_file(source_path: Path, output_dir: Path, compiler: str = "gcc") -
             error_message=str(e)
         )
 
-def run_executable(exe_path: str, input_data: Optional[str] = None, timeout: int = 5) -> ExecutionResult:
+def run_executable(exe_path: str, input_data: Optional[str] = None, timeout: int = 5, use_wsl: bool = False) -> ExecutionResult:
     """Run a compiled executable and capture output."""
     try:
+        if use_wsl:
+            # Convert path for WSL
+            wsl_path = str(exe_path).replace('\\', '/')
+            cmd = ["wsl", wsl_path]
+        else:
+            cmd = [exe_path]
+            
         result = subprocess.run(
-            [exe_path],
+            cmd,
             input=input_data,
             capture_output=True,
             text=True,
+            encoding='utf-8',
+            errors='replace',
             timeout=timeout
         )
         
@@ -103,7 +124,7 @@ def run_executable(exe_path: str, input_data: Optional[str] = None, timeout: int
             error=str(e)
         )
 
-def compare_files(original_c: Path, refactored_txt: Path, compiler: str = "gcc") -> ComparisonResult:
+def compare_files(original_c: Path, refactored_txt: Path, compiler: str = "gcc", use_wsl: bool = False) -> ComparisonResult:
     """Compare original and refactored C files."""
     
     # Create temp directory for refactored C file
@@ -120,9 +141,9 @@ def compare_files(original_c: Path, refactored_txt: Path, compiler: str = "gcc")
         f.write(refactored_code)
     
     build_dir = Path("build")
-    original_result = compile_c_file(original_c, build_dir / "original", compiler)
+    original_result = compile_c_file(original_c, build_dir / "original", compiler, use_wsl)
     
-    refactored_result = compile_c_file(refactored_c, build_dir / "refactored", compiler)
+    refactored_result = compile_c_file(refactored_c, build_dir / "refactored", compiler, use_wsl)
     
     comparison = ComparisonResult(
         original_file=str(original_c),
@@ -138,8 +159,8 @@ def compare_files(original_c: Path, refactored_txt: Path, compiler: str = "gcc")
         
         # Run without input first
         if original_result.executable_path and refactored_result.executable_path:
-            original_exec = run_executable(original_result.executable_path)
-            refactored_exec = run_executable(refactored_result.executable_path)
+            original_exec = run_executable(original_result.executable_path, use_wsl=use_wsl)
+            refactored_exec = run_executable(refactored_result.executable_path, use_wsl=use_wsl)
         
             comparison.original_execution = original_exec
             comparison.refactored_execution = refactored_exec
@@ -194,11 +215,11 @@ DETAILED RESULTS:
     
     for i, comp in enumerate(comparisons, 1):
         report += f"\n{i}. {Path(comp.original_file).name}\n"
-        report += f"   Original compiled: {'✓' if comp.original_compilation.compiled else '✗'}\n"
-        report += f"   Refactored compiled: {'✓' if comp.refactored_compilation.compiled else '✗'}\n"
+        report += f"   Original compiled: {'1' if comp.original_compilation.compiled else '0'}\n"
+        report += f"   Refactored compiled: {'1' if comp.refactored_compilation.compiled else '0'}\n"
         
         if comp.outputs_match is not None:
-            report += f"   Outputs match: {'✓' if comp.outputs_match else '✗'}\n"
+            report += f"   Outputs match: {'1' if comp.outputs_match else '0'}\n"
         
         if not comp.original_compilation.compiled and comp.original_compilation.error_message:
             error_msg = comp.original_compilation.error_message[:100]
@@ -227,7 +248,8 @@ def main():
     original_dir = Path("../data/2024")
     results_dir = Path("../results")
     reports_dir = Path("../reports")
-    compiler = "gcc"  
+    compiler = "gcc"
+    use_wsl = True  # Set to False to use Windows gcc  
     
     reports_dir.mkdir(exist_ok=True)
     
@@ -249,7 +271,7 @@ def main():
         print(f"[{i}/{len(c_files)}] Comparing: {original_c.name}")
         
         try:
-            comparison = compare_files(original_c, refactored_txt, compiler)
+            comparison = compare_files(original_c, refactored_txt, compiler, use_wsl)
             comparisons.append(comparison)
             processed += 1
             
@@ -257,8 +279,10 @@ def main():
             if comparison.original_compilation.compiled and comparison.refactored_compilation.compiled:
                 if comparison.outputs_match:
                     print(f" Both compiled and outputs match!\n")
-                else:
+                elif comparison.outputs_match is False:
                     print(f" Both compiled but outputs differ\n")
+                else:
+                    print(f" Both compiled (execution not compared)\n")
             elif comparison.refactored_compilation.compiled:
                 print(f" Only refactored compiled\n")
             elif comparison.original_compilation.compiled:

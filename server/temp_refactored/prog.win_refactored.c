@@ -1,114 +1,116 @@
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
 #include <fcntl.h>
 
-#define MAX_MEMORY_SIZE ((1 << 24) - 1)
-#define BUFFER_SIZE 33
+#define H h[c & 7]
+#define C(a, b) case a: b; break;
+#define X(n, t, o) C(n, b = (t)c o (t)b)
+#define Q(x) (QueryPerformance##x(&q), q.QuadPart)
+#define R b = m[++d]; n = a & 127; if (n) { if (n - 1) b = m[b & k] + (n > 2 ? n - 65 : 0); \
+    if (n - 2) { n = b % 4 * 8; b = b / 4 & k; b = m[b] >> n | m[b + 1] * 2 << ~n % 32; } } a >>= 7;
+#define Y(n, t, a, b, c, d) X(n, t, a) X(n + 1, t, b) X(n + 2, t, c) X(n + 3, t, d)
+#define O(n, t) Y(n, t, +, -, |, ^) Y(n + 4, t, &, *, /, %) \
+    Y(n + 8, t, <<, >>, ==, !=) Y(n + 12, t, <, <=, >, >=)
+#define W(c) m[d] = (m[d] | n c) ^ (~b & n) c;
 
-// Global variable to track exit condition
-static int exit_condition = 0;
+static int E = 0;
 
 // Window procedure callback function
-static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
-    exit_condition |= (msg == WM_DESTROY);
-    return DefWindowProcA(hwnd, msg, w_param, l_param);
+static LRESULT CALLBACK P(HWND a, UINT b, WPARAM c, LPARAM d) {
+    E |= (b == 2);
+    return DefWindowProcA(a, b, c, d);
 }
 
-// Function to read file content into memory
-void read_file_into_memory(FILE *file, unsigned *memory) {
-    unsigned address = 0;
-    int byte;
-    while ((byte = fgetc(file)) != EOF && address <= MAX_MEMORY_SIZE) {
-        memory[address / 4] |= byte << (address % 4 * 8);
-        address++;
-    }
-    fclose(file);
-}
-
-// Main function
 int main(int argc, char **argv) {
-    FILE *file = (argc > 1) ? fopen(argv[1], "rb") : NULL;
-    void *handles[8] = { stdin, stdout, stderr };
-    unsigned *memory = calloc(MAX_MEMORY_SIZE + 4, sizeof(unsigned));
-    char buffer[BUFFER_SIZE] = { 0 };
-    LARGE_INTEGER freq, counter;
-    HWND window_handle = 0;
-    HDC device_context = 0;
-    MSG msg;
-    double frequency_factor;
+    void *f = argc-- > 1 ? fopen(argv[1], "rb") : 0, *h[8] = { stdin, stdout, stderr };
+    unsigned int y = 0, z = 0, a, b = 0, d, n = 0, k = (1 << 24) - 1, *m = calloc(k + 4, 4);
+    char s[33] = { 0 };
+    LARGE_INTEGER q;
+    HWND W = 0;
+    HDC D = 0;
+    MSG M;
+    double F = 1000.0 / Q(Frequency);
 
-    // Initialize the timer and frequency factor
-    QueryPerformanceFrequency(&freq);
-    frequency_factor = 1000.0 / freq.QuadPart;
     timeBeginPeriod(1);
 
-    if (memory && file) {
-        read_file_into_memory(file, memory);
-        memory[1] = ftell(file);
+    if (m && f) {
+        for (; b <= k && ((a = fgetc(f)) < 256 || (a = argv[argc][n++] & 255) || (n = 0, --argc)); b++) {
+            m[b / 4] |= a << b % 4 * 8;
+        }
+        fclose(f);
 
-        unsigned pc = 0, a, b = 0, c, d, n = 0, k = MAX_MEMORY_SIZE;
-
-        while (1) {
-            a = memory[pc & k];
-            pc += 4;
+        for (m[1] = b;;) {
+            a = m[d = *m & k];
+            *m += 4;
+            R;
             c = b;
-            d = memory[pc & k];
-
+            R;
+            d = m[d + 1];
             switch (a >> 9) {
-                case 1: // I/O operations
-                    b = handles[c & 7] ? (c < 0 ? fgetc(handles[c & 7]) : fputc(b, handles[c & 7])) : -1;
-                    break;
-                case 2: // Timing operation
-                    QueryPerformanceCounter(&counter);
-                    b = counter.QuadPart * frequency_factor;
-                    break;
-                case 3: // Sleep operation
-                    Sleep(b);
-                    break;
-                case 4: // String operations
-                    buffer[c & 31] = (b && b - 48 > 9 && (b | 32) - 97 > 25 && b - 46) ? 95 : b;
-                    break;
-                case 5: // File operations
-                    b = (handles[c & 7]) ? (c < 0 ? fclose(handles[c & 7]), file = NULL : fopen(buffer, b ? "wb" : "rb")) : -1;
-                    break;
-                case 6: // File seek/tell
-                    b = (handles[c & 7]) ? (c < 0 ? ftell(handles[c & 7]) : fseek(handles[c & 7], (int)b, c / 8)) : -1;
-                    break;
-                case 7: // Window creation
-                    if (!window_handle && ~(-c & -b) >> 12) {
-                        WNDCLASSA wnd_class = { 0, window_proc, 0, 0, 0, 0, 0, 0, 0, buffer };
-                        RECT rect = { 0, 0, c, b };
-                        RegisterClassA(&wnd_class);
-                        AdjustWindowRect(&rect, WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 0);
-                        device_context = GetDC(window_handle = CreateWindowExA(0, buffer, buffer, WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 0, 0, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, NULL, NULL));
+                C(1, b = H ? c < 0 ? fgetc(H) : fputc(b, H) : -1)
+                C(2, b = Q(Counter) * F)
+                C(3, Sleep(b))
+                C(4, s[c & 31] = b && b - 48 > 9 && (b | 32) - 97 > 25 && b - 46 ? 95 : b)
+                C(5, b = !(H = H ? fclose(H), f = 0 : fopen(s, b ? "wb" : "rb")))
+                C(6, b = H ? c < 0 ? ftell(H) : fseek(H, (int)b, c / 8) : -1)
+                case 7:
+                    if (!(W || ~(-c & -b) >> 12)) {
+                        WNDCLASSA C = { 0, P, 0, 0, 0, 0, 0, 0, 0, s };
+                        RECT r = { 0, 0, y = c, z = b };
+                        RegisterClassA(&C);
+                        n = 1 << 31;
+                        AdjustWindowRect(&r, c = WS_CAPTION | WS_SYSMENU | WS_VISIBLE, 0);
+                        D = GetDC(W = CreateWindowExA(0, s, s, c, n, n, r.right - r.left, r.bottom - r.top, 0, 0, 0, 0));
                     }
-                    b = window_handle ? 10 : 0;
+                    b = W ? 10 : 0;
                     break;
                 default:
                     return a ? 1 : c;
+                C(8, b = E * 3; if (!b) while (b = 2, W && PeekMessageA(&M, W, 0, 0, 1)) {
+                    b = M.message - 512;
+                    if (b < 11) {
+                        m[1] = M.lParam + (M.wParam & (b > 9) << 30);
+                        b += 9;
+                        break;
+                    }
+                    b = (b | 4) + 252;
+                    if (b < 2) {
+                        m[1] = M.wParam;
+                        break;
+                    }
+                    DispatchMessageA(&M);
+                })
+                case 9:
+                    b &= k;
+                    if (W && b + y * z < k) {
+                        int B[10] = { 40, y, -z, 1 << 21 | 1 };
+                        SetDIBitsToDevice(D, 0, 0, y, z, 0, 0, 0, z, m + b, f = &B, 0);
+                        SwapBuffers(D);
+                    }
+                    break;
+                C(10, b = !b && H ? _setmode(_fileno(H), O_BINARY) : 0)
+                O(32, unsigned)
+                O(48, int)
+                O(64, unsigned short)
+                O(80, short)
+                O(96, unsigned char)
+                O(112, signed char)
             }
-
             n = a & 127;
             if (n) {
                 c = 0;
-                d = n > 2 ? memory[pc & k] + n - 65 : pc;
+                d = n > 2 ? m[d & k] + n - 65 : d;
                 d = (n - 2 ? c = d % 4 * 8, d / 4 : d) & k;
                 n = -1;
                 n >>= a >> 4 & 24;
-                if (c) {
-                    memory[pc] = (memory[pc] | n << c) ^ (~b & n) << c;
-                }
-                pc++;
-                if (c) {
-                    memory[pc] = (memory[pc] | n >> (32 - c)) ^ (~b & n) >> (32 - c);
-                }
+                W(<< c)
+                d++;
+                if (c) W(>>(32 - c))
             } else {
-                memory[0] += b ? d : 0;
+                *m += b ? d : 0;
             }
         }
     }
-
     return 1;
 }

@@ -1,51 +1,48 @@
 ```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <math.h>
 
-#define MAX_ARRAY_SIZE 65536
-#define MAX_BUFFER_SIZE 1048576
+#define CONCAT(x, o) x##o
 
-char X[MAX_ARRAY_SIZE][4], Z[MAX_BUFFER_SIZE], *N = X[1], *P = Z, *H, A[12];
+char X[1 << 16][4], Z[1 << 20], *N = X[1], *P = Z, *H, A[12];
 
-// Function to generate a string representation for a number
-char *generate_string(int i, unsigned int x) {
-    char *buffer = NULL, *D;
-    if ((x >> 16) || 0 == *(buffer = X[x])) {
-        int a, b = (int)(sqrt(x) + 0.5), c = x - b * b;
-        D = generate_string(0, 65535 & b);
-        sprintf(A, "%s*%s%c%s", D, D, c ? (c < 0 ? '-' : '+') : 0, generate_string(0, c < 0 ? -c : c));
-        buffer = buffer ? a = *N, b = N[1], c = N[2], *buffer = a + !b - 90 ? a == 'z' ? 65 : a + 1 : (b = 'z' - b ? b - 90 ? b % 64 + 65 : 97 : (c = -~c | 96, 65), ~b % 56 % 47 ? 97 : 'j') : buffer, buffer[1] = b, buffer[2] = c, printf(",%s=%s", buffer, A), (N = buffer) : A;
+char *C(int i, unsigned x) {
+    char *B = 0, *D;
+    if ((x >> 16) || 0 == *(B = X[x])) {
+        int a, b = (sqrt(x) + 0.5), c = x - b * b;
+        D = C(0, 65535 & b);
+
+        CONCAT(sprintf, )(A, "%s*%s%c%s", D, D, c ? (c < 0 ? '-' : '+') : 0, C(0, c < 0 ? -c : c));
+
+        if (!B) {
+            a = *N;
+            b = N[1];
+            c = N[2];
+            *B = a + !b - 90 ? (a == 'z' ? 65 : a + 1) : (b = 'z' - b ? b - 90 ? b % 64 + 65 : 97 : (c = -~c | 96, 65), ~b % 56 % 47 ? 97 : 'j');
+            B[1] = b;
+            B[2] = c;
+            CONCAT(printf, )(",%s=%s", B, A);
+            N = B;
+        }
     }
-    return i > 0 ? P += sprintf(P, ",%s", buffer) : buffer;
+    CONCAT(return, )(i > 0 ? P += CONCAT(sprintf, )(P, ",%s", B) : B);
 }
 
 int main() {
     int a, i = **X = Z[1] = 'a', c, n = 0;
     *X[1] = 98;
 
-    // Print the header of the generated C code
-    printf("#include <stdio.h>\nint a;\nint main() {\nint b = -~a");
-
-    // Generate the main body of the C code
-    for (; i > 3 && P - Z + 33 < MAX_BUFFER_SIZE; generate_string(i, a)) {
-        for (a = i = 0; i < 4 && 0 <= (c = getchar()); n++) {
+    printf("#include <stdio.h>\nint main(){int b=-~a");
+    while (i > 3 && P - Z + 33 < 1 << 20) {
+        C(i, a);
+        for (a = i = 0; i < 4 && 0 <= (c = CONCAT(get, char)()); n++) {
             ((char *)&a)[i++] = c;
         }
     }
-
-    // Finalize and print the generated C code
     H = P;
-    generate_string(1, n);
+    C(1, n);
     *H++ = 0;
-    printf(", Z[] = {%s}; fwrite(Z, b, %s, stdout); }\n", Z + 1, H);
+
+    printf(",Z[]={%s};fwrite(Z,b,%s,stdout);}\n", Z + 1, H);
 }
 ```
-
-### Key Refactoring Changes:
-1. Improved variable and function names for clarity.
-2. Added comments to explain the code's logic.
-3. Replaced macros with functions for better readability.
-4. Used consistent indentation and formatting.
-5. Improved code readability by breaking down complex expressions and adding whitespace.
-6. Ensured the refactored code compiles and maintains the original functionality.

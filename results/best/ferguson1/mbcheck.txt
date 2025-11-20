@@ -1,5 +1,3 @@
-```c
-// Refactored code with clear comments
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -8,119 +6,87 @@
 #include <errno.h>
 #include <stdint.h>
 
-// Global variables for program configuration and state
-static unsigned print_locations = 0;
-static const char *default_filename = "data.asc.src";
-static uintmax_t total_unicode_count = 0;
-static size_t current_string_index = 0;
+// Global variables
+static unsigned loc = 0;
+static char const *filename = "data.asc.src";
+static uintmax_t unicode = 0;
 
-// Function prototypes
-void process_file(const char *filename);
-void check_string_for_unicode(const char *string, size_t string_index);
-
-// Entry point of the program
+// Main function
 int main(int argc, char **argv) {
-    const char *filename = default_filename;
+    FILE *fp = NULL;
+    size_t len = 0;
+    char *buffer = NULL;
     int option;
+    int byte;
+    size_t string_index = 1;  // Start indexing strings at 1
+    uintmax_t codes;
 
-    // Parse command-line arguments
+    // Parse command line options
     while ((option = getopt(argc, argv, "i:l")) != -1) {
         switch (option) {
             case 'i':
                 filename = optarg;
                 break;
             case 'l':
-                print_locations = 1;
+                loc = 1;
                 break;
-            default:
-                exit(EXIT_FAILURE);
+            case ':':
+            case '?':
+                exit(1);
+                break;
         }
     }
 
-    // Process the file and check for multibyte characters
-    process_file(filename);
+    // Open file
+    errno = 0;
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Couldn't open data file %s: %s\n", filename, strerror(errno));
+        exit(1);
+    }
 
-    // Output the total number of unicode characters found
-    printf("%ju unicode character%s found in %s\n", 
-           total_unicode_count, 
-           total_unicode_count == 1 ? "" : "s", 
-           filename);
+    // Read strings from file
+    while (getdelim(&buffer, &len, '\0', fp) != -1) {
+        codes = 0;
+        for (size_t char_index = 0; buffer[char_index]; ++char_index) {
+            byte = buffer[char_index];
 
-    // Exit with a specific code if any unicode characters were found
-    if (total_unicode_count > 0) {
+            // Check for multibyte characters
+            if ((byte & 0xF8) == 0xF0) {
+                if (loc) printf("<%zu:%zu>\n", string_index, char_index);
+                char_index += 3;
+                ++unicode;
+                ++codes;
+            } else if ((byte & 0xF0) == 0xE0) {
+                if (loc) printf("<%zu:%zu>\n", string_index, char_index);
+                char_index += 2;
+                ++unicode;
+                ++codes;
+            } else if ((byte & 0xE0) == 0xC0) {
+                if (loc) printf("<%zu:%zu>\n", string_index, char_index);
+                ++char_index;
+                ++unicode;
+                ++codes;
+            }
+        }
+
+        // Report any found unicode characters
+        if (codes > 0) {
+            fprintf(stderr, "%4ju unicode character%s found in string %zu in file %s\n", 
+                    codes, codes == 1 ? "" : "s", string_index, filename);
+        }
+        ++string_index;
+    }
+
+    // Close file
+    fclose(fp);
+    fp = NULL;
+
+    // Final report of unicode characters
+    printf("%ju unicode character%s found in %s\n", unicode, unicode == 1 ? "" : "s", filename);
+    if (unicode > 0) {
         exit(666);
     }
 
     return 0;
 }
-
-// Opens the file and reads it string by string
-void process_file(const char *filename) {
-    FILE *file_pointer = fopen(filename, "r");
-    if (file_pointer == NULL) {
-        fprintf(stderr, "Couldn't open data file %s: %s\n", filename, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    char *buffer = NULL;
-    size_t buffer_length = 0;
-    current_string_index = 1; // Start indexing from 1
-
-    // Read each string (null-terminated) from the file
-    while (getdelim(&buffer, &buffer_length, '\0', file_pointer) != -1) {
-        check_string_for_unicode(buffer, current_string_index);
-        current_string_index++;
-    }
-
-    // Clean up resources
-    fclose(file_pointer);
-    free(buffer);
-}
-
-// Checks a string for unicode characters and reports their positions
-void check_string_for_unicode(const char *string, size_t string_index) {
-    uintmax_t unicode_count_in_string = 0;
-    int byte_value;
-
-    // Iterate over each byte in the string
-    for (size_t position = 0; string[position] != '\0'; position++) {
-        byte_value = (unsigned char) string[position];
-
-        // Check for 4-byte unicode character
-        if ((byte_value & 0xF8) == 0xF0) {
-            if (print_locations) {
-                printf("<%zu:%zu>\n", string_index, position);
-            }
-            position += 3; // Skip the next 3 bytes of this character
-            unicode_count_in_string++;
-        }
-        // Check for 3-byte unicode character
-        else if ((byte_value & 0xF0) == 0xE0) {
-            if (print_locations) {
-                printf("<%zu:%zu>\n", string_index, position);
-            }
-            position += 2; // Skip the next 2 bytes of this character
-            unicode_count_in_string++;
-        }
-        // Check for 2-byte unicode character
-        else if ((byte_value & 0xE0) == 0xC0) {
-            if (print_locations) {
-                printf("<%zu:%zu>\n", string_index, position);
-            }
-            position += 1; // Skip the next byte of this character
-            unicode_count_in_string++;
-        }
-    }
-
-    // Report the number of unicode characters found in this string
-    if (unicode_count_in_string > 0) {
-        fprintf(stderr, "%4ju unicode character%s found in string %zu in file\n", 
-                unicode_count_in_string, 
-                unicode_count_in_string == 1 ? "" : "s", 
-                string_index);
-    }
-
-    // Update the total count of unicode characters found
-    total_unicode_count += unicode_count_in_string;
-}
-```

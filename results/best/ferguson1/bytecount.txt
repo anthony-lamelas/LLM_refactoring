@@ -1,40 +1,18 @@
-```c
-// Refactored code with clear comments
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <getopt.h>
 
-// Function to open the file and handle errors
-FILE *open_file(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        fprintf(stderr, "Error: couldn't open data file\n");
-        exit(EXIT_FAILURE);
-    }
-    return file;
-}
-
-// Function to process the file and print the string locations
-void process_file(FILE *file) {
-    char *buffer = NULL;
-    size_t buffer_length = 0;
-    size_t string_index = 1; // Start index at 1 due to file padding
-
-    while (getdelim(&buffer, &buffer_length, '\0', file) != -1) {
-        // Print the index and string, skipping the first character if it is '\a'
-        printf("<%zu>\n%s\n", string_index, *buffer == '\a' ? buffer + 1 : buffer);
-        ++string_index;
-    }
-
-    free(buffer);
-}
-
 int main(int argc, char **argv) {
-    char *filename = "data.src"; // Default filename
+    FILE *filePointer = NULL;
+    size_t bufferLength = 0;
+    char *buffer = NULL;
+    char *filename = "data.src";
     int option;
+    size_t stringIndex = 0;
 
-    // Parse command line arguments
+    // Parse command line options
     while ((option = getopt(argc, argv, "i:")) != -1) {
         switch (option) {
             case 'i':
@@ -42,16 +20,43 @@ int main(int argc, char **argv) {
                 break;
             case ':':
             case '?':
-                fprintf(stderr, "Usage: %s [-i filename]\n", argv[0]);
-                exit(EXIT_FAILURE);
+                exit(1);
+                break; // Extra sanity check; avoids compiler warning
         }
     }
 
-    // Open the file and process its contents
-    FILE *file = open_file(filename);
-    process_file(file);
-    fclose(file);
+    // Open the file
+    filePointer = fopen(filename, "r");
+    if (filePointer == NULL) {
+        fprintf(stderr, "couldn't open data file\n");
+        exit(1);
+    }
+
+    // Initialize string index
+    stringIndex = 1;
+    while (getdelim(&buffer, &bufferLength, '\0', filePointer) != -1) {
+        // Print index and string, handling special case for strings starting with '\a'
+        printf("<%zu>\n%s\n", stringIndex, *buffer == '\a' ? buffer + 1 : buffer);
+        ++stringIndex;
+    }
+
+    // Close the file
+    fclose(filePointer);
+    filePointer = NULL;
+
+    // Note: The following block is kept for documentation purposes but is not executed
+    #if 0
+    free(buffer);
+    buffer = NULL;
+    rewind(filePointer);
+
+    if (getdelim(&buffer, &bufferLength, EOF, filePointer) != -1) {
+        printf("\n34: %s\n", buffer + 34);
+    }
+
+    free(buffer);
+    buffer = NULL;
+    #endif
 
     return 0;
 }
-```

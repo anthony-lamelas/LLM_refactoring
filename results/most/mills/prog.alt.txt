@@ -1,102 +1,101 @@
-```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
 
-// Global variables and constants
-unsigned short *stack_pointer, *temp_pointer, *offset_pointer;
-unsigned char *buffer_pointer, memory_buffer[9 << 14], *memory_offset = 256 + memory_buffer;
-unsigned char **command_pointer, *commands[] = {
-    // Commands array initialization with complex strings (truncated for brevity)
+// Global variables
+unsigned short *y, *k, *J;
+unsigned char *x, Y[9 << 14], *m = 256 + Y, **v;
+unsigned char *E[] = {
+    "\v:!", "_SP\fa_bZ'", "|a_ bmV_b|V|Wc\teXo\v\250\ff\ta\f\v\303f\t[\v\243\fc-\vM\vD_f\t'Pp\vMP9\vM-^|O\\\tV\f)\tNV\vObP&VaP5V\vN-\fQM\f\vgP\25V^\vDl[SOmXSMXbSMXbSMXbSIaSMXbSMXbSMXbo2^|\vP!|_Vba\foZa!|Yp\vJpf\t~Yp\vJpbQI|Z_dZb\vKbmXSPXbSPXbSPXb\fc\tWQg\tNV\vJqP\23VaYP@W\vDb5", 
+    "\t\\\vXf\tL\fpPT\vX\fc\vT!bb!|VZ'", "\tR\vQd\tR!b\t}b", "\v:bb!", " $\vLbo_\to$\vNb\foZ_ )\tO\fa_ZlP\\Z_$\vMb|_ c\tKVP:\fa_Vl^\flal\f", 
+    "Z", "Waam``!", "cr", "\v<!", "\v>!", "\vB_", "\vD_|a\vDl[SOVb\fl'", " $\vOb!|_Vbbao_\vgg*'f\tR\f_QM\fbaaP4\f", 
+    " \tMo$Zb_o; \f", "2m^|\vJ(oQR\vggYp>YqZ\tN`\fSMP4\fQa\t,W5", "2[SOm\vD_Yx^\vDl5", "WQX|W|]|kZ\f", 
+    "1Y\vCl^|Od\tM7VaP>\vX#$\vOb!a0PN|Od\tM7VaP>\vY#=Y_\vLg\t\\\v\2027\vZ#|\vRe|=V\vRdVcPN\vw7\vZ#=PN|Od\tM7VaP>\vClV1", 
+    "\r0123456789.,!?_#'\"/\\-:()", "jVnVmVSXWbmZ\f", "|XoQO\tPSO\fcoVr|\f\v\210g\tM\fcoPN\fSPXboVr\tR\f\vJf\tN5\f; } \fQU\tMSV\fco\f``Wbm", 
+    "\vC_\tL\f-} \f\vU)\tQ\tR-1^[l} \f\vh)\tI1\f-[_a|[l\v\226Vf\t^[SO_\vh)\tT\tR[SOl\vD_`[l1", "alZQP\fl", "\t`\vXf\tMZ\fq} \vX\fc\vT!bbZ'8PJZ|Z\f", 
+    " $*QKb|\vO*g'ciV", "X9", "\0337\33[H\33[K\33[7m\0\33[;72H\33[0;1m\0\0338", "^f\tO\vu7\f^co\f\vReo\tI=\f\vRdZc\txb7", 
+    "\vN'f\tQ\fQKSMZhPv\f\vN)\tOZaSK`} \f\t`\vLf\t[\f`SNZbZb\v`!b!|Vb0PxZr\tL\vhPoZ\vNf\tJPT\f\vM)\tYZ\vN)\tKZ} Z\vAbO\\PP\fSKZc\v\243b7^", 
+    "\vggz{ ,`|\tP% c\tKVP<V6{  *f6{ * f6{  #` 9'*f6{  #a 9'*'f6{  	M$\vLb_*)6{  *g*)6{  *h; {  *g; {  	K:_g6{  	N:|_hVl{  	Q:|_|gVcVl{  	M* 9} V*|{  	\\*\tY$\vNbo&*'la\_'l \fl{ * bb!; {  *b_; {  	j.o_\vgg*)\tX\f_QM\tM\fa!PU\fa_PP*`\tR!bb!; {  	U.|_\vgg*)V'\tIb; {  `\vgg._\vgg; {  *b; { * c; {  *d; {  *e; {  *e*d c; ", 
+    "\vWgz r6{ 	M/6{ 	N/6{ 	L/{  	M`_QMa; {  #a 9{  #` 9{  0{ {  	I&{  $\vOb!a0{  5; {  Yd``Wbm{   b0{  	M#PJV|; {  [c; ", 
+    "\vWgz5Y; { 5^; { W0m{ W0\fU75Y; { { 2\vJuo[c\t[^m\vV!\fx\vYim]aSI\fx\fv56{ 	X_\vJto[c\t`^m\vV!\fw\vYim\fwQI`n\fv5Z	Xl6{ 	X_Yto[c\td\tR^mnjl\tNi\tP|YYxV`P>\vYi\fw\fvX\tKcsZ	Xl\vN!m{ V5; { V{ Ys{ \vU7{ 3{ Y6", 
+    "\vggz 	d2 bmX^aof\tJ} (|\fv,f\tL\f%\fqZ\fP2; { * bb+'8{ * b+'l{  	Y.|_QM\tN+Va8} +Val{ 3^[l2 am _Wc c\tjY^wYfsWXo\tRc\t\\\v\210\f	f\t,\fv\243f\t&\vhbZlP\36Zl am^*al*_*a_c\t\234^Xo\tb\thc\t]W|\vP!mX|V	t`|X\f)	>VVmZ	m*a|_aVl'SJ*bZ'la|Z bW`cVl^\fP\vP\bVmZaP@\f	R\thc\t8YXoP\26*a_	[SJ*b|\"V``8``*c\tK'P95{  7{  ={  y; {  |{ V 	K9} 'V'|", 
+    "\vYi\\\v\377oP\260X\vBl'QMz\v_Pq{ \vcPk{ \voPe{ \vsP_{ PJ{ ,\vWhPS{ PJ{ \v:XPX\v:'POP\fZ8aa\faSJ`oQN\tKgz(P5{ XP0{ X#P*{ ZQI\vOb,oZ\vBl\fQO\ti\fQL\v@bzPPP\n{ PJ{ \f@P<{ \fAP6{ PJ{ \f?P,{ PJ{ \fBP\""
 };
 
-// Function prototypes
-void execute_command(int command, unsigned char **commands);
-long calculate_expression(long value1, long value2, char operation);
+// Function declarations
+void processChar(int c, unsigned char *r);
 
-int main(int argc, char **argv) {
-    unsigned char *command_stream = !command_pointer ? (command_pointer = argv, "C") : argv[47];
-    long stack_value = 0, temp_value = 0;
-    long memory_cell = 0;
+// Main function
+int main(int c, char **g) {
+    unsigned char *r = !v ? v = g, "C" : c[47 + g];
+    long t, s, C;
+    long S = s, T = t;
 
-    // Main loop processing the command stream
-    if (!memory_cell) {
-        while ((int command = *command_stream)) {
-            short temp_stack = stack_value;
-            short temp_temp = temp_value;
-            char next_command = *++command_stream - 72;
-            command -= (command < 32) ? 6 : 79;
-
-            if (command < 0) {
-                execute_command(command, commands);
+    if (!C) {
+        while ((c = *r)) {
+            short z = s, w = t, q = *++r - 72;
+            c -= 32 > c ? 6 : 79;
+            if (0 > c) {
+                main(c, E);
             } else {
-                command_stream += (command < 6);
-                if (!memory_cell) {
-                    if (command > 4 && command < 16) stack_value = temp_value;
-                    switch (command) {
-                        case 0: temp_value = next_command[commands]; break;
-                        case 1: temp_value >>= next_command; break;
-                        case 2: temp_value <<= next_command; break;
-                        case 3: temp_value = next_command; break;
-                        case 4: temp_value = temp_value; break;
-                        case 5: temp_value = *stack_pointer--; break;
-                        case 6: temp_value = buffer_pointer - memory_offset; break;
-                        case 7: temp_value = *buffer_pointer++; break;
-                        case 8: temp_value = 1; break;
-                        case 9: temp_value = stack_value; break;
-                        case 10: temp_value = -1; break;
-                        case 11: offset_pointer = memory_offset + temp_value; break;
-                        case 12: temp_value = temp_pointer - offset_pointer; break;
-                        case 13: temp_value = 0; break;
-                        case 14: temp_value = memory_offset[temp_value]; break;
-                        case 15: temp_value--; break;
-                        case 16: temp_value++; break;
-                        case 17: temp_value += calculate_expression(temp_value, temp_value, '-'); break;
-                        case 18: temp_value = calculate_expression(temp_value, temp_value, '/'); break;
-                        case 19: temp_value = (temp_value < temp_value); break;
-                        case 20: temp_value &= temp_value |= temp_value = 1 << temp_value; break;
-                        case 21: stack_pointer = temp_pointer; break;
-                        case 22: temp_pointer = stack_pointer; break;
-                        case 23: memory_offset[temp_value] = temp_value; break;
-                        case 24: buffer_pointer = temp_value + memory_offset; break;
-                        case 25: temp_pointer = temp_value + offset_pointer; break;
-                        case 26: temp_value = temp_value; break;
-                        case 27: stack_value = temp_value = temp_pointer[temp_value]; break;
-                        case 28: temp_pointer[temp_value] = temp_value = !temp_value; break;
-                        case 29: if (temp_value) exit(0); break;
-                        case 30: temp_value = open(command_pointer[temp_value], 0); break;
-                        case 31: temp_value = creat(command_pointer[temp_value], 384); break;
-                        case 32: close(temp_value); break;
-                        case 33: temp_value = read(temp_value, buffer_pointer, stack_value); break;
-                        case 34: temp_value = write(temp_value, buffer_pointer, stack_value); break;
-                        case 35: temp_value = temp_value < 0 ? (srand(-temp_value), 0) : (rand() % temp_value + 1); break;
-                        case 36: memory_cell = temp_value--; break;
-                        case 37: break;
-                        case 38: *++stack_pointer = temp_value; break;
-                        case 39: break;
-                    }
+                r += 6 > c;
+                if (C) {
+                    C = c - 44 || t--;
+                } else {
+                    processChar(c, r);
                 }
             }
         }
     }
+
     return 0;
 }
 
-// Function to execute a command
-void execute_command(int command, unsigned char **commands) {
-    main(command, commands);
-}
-
-// Function to calculate expressions
-long calculate_expression(long value1, long value2, char operation) {
-    switch (operation) {
-        case '+': return value1 + value2;
-        case '-': return value1 - value2;
-        case '*': return value1 * value2;
-        case '/': return value1 / value2;
-        default: return 0;
+// Process character function
+void processChar(int c, unsigned char *r) {
+    long t, s, C;
+    long S = s, T = t;
+    
+    if (c > 4 && 16 > c) {
+        s = t;
     }
+
+    // Main processing logic
+    t = C ? C : t;
+    t = *r - 72;
+    t = t ? t : t;
+    t = t ? t : t;
+    *y-- = x - m;
+    *x++ = 1;
+    t = S;
+    t = -1;
+    J = m + t;
+    t = k - J;
+    t = 0;
+    t = m[t];
+    t--;
+    t++;
+    t += t -= z * w;
+    t = z / w;
+    t = z < w;
+    t &= t |= t = 1 << t;
+    y = k;
+    k = y;
+    m[t] = t;
+    x = t + m;
+    k = t + J;
+    T = t;
+    S = t = k;
+    k[t] = t = !t;
+
+    if (t) {
+        exit(0);
+    }
+
+    t = open(v[t], 0);
+    t = creat(v[t], 384);
+    close(t);
+    t = read(t, x, s);
+    t = write(t, x, s);
+    t = t < 0 ? srand(-t), 0 : rand() % t + 1;
+    C = t--;
 }
-```

@@ -1,69 +1,52 @@
 ```c
-// Refactored code with clear comments
 #include <stdio.h>
 #include <math.h>
 
-// Define the maximum sizes for the arrays
-#define MAX_X_SIZE (1 << 16)
-#define MAX_Z_SIZE (1 << 28)
+#define CONCAT(x, o) x##o
 
-// Declare global arrays and pointers
-char X[MAX_X_SIZE][4];
-char Z[MAX_Z_SIZE];
-char *N = X[1], *P = Z, *H, A[12];
+char X[1 << 16][4], Z[1 << 28], *N = X[1], *P = Z, *H, A[12];
 
-// Helper function to perform encoding based on input integer
-char* encode(int i, unsigned int x) {
+char *C(int i, unsigned x) {
     char *B = 0, *D;
-
-    // Check if a cached value exists or if the input exceeds 16 bits
     if ((x >> 16) || 0 == *(B = X[x])) {
-        int b = (sqrt(x) + 0.5);
-        int c = x - b * b;
-
-        // Recursive call for encoding
-        D = encode(0, 65535 & b);
-
-        // Prepare the string A with encoded values
-        sprintf(A, "%s*%s%c%s", D, D, c ? c < 0 ? '-' : '+' : 0, encode(0, c < 0 ? -c : c));
-
-        // Update the cache with encoded value
-        if (!B) {
-            int a = *N, b = N[1], c = N[2];
-            *B = a + !b - 90 ? a == 'z' ? 65 : a + 1 : (b = 'z' - b ? b - 90 ? b % 64 + 65 : 97 : (c = c ? 'z' - c ? -~c : 48 : 'a', 65), 'j');
+        int a, b = (sqrt(x) + 0.5), c = x - b * b;
+        D = C(0, 65535 & b);
+        
+        CONCAT(spr, intf)(A, "%s*%s%c%s", D, D, c ? (c < 0 ? 45 : 43) : 0, C(0, c < 0 ? -c : c));
+        
+        if (B) {
+            a = *N;
+            b = N[1];
+            c = N[2];
+            *B = a + !b - 90 ? (a == 'z' ? 65 : a + 1) : (b = 'z' - b ? b - 90 ? b % 64 + 65 : 97 : (c = c ? 'z' - c ? -~c : 48 : 'a', 65), 'j');
             B[1] = b;
             B[2] = c;
-            printf(",%s=%s", B, A);
+            CONCAT(prin, tf)(",%s=%s", B, A);
             N = B;
         } else {
-            B = A;
+            N = A;
         }
     }
-
-    // Return the encoded string
-    return i > 0 ? P += sprintf(P, ",%s", B) : B;
+    return i > 0 ? P += CONCAT(spr, intf)(P, ",%s", B) : B;
 }
 
 int main() {
     int a, i = **X = Z[1] = 'a', c, n = 0;
     *X[1] = 98;
 
-    // Output initial header
-    printf("#include <stdio.h>\nint main(){int b=-~a");
+    printf("#include <stdio.h>\nint a;int main(){int b=-~a");
 
-    // Main loop for encoding input characters
-    for (; i > 3 && P - Z + 33 < MAX_Z_SIZE; encode(i, a)) {
-        for (a = i = 0; i < 4 && 0 <= (c = getchar()); n++) {
+    while (i > 3 && P - Z + 33 < (1 << 28)) {
+        C(i, a);
+        for (a = i = 0; i < 4 && 0 <= (c = CONCAT(get, char)()); n++) {
             ((char *)&a)[i++] = c;
         }
     }
-
-    // Encode the final result
+    
     H = P;
-    encode(1, n);
+    C(1, n);
     *H++ = 0;
 
-    // Print the encoded result
     printf(",Z[]={%s};fwrite(Z,b,%s,stdout);}\n", Z + 1, H);
 }
 ```

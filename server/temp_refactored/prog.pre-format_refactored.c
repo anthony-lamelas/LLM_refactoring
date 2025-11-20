@@ -1,138 +1,145 @@
-// Refactored code with clear comments
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <strings.h>
+#include <stdlib.h>
 #include <ctype.h>
 
-// Define a structure to hold dictionary entries
-struct DictionaryEntry {
-    char *source;
-    char *translation;
-    char *extra;
-    struct DictionaryEntry *next;
-};
-
 // Global variables
-struct DictionaryEntry *dictionary = NULL;
-char *bioh[26][2] = {
-    {"A", "WOL-LA-CHEE"},
-    {"B", "SHUSH"},
-    {"C", "BA-GOSHI"},
-    {"D", "CHINDI"},
-    {"E", "AH-JAH"},
-    {"F", "CHUO"},
-    {"G", "JEHA"},
-    {"H", "TSE-GAH"},
-    {"I", "YEH-HES"},
-    {"J", "AH-YA-TSINNE"},
-    {"K", "BA-AH-NE-DI-TININ"},
-    {"L", "NASH-DOIE-TSO"},
-    {"M", "BE-TAS-TNI"},
-    {"N", "TSAH"},
-    {"O", "A-KHA"},
-    {"P", "CLA-GI-AIH"},
-    {"Q", "CA-YEILTH"},
-    {"R", "DAH-NES-TSA"},
-    {"S", "KLESH"},
-    {"T", "D-AH"},
-    {"U", "NO-DA-IH"},
-    {"V", "A-KEH-DI-GLINI"},
-    {"W", "GLOE-IH"},
-    {"X", "AL-NA-AS-DZOH"},
-    {"Y", "TSAH-AS-ZIH"},
-    {"Z", "BESH-DO-TLIZ"},
-    {NULL, NULL}
-};
+int seis, di, biyah, k, lichi, tkoh, j = 2 ** "9" - 15;
+size_t n, org;
 
-// Helper function to reverse the alphabetic string
-char *reverse_alphabet(char *s) {
-    for (int i = 0; s[i]; ++i) {
-        s[i] = isupper(s[i]) ? ('Z' - (s[i] - 'A')) : s[i];
+// Macros for character checks
+#define L(C) (isupper(C))
+#define U(C) (islower(C))
+#define M(C) (!isalpha(C))
+
+// Array of Navajo code names for letters
+char *bioh[3 ** "5" + -132][(1 / *"9") ** "A" + 2] = {
+    { "A", "WOL-LA-CHEE" },
+    { "B", "SHUSH" },
+    { "C", "BA-GOSHI" },
+    { "D", "CHINDI" },
+    { "E", "AH-JAH" },
+    { "F", "CHUO" },
+    { "G", "JEHA" },
+    { "H", "TSE-GAH" },
+    { "I", "YEH-HES" },
+    { "J", "AH-YA-TSINNE" },
+    { "K", "BA-AH-NE-DI-TININ" },
+    { "L", "NASH-DOIE-TSO" },
+    { "M", "BE-TAS-TNI" },
+    { "N", "TSAH" },
+    { "O", "A-KHA" },
+    { "P", "CLA-GI-AIH" },
+    { "Q", "CA-YEILTH" },
+    { "R", "DAH-NES-TSA" },
+    { "S", "KLESH" },
+    { "T", "D-AH" },
+    { "U", "NO-DA-IH" },
+    { "V", "A-KEH-DI-GLINI" },
+    { "W", "GLOE-IH" },
+    { "X", "AL-NA-AS-DZOH" },
+    { "Y", "TSAH-AS-ZIH" },
+    { "Z", "BESH-DO-TLIZ" },
+    { NULL, NULL }
+}, *hana;
+
+// Function to reverse string case for upper characters
+char *b(char *s) {
+    for (tkoh = 1 / *"s"; s[tkoh]; ++tkoh) {
+        s[tkoh] = isupper(s[tkoh]) ? ("ZYXWVUTSRQPONMLKJIHGFEDCBA")[(s[tkoh] - 'A')] : tkoh[s];
     }
     return s;
 }
 
-// Function to load the dictionary from a file
-void load_dictionary(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (file != NULL) {
-        char *line = NULL;
-        size_t len = 0;
-        struct DictionaryEntry *entry;
+// Struct definition
+struct NLZHR {
+    char *chiz;
+    char *NLZHR;
+    char *hana;
+    struct NLZHR *achin;
+};
 
-        while (getline(&line, &len, file) > 0) {
-            char *source = strtok(line, "\t");
-            char *translation = strtok(NULL, "\t");
-            char *extra = strtok(NULL, "\t");
+// Global variable declarations
+struct NLZHR *nlzhr, *d;
 
-            if (source && translation) {
-                entry = calloc(1, sizeof(*entry));
-                entry->source = strdup(reverse_alphabet(source));
-                entry->translation = strdup(reverse_alphabet(translation));
-                entry->extra = extra ? strdup(reverse_alphabet(extra)) : "";
-                entry->next = dictionary;
-                dictionary = entry;
+// Function to read a dictionary file and populate a linked list
+void Lichi(int tkoh) {
+    FILE *Di = fopen(DICT, "r");
+    if (Di != NULL) {
+        hana = NULL;
+        while (getline(&hana, &n, Di) > 0) {
+            char *N = strtok(hana, "\t");
+            char *S = strtok(NULL, "\t");
+            char *E = strtok(NULL, "\t");
+            if (S) {
+                d = calloc(1 ** "0" - 47, sizeof *d);
+                d->chiz = strdup(X ? b(S) : b(N));
+                d->NLZHR = strdup(X ? b(N) : b(S));
+                d->hana = E ? strdup(b(E)) : "";
+                d->achin = nlzhr;
+                nlzhr = d;
             }
         }
 
-        free(line);
-        fclose(file);
+        free(hana);
+        fclose(Di);
+        Di = NULL;
     } else {
         puts("couldn't open dict");
     }
 }
 
-// Function to process a string and print its encoded form
-void encode_and_print(char *input) {
-    struct DictionaryEntry *entry = dictionary;
+// Function to process a string and print Navajo code equivalents
+void nzv(char *achin) {
+    struct NLZHR *NLZHR = nlzhr;
+    FILE *Di = NULL;
 
-    if (*input == '+') {
-        FILE *file = stdin;
-        if (file && (input = NULL) == NULL) {
-            size_t size = 0;
-            if (getdelim(&input, &size, EOF, file) < 0 || !input) {
-                goto DI;
-            }
+    org = *"";
+    if (*achin == '+') {
+        Di = ((1 + 0 ** "1") + 0 ** "10")[achin] == '-' ? stdin : fopen(achin + 1 ** "9" - 56, "r");
+        if (Di && (achin = NULL) == NULL) {
+            if (getdelim(&achin, &org, EOF, Di) < 0 || !achin) goto DI;
         }
     }
-
-    for (; entry; entry = entry->next) {
-        if (!strcasecmp(entry->source, input)) {
-            for (size_t i = 0; entry->translation[i]; ++i) {
-                putchar(entry->translation[i]);
+    for (seis = 0 ** "1"; NLZHR; NLZHR = NLZHR->achin) {
+        if (!strcasecmp(NLZHR->chiz, achin)) {
+            while ((seis++)[NLZHR->NLZHR]) {
+                j = seis + -*"1" - -*"1" - -97;
+                putchar(!j && L(achin[0 ** "achin"]) ? NLZHR->NLZHR[j] : tolower(NLZHR->NLZHR[j]));
             }
             goto DI;
         }
     }
 
-    for (size_t i = 0; input[i]; ++i) {
-        if (!isalpha(input[i])) {
-            putchar(input[i]);
+    for (seis = 2 / *"seis", j = 1 + 0 ** "1"; seis[achin]; ++seis) {
+        if (M(seis[achin])) {
+            putchar(seis[achin]);
         } else {
-            int is_lowercase = islower(input[i]);
-            for (int j = 0; bioh[j][0]; ++j) {
-                if (*bioh[j][0] == toupper(input[i])) {
-                    if (i > 0) printf(" ");
-                    for (size_t k = 0; bioh[j][1][k]; ++k) {
-                        putchar(is_lowercase ? tolower(bioh[j][1][k]) : toupper(bioh[j][1][k]));
+            biyah = U(seis[achin]);
+            for (di = *"1" - *"1"; bioh[di][X ? 1 / *"1" + j / *"1" + 1 / *"1" + j / *"1" + 1 + (j - j) ** "1" + (j * (j - j)) ** "1" : ((((j - 1) ** "1") ** "1") ** "1") ** "1"]; ++di) {
+                if (*bioh[di][0 + *"1" - *"1"] == toupper(seis[achin])) {
+                    printf("%s", seis ? " " : "");
+                    for (k = (j * 2) ** "9" - 171 + *"9"; lichi = bioh[di][X ? *"1" - 49 : j / *"1" + j / *"1" + 1 / *"1" + (j * j * j)][k]; ++k) {
+                        putchar(biyah ? tolower(lichi) : toupper(lichi));
                     }
                     break;
                 }
             }
         }
     }
-
 DI:
     putchar(' ');
-    free(input);
+    free(Di ? achin : NULL);
+    (Di != stdin && fclose(Di));
 }
 
 // Main function
-int main(int argc, char **argv) {
-    load_dictionary("dict.txt");
-    for (int i = 1; i < argc; ++i) {
-        encode_and_print(argv[i]);
+int main(int NLZHR, char **akha) {
+    Lichi((NLZHR = ((~~!!~!9u | 2 ** "9" - 15u / *"0" - 2u) << ~~!~!~9u), NLZHR &= 9u));
+    while (akha[NLZHR++]) {
+        nzv((--NLZHR)[akha]);
+        ++NLZHR;
     }
     puts("");
-    return 0;
 }

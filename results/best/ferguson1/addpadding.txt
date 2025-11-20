@@ -1,5 +1,3 @@
-```c
-// Refactored code with clear comments
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -7,129 +5,128 @@
 #include <getopt.h>
 #include <errno.h>
 
-// Constants
 #define BLOCKSIZE 512
-#define PADDING_STRING "ha_ha(){hell:goto hell;}main(){goto hell;hell:goto hell;ha_ha();main();goto hell;}"
-#define COMMENT_START "/*useless code below, goto end of file*/"
-#define COMMENT_END "/*useless code above, goto start of file*/"
 
-// Global variables
-static FILE *input_file = NULL, *output_file = NULL, *prog_file = NULL;
-static char *buffer = NULL, *prog_content = NULL;
-static size_t buffer_length = 0, prog_length = 0, padding_length = 0;
+static char padding[] = "ha_ha(){hell:goto hell;}main(){goto hell;hell:goto hell;ha_ha();main();goto hell;}";
+static char comment1[] = "/*useless code below, goto end of file*/";
+static char comment2[] = "/*useless code above, goto start of file*/";
+
+static FILE *in = NULL, *out = NULL, *prog = NULL;
+static char *buf = NULL, *p = NULL;
+static size_t len = 0, count = 0, padlen = 0;
 static char *data_src = "data.src";
-static char *data_dst = "data";
+static char *data = "data";
 static char *data_asc_src = "data.asc.src";
-static char *data_asc_dst = "data.asc";
+static char *data_asc = "data.asc";
 static char *data_scrnshot_src = "data.scrnshot.src";
-static char *data_scrnshot_dst = "data.scrnshot";
-static char *prog_filename = "prog.c";
+static char *data_scrnshot = "data.scrnshot";
+static char *prog_c_filename = "prog.c";
+static char *prog_c = NULL;
+static int l = 0, k = 0;
 
-// Function prototypes
-void add_padding_to_data(const char *dst, const char *src);
-void close_and_free_resources();
-void handle_error(const char *message, const char *filename);
-
-// Add padding to each string in the data file
-void add_padding_to_data(const char *dst, const char *src) {
-    input_file = fopen(src, "r");
-    if (input_file == NULL) {
-        handle_error("couldn't open data source file", src);
+void make_data(char const *dst, char const *src) {
+    // Close any open input file
+    if (in) {
+        fclose(in);
+        in = NULL;
     }
 
-    output_file = fopen(dst, "w");
-    if (output_file == NULL) {
-        handle_error("couldn't open output data file", dst);
-        fclose(input_file);
-        return;
+    // Close any open output file
+    if (out) {
+        fclose(out);
+        out = NULL;
     }
 
-    // Write initial comment and padding
-    int comment_length = fprintf(output_file, "%s", COMMENT_START);
-    for (size_t i = comment_length; i < BLOCKSIZE;) {
-        for (size_t j = 0; j < padding_length && i + j < BLOCKSIZE; ++j) {
-            fputc(PADDING_STRING[j], output_file);
+    // Open the input file
+    errno = 0;
+    in = fopen(src, "r");
+    if (in == NULL) {
+        fprintf(stderr, "%s: couldn't open data source file: %s\n", src, strerror(errno));
+        exit(1);
+    }
+
+    // Open the output file
+    errno = 0;
+    out = fopen(dst, "w");
+    if (out == NULL) {
+        fprintf(stderr, "%s: couldn't open output data file: %s\n", dst, strerror(errno));
+        fclose(in);
+        in = NULL;
+        fclose(prog);
+        prog = NULL;
+        free(prog_c);
+        prog_c = NULL;
+        exit(1);
+    }
+
+    // Write the first comment and padding
+    l = fprintf(out, "%s", comment1);
+    size_t i, j;
+    for (i = l; i < BLOCKSIZE;) {
+        for (j = 0; j < padlen; ++j) {
+            if (j + i + 1 < BLOCKSIZE + 1) {
+                fputc(padding[j], out);
+            }
         }
-        i += padding_length;
+        i += j;
     }
 
     // Process each string in the input file
-    while (getdelim(&buffer, &buffer_length, '\0', input_file) != -1) {
-        if (*buffer == '%') {
-            fprintf(output_file, "%s", buffer);
-        } else if (*buffer == '\a') {
-            fprintf(output_file, "\b%s", buffer + 1);
+    while (getdelim(&buf, &len, '\0', in) != -1) {
+        if (*buf == '%') {
+            fprintf(out, "%s", buf);
+        } else if (*buf == '\a') {
+            fprintf(out, "\b%s", buf + 1);
         } else {
-            fputs(buffer, output_file);
-        }
-        fputc('\0', output_file);
-
-        for (size_t i = strlen(buffer) + 1; i < BLOCKSIZE;) {
-            for (size_t j = 0; j < padding_length && i + j < BLOCKSIZE; ++j) {
-                fputc(PADDING_STRING[j], output_file);
+            for (p = buf; *p; ++p) {
+                fputc(*p, out);
             }
-            i += padding_length;
+        }
+        fputc('\0', out);
+
+        for (i = strlen(buf) + 1; i < BLOCKSIZE;) {
+            for (j = 0; j < padlen; ++j) {
+                if (j + i < BLOCKSIZE) {
+                    fputc(padding[j], out);
+                }
+            }
+            i += j;
         }
     }
 
-    // Write ending comments and prog content
-    fprintf(output_file, "\n%s%s\n", COMMENT_END, COMMENT_START);
+    // Add comments and padding at the end of the file
+    fprintf(out, "\n%s%s\n", comment2, comment1);
 
-    size_t count = 0;
-    for (char *p = prog_content; *p; ++p) {
+    // Write the prog_c content with formatting
+    for (count = 0, p = prog_c; *p; ++p) {
         if (*p == '\n') {
             if (count < 15) {
-                fputc('\n', output_file);
+                fputc('\n', out);
             } else {
-                fprintf(output_file, "\n%s%s%s\n", COMMENT_START, PADDING_STRING, COMMENT_END);
+                fprintf(out, "\n%s%s%s\n", comment1, padding, comment2);
             }
             ++count;
         } else {
-            fputc(*p, output_file);
+            fputc(*p, out);
         }
     }
 
-    fprintf(output_file, "%s", COMMENT_END);
+    // Add the final comment
+    fprintf(out, "%s", comment2);
 
-    fclose(input_file);
-    fclose(output_file);
-}
-
-// Handle errors by printing error message and freeing resources
-void handle_error(const char *message, const char *filename) {
-    fprintf(stderr, "%s: %s: %s\n", filename, message, strerror(errno));
-    close_and_free_resources();
-    exit(1);
-}
-
-// Close all open files and free allocated memory
-void close_and_free_resources() {
-    if (input_file) {
-        fclose(input_file);
-        input_file = NULL;
-    }
-    if (output_file) {
-        fclose(output_file);
-        output_file = NULL;
-    }
-    if (prog_file) {
-        fclose(prog_file);
-        prog_file = NULL;
-    }
-    if (buffer) {
-        free(buffer);
-        buffer = NULL;
-    }
-    if (prog_content) {
-        free(prog_content);
-        prog_content = NULL;
-    }
+    // Clean up
+    fclose(in);
+    in = NULL;
+    fclose(out);
+    out = NULL;
+    free(buf);
+    buf = NULL;
 }
 
 int main(int argc, char **argv) {
-    int option;
-    while ((option = getopt(argc, argv, "i:I:o:O:p:")) != -1) {
-        switch (option) {
+    // Process command line arguments
+    while ((k = getopt(argc, argv, "i:I:o:O:p:dt")) != -1) {
+        switch (k) {
             case 'i':
                 data_src = optarg;
                 break;
@@ -137,13 +134,13 @@ int main(int argc, char **argv) {
                 data_asc_src = optarg;
                 break;
             case 'o':
-                data_dst = optarg;
+                data = optarg;
                 break;
             case 'O':
-                data_asc_dst = optarg;
+                data_asc = optarg;
                 break;
             case 'p':
-                prog_filename = optarg;
+                prog_c_filename = optarg;
                 break;
             case ':':
             case '?':
@@ -152,25 +149,36 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Load prog_file content
-    prog_file = fopen(prog_filename, "r");
-    if (prog_file == NULL) {
-        handle_error("couldn't open prog.c code file", prog_filename);
+    // Calculate the length of the padding string
+    padlen = strlen(padding);
+
+    // Open and read the prog.c file
+    errno = 0;
+    prog = fopen(prog_c_filename, "r");
+    if (prog == NULL) {
+        fprintf(stderr, "%s: couldn't open prog.c code file: %s\n", prog_c_filename, strerror(errno));
+        fclose(in);
+        in = NULL;
+        exit(1);
     }
 
-    if (getdelim(&prog_content, &prog_length, EOF, prog_file) == -1) {
-        handle_error("couldn't read prog.c", prog_filename);
+    errno = 0;
+    if (getdelim(&prog_c, &len, EOF, prog) == -1) {
+        fprintf(stderr, "couldn't read prog.c\n");
+        fclose(in);
+        in = NULL;
+        fclose(prog);
+        prog = NULL;
+        exit(1);
     }
 
-    padding_length = strlen(PADDING_STRING);
+    // Process each file
+    make_data(data, data_src);
+    make_data(data_asc, data_asc_src);
+    make_data(data_scrnshot, data_scrnshot_src);
 
-    // Create padded data files
-    add_padding_to_data(data_dst, data_src);
-    add_padding_to_data(data_asc_dst, data_asc_src);
-    add_padding_to_data(data_scrnshot_dst, data_scrnshot_src);
-
-    // Free resources
-    close_and_free_resources();
+    // Clean up
+    fclose(prog);
+    prog = NULL;
     return 0;
 }
-```
