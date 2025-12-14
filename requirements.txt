@@ -1,3 +1,10 @@
 python-dotenv
 openai
 pydantic
+anthropic
+groq
+google-generativeai
+matplotlib
+pandas
+seaborn
+ipykernel

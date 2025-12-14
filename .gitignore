@@ -18,6 +18,17 @@ temp_refactored/
 # Results (optional - uncomment if you don't want to track these)
 # results/
 # reports/
+results_openai/
+results_gemini/
+results_claude/
+results_groq/
+results_deepseek/
+reports_openai/
+reports_gemini/
+reports_claude/
+reports_groq/
+reports_deepseek/
+reports_combined/
 
 # Test files
 test_*.py
